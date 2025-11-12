@@ -136,9 +136,13 @@ class ExamMarkCalculator
             : 'Failed Individual';
     }
 
+
     private function getGrade($finalMark, $gradePoints)
     {
-        $grade = collect($gradePoints)->first(fn($g) => $finalMark >= $g['from_mark'] && $finalMark <= $g['to_mark']);
+        $grade = collect($gradePoints)->first(function ($g) use ($finalMark) {
+            return $finalMark >= $g['from_mark'] && $finalMark <= $g['to_mark'];
+        });
+
         return [
             'grade' => $grade['grade'] ?? 'F',
             'grade_point' => $grade['grade_point'] ?? '0.00'
