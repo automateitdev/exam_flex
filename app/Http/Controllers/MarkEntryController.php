@@ -4,14 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Services\ExamService;
 use App\Models\TempExamConfig;
-use App\Helpers\ApiResponseHelper;
 use App\Services\ResultCalculator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Services\ExamMarkCalculator;
-use App\Services\ExamService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
