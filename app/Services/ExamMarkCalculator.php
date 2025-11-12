@@ -57,11 +57,13 @@ class ExamMarkCalculator
 
         // 3. Overall Pass
         $overallPass = true;
-        $overallCalc = 0;
         $overallDetails = $details->where('is_overall', true);
-        $overallMarkRequired = $overallDetails->first()->overall_mark ?? $overallDetails->sum('pass_mark');
+        $overallMarkRequired = $overallDetails->sum('overall_mark') > 0
+            ? $overallDetails->sum('overall_mark')
+            : $overallDetails->sum('pass_mark');
 
         if ($overallDetails->isNotEmpty() && $overallMarkRequired > 0) {
+            $overallCalc = 0;
             foreach ($overallDetails as $d) {
                 $mark = $partMarks[$d['exam_code_title']] ?? 0;
                 $percent = ($d['conversion'] ?? 100) / 100;
@@ -70,7 +72,6 @@ class ExamMarkCalculator
             $finalOverall = roundMark($overallCalc, $method);
             $overallPass = $finalOverall >= $overallMarkRequired;
         }
-
         // 4. Fail Threshold
         $failThreshold = $highestFail > 0 ? $highestFail + 0.01 : 33;
 
