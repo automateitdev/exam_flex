@@ -45,7 +45,7 @@ class ExamMarkCalculator
         // 1. obtained_mark = যোগ (CQ + MCQ)
         $obtainedMark = $details->sum(fn($d) => $partMarks[$d['exam_code_title']] ?? 0);
 
-        // 2. Individual Pass (is_individual = true)
+        // 2. Individual Pass
         $individualPass = true;
         foreach ($details->where('is_individual', true) as $d) {
             $mark = $partMarks[$d['exam_code_title']] ?? 0;
@@ -74,24 +74,30 @@ class ExamMarkCalculator
         // 4. Fail Threshold
         $failThreshold = $highestFail > 0 ? $highestFail + 0.01 : 33;
 
-        // 5. Final Pass (before grace)
-        $finalMark = $obtainedMark;
-        $pass = $individualPass && $overallPass && ($finalMark >= $failThreshold);
-        $remark = $this->getRemark($pass, $individualPass, $overallPass);
+        // 5. Pass Before Grace
+        $passBeforeGrace = $individualPass && $overallPass && ($obtainedMark >= $failThreshold);
+        $finalMark = $passBeforeGrace ? $obtainedMark : 0; // ফেল হলে 0
 
         // 6. Grace Mark
         $appliedGrace = 0;
-        if (!$pass && $graceMark > 0 && $finalMark < $failThreshold) {
-            $needed = ceil($failThreshold - $finalMark);
+        $pass = $passBeforeGrace;
+        $remark = $passBeforeGrace ? '' : $this->getRemark($passBeforeGrace, $individualPass, $overallPass);
+
+        if (!$passBeforeGrace && $graceMark > 0 && $obtainedMark < $failThreshold) {
+            $needed = ceil($failThreshold - $obtainedMark);
             $appliedGrace = min($needed, $graceMark);
-            $finalMark += $appliedGrace;
+            $finalMark = $obtainedMark + $appliedGrace;
+
             if ($finalMark >= $failThreshold) {
                 $pass = true;
                 $remark = "Pass by Grace ($appliedGrace marks)";
+            } else {
+                $pass = false;
+                $remark = "Fail (Grace Applied)";
             }
         }
 
-        // 7. Grade
+        // 7. Grade (শুধু final_mark দিয়ে)
         $gradeInfo = $this->getGrade($finalMark, $gradePoints);
 
         return [
@@ -131,9 +137,9 @@ class ExamMarkCalculator
     private function getRemark($pass, $individualPass, $overallPass)
     {
         if ($pass) return '';
-        return $individualPass
-            ? ($overallPass ? 'Below Threshold' : 'Failed Overall')
-            : 'Failed Individual';
+        if (!$individualPass) return 'Failed Individual';
+        if (!$overallPass) return 'Failed Overall';
+        return 'Below Threshold';
     }
 
 
