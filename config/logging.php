@@ -119,7 +119,7 @@ return [
         ],
 
         'exam_flex_log' => [
-            'driver' => 'single',
+            'driver' => 'daily',
             'path' => storage_path('logs/exam_flex.log'),
             'level' => env('LOG_LEVEL', 'debug'),
         ],
