@@ -105,15 +105,24 @@ class ExamMarkCalculator
 
     private function calculateObtainedMark($details, $partMarks, $method)
     {
-        $calculated = 0;
+        $totalWeighted = 0;
+        $obtainedWeighted = 0;
+
         foreach ($details as $d) {
             $code = $d['exam_code_title'];
             $mark = $partMarks[$code] ?? 0;
             $total = $d['total_mark'] ?? 100;
             $conv = $d['conversion'] ?? 100;
-            $calculated += ($mark / $total) * $conv;
+
+            $weight = $conv;
+            $totalWeighted += $weight;
+            $obtainedWeighted += ($mark / $total) * $weight;
         }
-        return $calculated;
+
+        if ($totalWeighted == 0) return 0;
+
+        $final = ($obtainedWeighted / $totalWeighted) * 100;
+        return roundMark($final, $method);
     }
 
     private function checkIndividualPass($details, $partMarks, $method)
