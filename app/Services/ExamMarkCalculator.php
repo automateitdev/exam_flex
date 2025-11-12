@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Log;
 
 class ExamMarkCalculator
 {
-
     public function calculate($payload)
     {
         $results = [];
@@ -25,37 +24,62 @@ class ExamMarkCalculator
 
     private function calculateStudent($student, $payload)
     {
-        $subject = $payload['subjects'][0]; // প্রথম সাবজেক্ট
+        $subject = $payload['subjects'][0];
         $details = collect($subject['exam_config']);
         $method = $subject['method_of_evaluation'] ?? 'At Actual';
         $graceMark = $subject['grace_mark'] ?? 0;
         $examName = $subject['exam_name'] ?? 'Semester Exam';
         $subjectName = $subject['subject_name'] ?? null;
         $attendanceRequired = $subject['attendance_required'] ?? false;
-        $highestFail = $subject['highest_fail_mark'] ?? null;
-        $overallPassMark = $subject['overall_pass_mark'] ?? null;
+        $highestFail = $subject['highest_fail_mark'] ?? 0;
         $gradePoints = $payload['grade_points'] ?? [];
 
         $studentId = $student['student_id'];
         $partMarks = $student['part_marks'];
-        $isAbsent = $attendanceRequired &&
-            (strtolower($student['attendance_status'] ?? 'absent') === 'absent');
+        $isAbsent = $attendanceRequired && strtolower($student['attendance_status'] ?? 'absent') === 'absent';
 
         if ($isAbsent) {
             return $this->absentResult($studentId, $partMarks, $examName, $subjectName);
         }
 
-        $calculated = $this->calculateObtainedMark($details, $partMarks, $method);
-        $obtainedMark = roundMark($calculated, $method);
+        // 1. obtained_mark = যোগ (CQ + MCQ)
+        $obtainedMark = $details->sum(fn($d) => $partMarks[$d['exam_code_title']] ?? 0);
 
-        $individualPass = $this->checkIndividualPass($details, $partMarks, $method);
-        $overallPass = $this->checkOverallPass($details, $partMarks, $method, $overallPassMark);
+        // 2. Individual Pass (is_individual = true)
+        $individualPass = true;
+        foreach ($details->where('is_individual', true) as $d) {
+            $mark = $partMarks[$d['exam_code_title']] ?? 0;
+            if ($mark < ($d['pass_mark'] ?? 0)) {
+                $individualPass = false;
+                break;
+            }
+        }
 
-        $failThreshold = $highestFail !== null ? $highestFail + 0.01 : 33;
+        // 3. Overall Pass
+        $overallPass = true;
+        $overallCalc = 0;
+        $overallDetails = $details->where('is_overall', true);
+        $overallMarkRequired = $overallDetails->first()->overall_mark ?? $overallDetails->sum('pass_mark');
+
+        if ($overallDetails->isNotEmpty() && $overallMarkRequired > 0) {
+            foreach ($overallDetails as $d) {
+                $mark = $partMarks[$d['exam_code_title']] ?? 0;
+                $percent = ($d['conversion'] ?? 100) / 100;
+                $overallCalc += $mark * $percent;
+            }
+            $finalOverall = roundMark($overallCalc, $method);
+            $overallPass = $finalOverall >= $overallMarkRequired;
+        }
+
+        // 4. Fail Threshold
+        $failThreshold = $highestFail > 0 ? $highestFail + 0.01 : 33;
+
+        // 5. Final Pass (before grace)
         $finalMark = $obtainedMark;
         $pass = $individualPass && $overallPass && ($finalMark >= $failThreshold);
         $remark = $this->getRemark($pass, $individualPass, $overallPass);
 
+        // 6. Grace Mark
         $appliedGrace = 0;
         if (!$pass && $graceMark > 0 && $finalMark < $failThreshold) {
             $needed = ceil($failThreshold - $finalMark);
@@ -67,6 +91,7 @@ class ExamMarkCalculator
             }
         }
 
+        // 7. Grade
         $gradeInfo = $this->getGrade($finalMark, $gradePoints);
 
         return [
@@ -101,63 +126,6 @@ class ExamMarkCalculator
             'grade_point' => '0.00',
             'attendance_status' => 'absent'
         ];
-    }
-
-    private function calculateObtainedMark($details, $partMarks, $method)
-    {
-        $totalWeighted = 0;
-        $obtainedWeighted = 0;
-
-        foreach ($details as $d) {
-            $code = $d['exam_code_title'];
-            $mark = $partMarks[$code] ?? 0;
-            $total = $d['total_mark'] ?? 100;
-            $conv = $d['conversion'] ?? 100;
-
-            $weight = $conv;
-            $totalWeighted += $weight;
-            $obtainedWeighted += ($mark / $total) * $weight;
-        }
-
-        if ($totalWeighted == 0) return 0;
-
-        $final = ($obtainedWeighted / $totalWeighted) * 100;
-        return roundMark($final, $method);
-    }
-
-    private function checkIndividualPass($details, $partMarks, $method)
-    {
-        foreach ($details->where('is_individual', true) as $d) {
-            $code = $d['exam_code_title'];
-            $mark = $partMarks[$code] ?? 0;
-            $total = $d['total_mark'] ?? 100;
-            $conv = $d['conversion'] ?? 100;
-            $converted = ($mark / $total) * $conv;
-            if (roundMark($converted, $method) < ($d['pass_mark'] ?? 0)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private function checkOverallPass($details, $partMarks, $method, $overallPassMark)
-    {
-        if ($overallPassMark === null) return true;
-        $calc = 0;
-        foreach ($details->where('is_overall', true) as $d) {
-            $code = $d['exam_code_title'];
-            $mark = $partMarks[$code] ?? 0;
-            $total = $d['total_mark'] ?? 100;
-            $conv = $d['conversion'] ?? 100;
-            $calc += ($mark / $total) * $conv;
-        }
-        return roundMark($calc, $method) >= $overallPassMark;
-    }
-
-    private function getFailThreshold($config)
-    {
-        $highestFail = $config['highest_fail_mark'] ?? null;
-        return $highestFail !== null ? $highestFail + 0.01 : 33;
     }
 
     private function getRemark($pass, $individualPass, $overallPass)
