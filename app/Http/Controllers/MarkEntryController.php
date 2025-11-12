@@ -111,7 +111,7 @@ class MarkEntryController extends Controller
             'status' => 'config_saved',
             'temp_id' => $tempId,
             'expires_at' => now()->addHours(2)->toDateTimeString()
-        ], 202)->header('Content-Type', 'application/json');
+        ], 202);
     }
 
     public function processStudents(Request $request)
@@ -189,7 +189,7 @@ class MarkEntryController extends Controller
             'status' => 'success',
             'message' => 'Marks calculated and ready to save',
             'results' => $results
-        ], 200)->header('Content-Type', 'application/json');
+        ], 200);
     }
 
     // public function processStudents(Request $request)
@@ -291,10 +291,13 @@ class MarkEntryController extends Controller
             'students' => 'required',
         ]);
 
-        if ($validator->fails()) {
+         if ($validator->fails()) {
+            Log::channel('exam_flex_log')->warning('Process Validation Failed', [
+                'errors' => $validator->errors()->toArray()
+            ]);
             return response()->json([
-                'errors' => ApiResponseHelper::formatErrors(ApiResponseHelper::VALIDATION_ERROR, $validator->errors()->toArray()),
-                'payload' => null,
+                'error' => 'Validation failed',
+                'details' => $validator->errors()
             ], 422);
         }
 
