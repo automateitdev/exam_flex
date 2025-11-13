@@ -18,13 +18,11 @@ class MarkEntryController extends Controller
 {
     protected $examService;
     protected $examMarkCalculator;
-    protected $resultProcess;
 
-    public function __construct(ExamService $examService,  ExamMarkCalculator $examMarkCalculator, ResultCalculator $resultProcess)
+    public function __construct(ExamService $examService,  ExamMarkCalculator $examMarkCalculator)
     {
         $this->examService = $examService;
         $this->examMarkCalculator = $examMarkCalculator;
-        $this->resultProcess = $resultProcess;
     }
 
 
@@ -234,7 +232,8 @@ class MarkEntryController extends Controller
             ], 422);
         }
 
-        $results = $this->resultProcess->calculate($request->all());
+        $results = app(ResultCalculator::class)->calculate($request->all());
+        // $results = App\\Services\\ResultCalculator->calculate($request->all());
 
         Log::channel('exam_flex_log')->info('Result Process Result', [
             'results' => $results
