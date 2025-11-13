@@ -20,54 +20,48 @@ class ResultCalculator
 
         $students = $payload['students'] ?? [];
         if (empty($students)) {
-            return [
-                'results' => [],
-                'highest_marks' => [],
-                'total_students' => 0
-            ];
+            return ['results' => [], 'highest_marks' => [], 'total_students' => 0];
         }
 
         $results = [];
-        $highestCollection = collect(); // ← subject_id + name + highest_mark
+        $highestCollection = collect();
 
         foreach ($students as $student) {
             $result = $this->processStudent($student, $gradeRules);
             $results[] = $result;
 
-            // শুধু একক সাবজেক্ট থেকে highest_marks সংগ্রহ
+            // Collect highest marks (only single subjects)
+            // calculate() এ
             foreach ($result['subjects'] as $s) {
-                $subjectId = $s['subject_id'] ?? null;
-                $subjectName = $s['subject_name'] ?? 'Unknown';
-                $mark = $s['final_mark'] ?? 0;
+                if ($s['is_combined'] || empty($s['subject_id'])) continue;
 
-                // শুধু যদি subject_id সংখ্যা হয় (একক সাবজেক্ট)
-                if (is_numeric($subjectId) && $subjectId > 0) {
-                    $key = "id_{$subjectId}"; // unique key
+                $id = $s['subject_id'];
+                $name = $s['subject_name'];
+                $mark = $s['final_mark'];
 
-                    if (!$highestCollection->has($key)) {
+                $key = "single_{$id}";
+                if (!$highestCollection->has($key)) {
+                    $highestCollection->put($key, [
+                        'subject_id' => $id,
+                        'subject_name' => $name,
+                        'highest_mark' => $mark
+                    ]);
+                } else {
+                    $current = $highestCollection->get($key);
+                    if ($mark > $current['highest_mark']) {
                         $highestCollection->put($key, [
-                            'subject_id' => (int) $subjectId,
-                            'subject_name' => $subjectName,
+                            'subject_id' => $id,
+                            'subject_name' => $name,
                             'highest_mark' => $mark
                         ]);
-                    } else {
-                        $current = $highestCollection->get($key);
-                        if ($mark > $current['highest_mark']) {
-                            $highestCollection->put($key, [
-                                'subject_id' => (int) $subjectId,
-                                'subject_name' => $subjectName,
-                                'highest_mark' => $mark
-                            ]);
-                        }
                     }
                 }
-                // কম্বাইন্ড সাবজেক্ট → skip
             }
         }
 
         return [
             'results' => $results,
-            'highest_marks' => $highestCollection->values()->toArray(), // ← array of objects
+            'highest_marks' => $highestCollection->values()->toArray(),
             'total_students' => count($results),
         ];
     }
@@ -77,24 +71,26 @@ class ResultCalculator
         $marks = $student['marks'] ?? [];
         $optionalId = $student['optional_subject_id'] ?? null;
 
-        $groups = collect($marks)->groupBy(fn($m, $id) => $m['combined_id'] ?? $id);
+        $groups = collect($marks)->groupBy(fn($m) => $m['combined_id'] ?? $m['subject_id']);
 
         $merged = [];
         $totalGP = 0;
         $subjectCount = 0;
         $failed = false;
 
-        foreach ($groups as $group) {
+        foreach ($groups as $groupId => $group) {
             if ($group->isEmpty()) continue;
 
-            $mergedSub = $group->count() > 1
-                ? $this->mergeCombined($group, $gradeRules)
-                : $this->processSingle($group->first(), $gradeRules);
+            $first = $group->first();
 
-            if ($mergedSub['grade'] === 'F') {
-                $failed = true;
+            // If combined
+            if ($first['is_combined']) {
+                $mergedSub = $this->processCombined($group, $gradeRules);
+            } else {
+                $mergedSub = $this->processSingle($first, $gradeRules);
             }
 
+            if ($mergedSub['grade'] === 'F') $failed = true;
             if (!$mergedSub['is_uncountable']) {
                 $totalGP += $mergedSub['grade_point'];
                 $subjectCount++;
@@ -103,14 +99,13 @@ class ResultCalculator
             $merged[] = $mergedSub;
         }
 
-        // 4th Subject Rule
+        // 4th Subject
         $optionalBonus = 0;
         $deductGP = 0;
         if ($optionalId && isset($marks[$optionalId])) {
             $opt = $marks[$optionalId];
             $optMark = $opt['final_mark'] ?? 0;
             $recalcGP = $this->markToGradePoint($optMark, $gradeRules);
-
             if ($optMark >= 40 && $recalcGP >= 2) {
                 $optionalBonus = $optMark >= 53 ? 13 : ($optMark >= 41 ? 1 : 0);
                 $deductGP = 2;
@@ -138,51 +133,51 @@ class ResultCalculator
     private function processSingle($subj, $gradeRules)
     {
         $mark = $subj['final_mark'] ?? 0;
-        $subjectId = $subj['subject_id'] ?? null;
-
         return [
-            'subject_id' => $subjectId, // ← সংখ্যা হলে highest_marks এ যাবে
-            'subject_name' => $subj['subject_name'] ?? 'Unknown',
+            'subject_id' => $subj['subject_id'],
+            'subject_name' => $subj['subject_name'],
             'final_mark' => (float) $mark,
             'grade_point' => $this->markToGradePoint($mark, $gradeRules),
             'grade' => $this->gpToGrade($mark, $gradeRules),
             'grace_mark' => (float) ($subj['grace_mark'] ?? 0),
             'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
+            'is_combined' => false,
         ];
     }
 
-    private function mergeCombined($group, $gradeRules)
+    private function processCombined($group, $gradeRules)
     {
         $totalMark = 0;
-        $names = [];
+        $combinedName = $group->first()['combined_subject_name'] ?? 'Unknown Combined';
 
         foreach ($group as $subj) {
             $mark = $subj['final_mark'] ?? 0;
             $totalMark += $mark;
-            $names[] = $subj['subject_name'] ?? 'Unknown';
 
             if ($this->gpToGrade($mark, $gradeRules) === 'F') {
                 return [
-                    'subject_id' => 'combined_' . $group->keys()->implode('_'), // ← string
-                    'subject_name' => implode(' + ', $names),
+                    'subject_id' => 'combined_' . implode('_', array_keys($group->toArray())),
+                    'subject_name' => $combinedName,
                     'final_mark' => $totalMark,
                     'grade_point' => 0,
                     'grade' => 'F',
                     'grace_mark' => collect($group)->sum('grace_mark'),
                     'is_uncountable' => false,
+                    'is_combined' => true,
                 ];
             }
         }
 
         $avgMark = $totalMark / count($group);
         return [
-            'subject_id' => 'combined_' . $group->keys()->implode('_'), // ← string
-            'subject_name' => implode(' + ', $names),
+            'subject_id' => 'combined_' . implode('_', array_keys($group->toArray())),
+            'subject_name' => $combinedName,
             'final_mark' => round($avgMark, 2),
             'grade_point' => $this->markToGradePoint($avgMark, $gradeRules),
             'grade' => $this->gpToGrade($avgMark, $gradeRules),
             'grace_mark' => collect($group)->sum('grace_mark'),
             'is_uncountable' => false,
+            'is_combined' => true,
         ];
     }
 
