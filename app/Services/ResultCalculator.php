@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Collection;
+
 class ResultCalculator
 {
     public function calculate($payload)
@@ -26,24 +28,46 @@ class ResultCalculator
         }
 
         $results = [];
-        $highest = [];
+        $highestCollection = collect(); // ← subject_id + name + highest_mark
 
         foreach ($students as $student) {
             $result = $this->processStudent($student, $gradeRules);
             $results[] = $result;
 
+            // শুধু একক সাবজেক্ট থেকে highest_marks সংগ্রহ
             foreach ($result['subjects'] as $s) {
-                $id = $s['subject_id'] ?? null;
+                $subjectId = $s['subject_id'] ?? null;
+                $subjectName = $s['subject_name'] ?? 'Unknown';
                 $mark = $s['final_mark'] ?? 0;
-                if ($id !== null) {
-                    $highest[$id] = max($highest[$id] ?? 0, $mark);
+
+                // শুধু যদি subject_id সংখ্যা হয় (একক সাবজেক্ট)
+                if (is_numeric($subjectId) && $subjectId > 0) {
+                    $key = "id_{$subjectId}"; // unique key
+
+                    if (!$highestCollection->has($key)) {
+                        $highestCollection->put($key, [
+                            'subject_id' => (int) $subjectId,
+                            'subject_name' => $subjectName,
+                            'highest_mark' => $mark
+                        ]);
+                    } else {
+                        $current = $highestCollection->get($key);
+                        if ($mark > $current['highest_mark']) {
+                            $highestCollection->put($key, [
+                                'subject_id' => (int) $subjectId,
+                                'subject_name' => $subjectName,
+                                'highest_mark' => $mark
+                            ]);
+                        }
+                    }
                 }
+                // কম্বাইন্ড সাবজেক্ট → skip
             }
         }
 
         return [
             'results' => $results,
-            'highest_marks' => $highest,
+            'highest_marks' => $highestCollection->values()->toArray(), // ← array of objects
             'total_students' => count($results),
         ];
     }
@@ -79,7 +103,7 @@ class ResultCalculator
             $merged[] = $mergedSub;
         }
 
-        // 4th Subject
+        // 4th Subject Rule
         $optionalBonus = 0;
         $deductGP = 0;
         if ($optionalId && isset($marks[$optionalId])) {
@@ -114,8 +138,10 @@ class ResultCalculator
     private function processSingle($subj, $gradeRules)
     {
         $mark = $subj['final_mark'] ?? 0;
+        $subjectId = $subj['subject_id'] ?? null;
+
         return [
-            'subject_id' => $subj['subject_id'] ?? $subj['subject_name'] ?? 'unknown',
+            'subject_id' => $subjectId, // ← সংখ্যা হলে highest_marks এ যাবে
             'subject_name' => $subj['subject_name'] ?? 'Unknown',
             'final_mark' => (float) $mark,
             'grade_point' => $this->markToGradePoint($mark, $gradeRules),
@@ -137,7 +163,7 @@ class ResultCalculator
 
             if ($this->gpToGrade($mark, $gradeRules) === 'F') {
                 return [
-                    'subject_id' => $group->keys()->implode('_'),
+                    'subject_id' => 'combined_' . $group->keys()->implode('_'), // ← string
                     'subject_name' => implode(' + ', $names),
                     'final_mark' => $totalMark,
                     'grade_point' => 0,
@@ -150,7 +176,7 @@ class ResultCalculator
 
         $avgMark = $totalMark / count($group);
         return [
-            'subject_id' => $group->keys()->implode('_'),
+            'subject_id' => 'combined_' . $group->keys()->implode('_'), // ← string
             'subject_name' => implode(' + ', $names),
             'final_mark' => round($avgMark, 2),
             'grade_point' => $this->markToGradePoint($avgMark, $gradeRules),
