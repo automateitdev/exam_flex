@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Log;
+
 class ResultCalculator
 {
     private $gradeRules;
@@ -20,7 +22,10 @@ class ResultCalculator
         foreach ($payload['students'] as $student) {
             $result = $this->processStudent($student);
             $results[] = $result;
-
+            Log::channel('exam_flex_log')->info('Processed Student Result', [
+                'student_id' => $result['student_id'],
+                'result' => $result,
+            ]);
             foreach ($result['subjects'] as $s) {
                 $id = $s['subject_id'];
                 $mark = $s['final_mark'];

@@ -18,11 +18,13 @@ class MarkEntryController extends Controller
 {
     protected $examService;
     protected $examMarkCalculator;
+    protected $resultProcess;
 
-    public function __construct(ExamService $examService,  ExamMarkCalculator $examMarkCalculator)
+    public function __construct(ExamService $examService,  ExamMarkCalculator $examMarkCalculator, ResultCalculator $resultProcess)
     {
         $this->examService = $examService;
         $this->examMarkCalculator = $examMarkCalculator;
+        $this->resultProcess = $resultProcess;
     }
 
 
@@ -191,107 +193,39 @@ class MarkEntryController extends Controller
         ], 200);
     }
 
-    // public function processStudents(Request $request)
-    // {
-    //     Log::channel('exam_flex_log')->info('Mark Calculation Request', [
-    //         'request' => $request->all()
-    //     ]);
-
-    //     $username = $request->getUser();
-    //     $password = $request->getPassword();
-
-    //     // Hash::check($password, $client->password_hash)
-
-    //     $credentials = [
-    //         'username' => $username,
-    //         'password' => $password,
-    //     ];
-
-    //     Log::channel('exam_flex_log')->info('Mark Calculation Credentials', [
-    //         'credentials' => $credentials
-    //     ]);
-    //     if (!$credentials || !isset($credentials['username']) || !isset($credentials['password'])) {
-    //         return response()->json(['error' => 'Unauthorized Credentials'], 401);
-    //     }
-    //     $domainRecord = DB::table('client_domains')->where('username', $credentials['username'])
-    //         // ->where('password_hash', $credentials['password'])
-    //         ->first();
-
-    //     if (!$domainRecord || !Hash::check($credentials['password'], $domainRecord->password_hash)) {
-    //         return response()->json(['error' => 'Unauthorized'], 401);
-    //     }
-
-    //     $validator = Validator::make($request->all(), [
-    //         'institute_id' => 'required',
-    //         'exam_type' => 'nullable|string',
-    //         'exam_name' => 'required|string',
-    //         'subject_name' => 'required|string',
-    //         'exam_config' => 'required',
-    //         'students' => 'required',
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return response()->json([
-    //             'errors' => ApiResponseHelper::formatErrors(ApiResponseHelper::VALIDATION_ERROR, $validator->errors()->toArray()),
-    //             'payload' => null,
-    //         ], 422);
-    //     }
-
-    //     $results = $this->examMarkCalculator->calculate($request->all());
-    //     //
-
-    //     Log::channel('exam_flex_log')->info('Mark Calculation Result', [
-    //         'results' => $results
-    //     ]);
-    //     return response()->json([
-    //         'status' => 'success',
-    //         'message' => 'Marks Calculated Successfully',
-    //         'results' => $results
-    //     ], 202);
-    // }
-
     //result process
     public function resultProcess(Request $request)
     {
-        Log::channel('exam_flex_log')->info('Mark Calculation Request', [
+        Log::channel('exam_flex_log')->info('Result Process Request', [
             'request' => $request->all()
         ]);
 
-        $username = $request->getUser();
-        $password = $request->getPassword();
-
-        // Hash::check($password, $client->password_hash)
-
-        $credentials = [
-            'username' => $username,
-            'password' => $password,
-        ];
-
-        Log::channel('exam_flex_log')->info('Mark Calculation Credentials', [
-            'credentials' => $credentials
-        ]);
-        if (!$credentials || !isset($credentials['username']) || !isset($credentials['password'])) {
-            return response()->json(['error' => 'Unauthorized Credentials'], 401);
+        $authHeader = $request->header('Authorization');
+        if (!$authHeader || !str_starts_with($authHeader, 'Basic ')) {
+            return response()->json(['error' => 'Missing or invalid Authorization header'], 401);
         }
-        $domainRecord = DB::table('client_domains')->where('username', $credentials['username'])
-            // ->where('password_hash', $credentials['password'])
+
+        $credentials = base64_decode(substr($authHeader, 6));
+        [$username, $password] = explode(':', $credentials, 2);
+
+        $client = DB::table('client_domains')
+            ->where('username', $username)
             ->first();
 
-        if (!$domainRecord || !Hash::check($credentials['password'], $domainRecord->password_hash)) {
+        if (!$client || !Hash::check($password, $client->password_hash)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
         $validator = Validator::make($request->all(), [
             'institute_id' => 'required',
-            'exam_type' => 'nullable|string',
             'exam_name' => 'required|string',
-            'subject_name' => 'required|string',
-            'exam_config' => 'required',
+            'has_combined' => 'required|boolean',
+            'grade_rules' => 'required',
             'students' => 'required',
         ]);
 
-         if ($validator->fails()) {
-            Log::channel('exam_flex_log')->warning('Process Validation Failed', [
+        if ($validator->fails()) {
+            Log::channel('exam_flex_log')->warning('Result Process Validation Failed', [
                 'errors' => $validator->errors()->toArray()
             ]);
             return response()->json([
@@ -300,13 +234,9 @@ class MarkEntryController extends Controller
             ], 422);
         }
 
-        $resultCalculator = app(ResultCalculator::class);
+        $results = $this->resultProcess->calculate($request->all());
 
-        $results = $resultCalculator->calculate($request->all());
-        // $results = $this->resultProcess->calculate($request->all());
-        //
-
-        Log::channel('exam_flex_log')->info('Mark Calculation Result', [
+        Log::channel('exam_flex_log')->info('Result Process Result', [
             'results' => $results
         ]);
         return response()->json([
