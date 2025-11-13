@@ -2,34 +2,42 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Collection;
-
 class ResultCalculator
 {
-    private Collection $gradeRules;
-
-    public function __construct()
-    {
-        $this->gradeRules = collect();
-    }
-
     public function calculate($payload)
     {
-        // ← এখানে grade_rules নেওয়া হচ্ছে
-        $this->gradeRules = collect($payload['grade_rules'] ?? [])
-            ->sortByDesc('from_mark');
+        $gradeRules = collect($payload['grade_rules'] ?? [])->sortByDesc('from_mark');
+        if ($gradeRules->isEmpty()) {
+            return [
+                'results' => [],
+                'highest_marks' => [],
+                'total_students' => 0,
+                'error' => 'Grade rules missing'
+            ];
+        }
+
+        $students = $payload['students'] ?? [];
+        if (empty($students)) {
+            return [
+                'results' => [],
+                'highest_marks' => [],
+                'total_students' => 0
+            ];
+        }
 
         $results = [];
         $highest = [];
 
-        foreach ($payload['students'] as $student) {
-            $result = $this->processStudent($student);
+        foreach ($students as $student) {
+            $result = $this->processStudent($student, $gradeRules);
             $results[] = $result;
 
             foreach ($result['subjects'] as $s) {
-                $id = $s['subject_id'];
-                $mark = $s['final_mark'];
-                $highest[$id] = max($highest[$id] ?? 0, $mark);
+                $id = $s['subject_id'] ?? null;
+                $mark = $s['final_mark'] ?? 0;
+                if ($id !== null) {
+                    $highest[$id] = max($highest[$id] ?? 0, $mark);
+                }
             }
         }
 
@@ -40,10 +48,10 @@ class ResultCalculator
         ];
     }
 
-    private function processStudent($student)
+    private function processStudent($student, $gradeRules)
     {
-        $marks = $student['marks'];
-        $optionalId = $student['optional_subject_id'];
+        $marks = $student['marks'] ?? [];
+        $optionalId = $student['optional_subject_id'] ?? null;
 
         $groups = collect($marks)->groupBy(fn($m, $id) => $m['combined_id'] ?? $id);
 
@@ -52,10 +60,12 @@ class ResultCalculator
         $subjectCount = 0;
         $failed = false;
 
-        foreach ($groups as $groupId => $group) {
-            $mergedSub = count($group) > 1
-                ? $this->mergeCombined($group)
-                : $this->processSingle($group->first());
+        foreach ($groups as $group) {
+            if ($group->isEmpty()) continue;
+
+            $mergedSub = $group->count() > 1
+                ? $this->mergeCombined($group, $gradeRules)
+                : $this->processSingle($group->first(), $gradeRules);
 
             if ($mergedSub['grade'] === 'F') {
                 $failed = true;
@@ -69,14 +79,16 @@ class ResultCalculator
             $merged[] = $mergedSub;
         }
 
-        // 4th Subject Rule
+        // 4th Subject
         $optionalBonus = 0;
         $deductGP = 0;
         if ($optionalId && isset($marks[$optionalId])) {
             $opt = $marks[$optionalId];
-            $recalcGP = $this->markToGradePoint($opt['final_mark']);
-            if ($opt['final_mark'] >= 40 && $recalcGP >= 2) {
-                $optionalBonus = $opt['final_mark'] >= 53 ? 13 : ($opt['final_mark'] >= 41 ? 1 : 0);
+            $optMark = $opt['final_mark'] ?? 0;
+            $recalcGP = $this->markToGradePoint($optMark, $gradeRules);
+
+            if ($optMark >= 40 && $recalcGP >= 2) {
+                $optionalBonus = $optMark >= 53 ? 13 : ($optMark >= 41 ? 1 : 0);
                 $deductGP = 2;
             }
         }
@@ -84,10 +96,10 @@ class ResultCalculator
         $finalGP = $failed ? 0 : max(0, $totalGP - $deductGP);
         $gpa = $subjectCount > 0 ? round($finalGP / $subjectCount, 2) : 0;
         $status = $failed ? 'Fail' : ($gpa >= 2.00 ? 'Pass' : 'Fail');
-        $letterGrade = $failed ? 'F' : $this->gpToGrade($gpa * 20); // 5.00 = 100
+        $letterGrade = $failed ? 'F' : $this->gpToGrade($gpa * 20, $gradeRules);
 
         return [
-            'student_id' => $student['student_id'],
+            'student_id' => $student['student_id'] ?? 0,
             'student_name' => $student['student_name'] ?? 'N/A',
             'roll' => $student['roll'] ?? 'N/A',
             'subjects' => $merged,
@@ -99,34 +111,34 @@ class ResultCalculator
         ];
     }
 
-    private function processSingle($subj)
+    private function processSingle($subj, $gradeRules)
     {
-        $gp = $this->markToGradePoint($subj['final_mark']);
-        $grade = $this->gpToGrade($subj['final_mark']);
-
+        $mark = $subj['final_mark'] ?? 0;
         return [
-            'subject_id' => $subj['subject_id'] ?? $subj['subject_name'],
-            'subject_name' => $subj['subject_name'],
-            'final_mark' => (float) $subj['final_mark'],
-            'grade_point' => $gp,
-            'grade' => $grade,
+            'subject_id' => $subj['subject_id'] ?? $subj['subject_name'] ?? 'unknown',
+            'subject_name' => $subj['subject_name'] ?? 'Unknown',
+            'final_mark' => (float) $mark,
+            'grade_point' => $this->markToGradePoint($mark, $gradeRules),
+            'grade' => $this->gpToGrade($mark, $gradeRules),
             'grace_mark' => (float) ($subj['grace_mark'] ?? 0),
-            'is_uncountable' => ($subj['subject_type'] ?? 'Compulsory') === 'Uncountable',
+            'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
         ];
     }
 
-    private function mergeCombined($group)
+    private function mergeCombined($group, $gradeRules)
     {
         $totalMark = 0;
-        $name = [];
+        $names = [];
 
         foreach ($group as $subj) {
-            $totalMark += $subj['final_mark'];
-            $name[] = $subj['subject_name'];
-            if ($this->gpToGrade($subj['final_mark']) === 'F') {
+            $mark = $subj['final_mark'] ?? 0;
+            $totalMark += $mark;
+            $names[] = $subj['subject_name'] ?? 'Unknown';
+
+            if ($this->gpToGrade($mark, $gradeRules) === 'F') {
                 return [
                     'subject_id' => $group->keys()->implode('_'),
-                    'subject_name' => implode(' + ', $name),
+                    'subject_name' => implode(' + ', $names),
                     'final_mark' => $totalMark,
                     'grade_point' => 0,
                     'grade' => 'F',
@@ -137,35 +149,32 @@ class ResultCalculator
         }
 
         $avgMark = $totalMark / count($group);
-        $grade = $this->gpToGrade($avgMark);
-        $gp = $this->markToGradePoint($avgMark);
-
         return [
             'subject_id' => $group->keys()->implode('_'),
-            'subject_name' => implode(' + ', $name),
+            'subject_name' => implode(' + ', $names),
             'final_mark' => round($avgMark, 2),
-            'grade_point' => $gp,
-            'grade' => $grade,
+            'grade_point' => $this->markToGradePoint($avgMark, $gradeRules),
+            'grade' => $this->gpToGrade($avgMark, $gradeRules),
             'grace_mark' => collect($group)->sum('grace_mark'),
             'is_uncountable' => false,
         ];
     }
 
-    private function gpToGrade($mark)
+    private function gpToGrade($mark, $gradeRules)
     {
-        foreach ($this->gradeRules as $rule) {
-            if ($mark >= $rule['from_mark'] && $mark <= $rule['to_mark']) {
-                return $rule['grade'];
+        foreach ($gradeRules as $rule) {
+            if ($mark >= ($rule['from_mark'] ?? 0) && $mark <= ($rule['to_mark'] ?? 0)) {
+                return $rule['grade'] ?? 'F';
             }
         }
         return 'F';
     }
 
-    private function markToGradePoint($mark)
+    private function markToGradePoint($mark, $gradeRules)
     {
-        foreach ($this->gradeRules as $rule) {
-            if ($mark >= $rule['from_mark'] && $mark <= $rule['to_mark']) {
-                return $rule['grade_point'];
+        foreach ($gradeRules as $rule) {
+            if ($mark >= ($rule['from_mark'] ?? 0) && $mark <= ($rule['to_mark'] ?? 0)) {
+                return $rule['grade_point'] ?? 0.0;
             }
         }
         return 0.0;
