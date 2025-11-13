@@ -45,7 +45,7 @@ class ExamMarkCalculator
         // 1. obtained_mark = যোগ (CQ + MCQ)
         $obtainedMark = $details->sum(fn($d) => $partMarks[$d['exam_code_title']] ?? 0);
 
-        // 2. Individual Pass
+        // 2. Individual Pass (pass_mark দিয়ে)
         $individualPass = true;
         foreach ($details->where('is_individual', true) as $d) {
             $mark = $partMarks[$d['exam_code_title']] ?? 0;
@@ -55,29 +55,30 @@ class ExamMarkCalculator
             }
         }
 
-        // 3. Overall Pass
+        // 3. Overall Pass (converted sum ≥ overall_mark)
         $overallPass = true;
+        $overallCalc = 0;
         $overallDetails = $details->where('is_overall', true);
-        $overallMarkRequired = $overallDetails->sum('overall_mark') > 0
-            ? $overallDetails->sum('overall_mark')
-            : $overallDetails->sum('pass_mark');
 
-        if ($overallDetails->isNotEmpty() && $overallMarkRequired > 0) {
-            $overallCalc = 0;
+        if ($overallDetails->isNotEmpty()) {
             foreach ($overallDetails as $d) {
                 $mark = $partMarks[$d['exam_code_title']] ?? 0;
                 $percent = ($d['conversion'] ?? 100) / 100;
                 $overallCalc += $mark * $percent;
             }
-            $finalOverall = roundMark($overallCalc, $method);
-            $overallPass = $finalOverall >= $overallMarkRequired;
+
+            $overallMarkRequired = $overallDetails->first()->overall_mark ?? 0;
+            if ($overallMarkRequired > 0) {
+                $overallPass = $overallCalc >= $overallMarkRequired;
+            }
         }
+
         // 4. Fail Threshold
         $failThreshold = $highestFail > 0 ? $highestFail + 0.01 : 33;
 
         // 5. Pass Before Grace
         $passBeforeGrace = $individualPass && $overallPass && ($obtainedMark >= $failThreshold);
-        $finalMark = $passBeforeGrace ? $obtainedMark : 0; // ফেল হলে 0
+        $finalMark = $passBeforeGrace ? $obtainedMark : 0;
 
         // 6. Grace Mark
         $appliedGrace = 0;
@@ -88,17 +89,13 @@ class ExamMarkCalculator
             $needed = ceil($failThreshold - $obtainedMark);
             $appliedGrace = min($needed, $graceMark);
             $finalMark = $obtainedMark + $appliedGrace;
-
             if ($finalMark >= $failThreshold) {
                 $pass = true;
                 $remark = "Pass by Grace ($appliedGrace marks)";
-            } else {
-                $pass = false;
-                $remark = "Fail (Grace Applied)";
             }
         }
 
-        // 7. Grade (শুধু final_mark দিয়ে)
+        // 7. Grade
         $gradeInfo = $this->getGrade($finalMark, $gradePoints);
 
         return [
