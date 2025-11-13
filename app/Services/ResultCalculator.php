@@ -2,30 +2,30 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
 
 class ResultCalculator
 {
-    private $gradeRules;
+    private Collection $gradeRules;
 
-    public function __construct($payload)
+    public function __construct()
     {
-        $this->gradeRules = collect($payload['grade_rules'] ?? [])
-            ->sortByDesc('from_mark');
+        $this->gradeRules = collect();
     }
 
     public function calculate($payload)
     {
+        // ← এখানে grade_rules নেওয়া হচ্ছে
+        $this->gradeRules = collect($payload['grade_rules'] ?? [])
+            ->sortByDesc('from_mark');
+
         $results = [];
         $highest = [];
 
         foreach ($payload['students'] as $student) {
             $result = $this->processStudent($student);
             $results[] = $result;
-            Log::channel('exam_flex_log')->info('Processed Student Result', [
-                'student_id' => $result['student_id'],
-                'result' => $result,
-            ]);
+
             foreach ($result['subjects'] as $s) {
                 $id = $s['subject_id'];
                 $mark = $s['final_mark'];
@@ -88,8 +88,8 @@ class ResultCalculator
 
         return [
             'student_id' => $student['student_id'],
-            'student_name' => $student['student_name'],
-            'roll' => $student['roll'],
+            'student_name' => $student['student_name'] ?? 'N/A',
+            'roll' => $student['roll'] ?? 'N/A',
             'subjects' => $merged,
             'gpa_without_optional' => $subjectCount > 0 ? round($totalGP / $subjectCount, 2) : 0,
             'gpa' => $gpa,
@@ -107,11 +107,11 @@ class ResultCalculator
         return [
             'subject_id' => $subj['subject_id'] ?? $subj['subject_name'],
             'subject_name' => $subj['subject_name'],
-            'final_mark' => $subj['final_mark'],
+            'final_mark' => (float) $subj['final_mark'],
             'grade_point' => $gp,
             'grade' => $grade,
-            'grace_mark' => $subj['grace_mark'],
-            'is_uncountable' => $subj['subject_type'] === 'Uncountable',
+            'grace_mark' => (float) ($subj['grace_mark'] ?? 0),
+            'is_uncountable' => ($subj['subject_type'] ?? 'Compulsory') === 'Uncountable',
         ];
     }
 
