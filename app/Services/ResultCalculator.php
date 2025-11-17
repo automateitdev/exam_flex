@@ -34,7 +34,6 @@ class ResultCalculator
 
             // === Collect highest marks from parts & single subjects ===
             foreach ($result['subjects'] as $s) {
-                // Combined subject with parts
                 if (isset($s['combined_name']) && isset($s['parts'])) {
                     foreach ($s['parts'] as $part) {
                         $this->updateHighest($highestCollection, $part);
@@ -42,7 +41,6 @@ class ResultCalculator
                     continue;
                 }
 
-                // Single subject
                 if (isset($s['subject_id']) && is_numeric($s['subject_id']) && !($s['is_combined'] ?? false)) {
                     $this->updateHighest($highestCollection, $s);
                 }
@@ -50,8 +48,8 @@ class ResultCalculator
         }
 
         return [
-            'has_combined' => $payload['has_combined'],
-            'exam_name' => $payload['exam_name'],
+            'has_combined' => $payload['has_combined'] ?? false,
+            'exam_name' => $payload['exam_name'] ?? 'Unknown Exam',
             'results' => $results,
             'highest_marks' => $highestCollection->values()->toArray(),
             'total_students' => count($results),
@@ -145,19 +143,29 @@ class ResultCalculator
         }
 
         $finalGP = $failed ? 0 : max(0, $totalGP - $deductGP);
-        $gpa = $subjectCount > 0 ? round($finalGP / $subjectCount, 2) : 0;
-        $status = $failed ? 'Fail' : ($gpa >= 2.00 ? 'Pass' : 'Fail');
-        $letterGrade = $failed ? 'F' : $this->gpToGrade($gpa * 20, $gradeRules);
+
+        $gpaWithoutOptional = $subjectCount > 0 ? round($totalGP / $subjectCount, 2) : 0;
+        $finalGpa = $subjectCount > 0 ? round($finalGP / $subjectCount, 2) : 0;
+
+        $status = $failed ? 'Fail' : ($finalGpa >= 2.00 ? 'Pass' : 'Fail');
+
+        // === দুটো Letter Grade ===
+        $letterGradeWithoutOptional = $this->gpaToLetterGrade($gpaWithoutOptional, $gradeRules);
+        $letterGrade = $this->gpaToLetterGrade($finalGpa, $gradeRules);
 
         return [
             'student_id' => $student['student_id'] ?? 0,
             'student_name' => $student['student_name'] ?? 'N/A',
             'roll' => $student['roll'] ?? 'N/A',
             'subjects' => $merged,
-            'gpa_without_optional' => $subjectCount > 0 ? round($totalGP / $subjectCount, 2) : 0,
-            'gpa' => $gpa,
-            'result_status' => $status,
+
+            'gpa_without_optional' => $gpaWithoutOptional,
+            'letter_grade_without_optional' => $letterGradeWithoutOptional,
+
+            'gpa' => $finalGpa,
             'letter_grade' => $letterGrade,
+
+            'result_status' => $status,
             'optional_bonus' => $optionalBonus,
         ];
     }
@@ -167,7 +175,6 @@ class ResultCalculator
         $combinedId = $group->first()['combined_id'];
         $combinedName = $group->first()['combined_subject_name'];
 
-        // Build parts with full details
         $parts = $group->map(function ($mark) use ($mark_configs) {
             $subjectId = $mark['subject_id'];
             $config = $mark_configs[$subjectId] ?? null;
@@ -185,12 +192,10 @@ class ResultCalculator
             ];
         })->values()->toArray();
 
-        // Combined Final Mark
         $combinedFinalMark = $group->sum('final_mark');
         $combinedGradePoint = $this->getGradePoint($combinedFinalMark, $gradeRules);
         $combinedGrade = $this->getGrade($combinedFinalMark, $gradeRules);
 
-        // === নতুন নিয়ম: মোট মার্ক যদি overall_required পার করে → Pass ===
         $overallRequired = $group->first()['overall_required'] ?? 33.0;
         $combinedStatus = $combinedFinalMark >= $overallRequired ? 'Pass' : 'Fail';
 
@@ -224,7 +229,19 @@ class ResultCalculator
         ];
     }
 
-    // === মিসিং ফাংশন যোগ করা হয়েছে ===
+    // === GPA থেকে Letter Grade ===
+    private function gpaToLetterGrade($gpa, $gradeRules)
+    {
+        foreach ($gradeRules as $rule) {
+            $gp = $rule['grade_point'] ?? 0;
+            $nextGp = $gp + 0.5;
+            if ($gpa >= $gp && $gpa < $nextGp) {
+                return $rule['grade'] ?? 'F';
+            }
+        }
+        return 'F';
+    }
+
     private function getGradePoint($mark, $gradeRules)
     {
         foreach ($gradeRules as $rule) {
