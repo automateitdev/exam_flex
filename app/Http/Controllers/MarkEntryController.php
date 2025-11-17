@@ -247,7 +247,7 @@ class MarkEntryController extends Controller
     }
 
     // Merit process
-     public function meritProcess(Request $request)
+    public function meritProcess(Request $request)
     {
         Log::channel('exam_flex_log')->info('Merit Process Request', [
             'request' => $request->all()

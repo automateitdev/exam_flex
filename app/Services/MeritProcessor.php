@@ -8,7 +8,14 @@ class MeritProcessor
 {
     public function process($payload)
     {
-        $results = collect($payload['results']['results'] ?? []);
+        $rawResults = $payload['results'] ?? [];
+        if (isset($rawResults['results']) && is_array($rawResults['results'])) {
+            $results = collect($rawResults['results']);
+        } elseif (is_array($rawResults)) {
+            $results = collect($rawResults);
+        } else {
+            $results = collect();
+        }
         $examConfig = $payload['exam_config'] ?? null;
         $academicDetails = collect($payload['academic_details'] ?? []);
         $studentDetails = collect($payload['student_details'] ?? []);
