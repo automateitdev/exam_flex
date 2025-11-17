@@ -50,6 +50,8 @@ class ResultCalculator
         }
 
         return [
+            'has_combined' => $payload['has_combined'],
+            'exam_name' => $payload['exam_name'],
             'results' => $results,
             'highest_marks' => $highestCollection->values()->toArray(),
             'total_students' => count($results),
@@ -188,8 +190,9 @@ class ResultCalculator
         $combinedGradePoint = $this->getGradePoint($combinedFinalMark, $gradeRules);
         $combinedGrade = $this->getGrade($combinedFinalMark, $gradeRules);
 
-        // Fail if any part is F
-        $combinedStatus = $group->contains(fn($m) => $m['grade'] === 'F') ? 'Fail' : 'Pass';
+        // === নতুন নিয়ম: মোট মার্ক যদি overall_required পার করে → Pass ===
+        $overallRequired = $group->first()['overall_required'] ?? 33.0;
+        $combinedStatus = $combinedFinalMark >= $overallRequired ? 'Pass' : 'Fail';
 
         return [
             'combined_id' => $combinedId,
@@ -200,6 +203,8 @@ class ResultCalculator
             'combined_status' => $combinedStatus,
             'is_uncountable' => false,
             'parts' => $parts,
+            'overall_required' => $overallRequired,
+            'fail_reason' => $combinedStatus === 'Fail' ? 'Total mark below required' : null,
         ];
     }
 
