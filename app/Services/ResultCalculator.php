@@ -8,6 +8,7 @@ class ResultCalculator
 {
     public function calculate($payload)
     {
+        $mark_configs = $payload['mark_configs'] ?? [];
         $gradeRules = collect($payload['grade_rules'] ?? [])->sortByDesc('from_mark');
         if ($gradeRules->isEmpty()) {
             return [
@@ -27,7 +28,7 @@ class ResultCalculator
         $highestCollection = collect();
 
         foreach ($students as $student) {
-            $result = $this->processStudent($student, $gradeRules);
+            $result = $this->processStudent($student, $gradeRules, $mark_configs);
             $results[] = $result;
 
             // === Collect highest marks from parts & single subjects ===
@@ -81,7 +82,7 @@ class ResultCalculator
         }
     }
 
-    private function processStudent($student, $gradeRules)
+    private function processStudent($student, $gradeRules, $mark_configs)
     {
         $marks = $student['marks'] ?? [];
         $optionalId = $student['optional_subject_id'] ?? null;
@@ -100,7 +101,7 @@ class ResultCalculator
 
             // === Combined Subject ===
             if ($first['is_combined']) {
-                $combinedResult = $this->processCombinedGroup($group, $gradeRules);
+                $combinedResult = $this->processCombinedGroup($group, $gradeRules, $mark_configs);
                 $merged[] = $combinedResult;
 
                 if (!$combinedResult['is_uncountable'] ?? false) {
@@ -157,58 +158,93 @@ class ResultCalculator
         ];
     }
 
-    private function processCombinedGroup($group, $gradeRules)
+    private function processCombinedGroup($group, $gradeRules, $mark_configs)
+    {
+        $parentSubjectId = $group->first()['subject_id'];
+        $config = $mark_configs[$parentSubjectId] ?? null;
+
+        // যদি কনফিগ না থাকে বা overall_mark = 0 → average করুন
+        if (!$config) {
+            return $this->processCombinedAverage($group, $gradeRules);
+        }
+
+        // বাকি কোড একই
+        $codes = $config['codes'];
+        $passMarks = $config['pass_marks'];
+        $overallRequired = $config['overall_required'];
+
+        $totalSum = 0;
+        $individualFail = false;
+        $parts = [];
+
+        foreach ($group as $subj) {
+            $partMarks = $subj['part_marks'] ?? [];
+            $sumThisPaper = 0;
+
+            foreach ($codes as $code) {
+                $mark = $partMarks[$code] ?? 0;
+                $sumThisPaper += $mark;
+
+                $pass = $passMarks[$code] ?? 0;
+                if ($mark < $pass) {
+                    $individualFail = true;
+                }
+            }
+
+            $totalSum += $sumThisPaper;
+
+            $parts[] = [ /* ... */];
+        }
+
+        $overallPass = $totalSum >= $overallRequired;
+        $status = ($individualFail && !$overallPass) ? 'Fail' : 'Pass';
+
+        $combinedGP = $status === 'Pass' ? $this->markToGradePoint($totalSum, $gradeRules) : 0;
+        $combinedGrade = $status === 'Pass' ? $this->gpToGrade($totalSum, $gradeRules) : 'F';
+
+        return [
+            'combined_name' => $group->first()['combined_subject_name'] ?? 'Combined',
+            'combined_final_mark' => (float)$totalSum,
+            'combined_grade_point' => $combinedGP,
+            'combined_grade' => $combinedGrade,
+            'combined_status' => $status,
+            'parts' => $parts,
+        ];
+    }
+
+    private function processCombinedAverage($group, $gradeRules)
     {
         $totalMark = 0;
-        $graceTotal = 0;
-        $failed = false;
-        $combinedName = $group->first()['combined_subject_name'] ?? 'Unknown Combined';
         $parts = [];
 
         foreach ($group as $subj) {
             $mark = $subj['final_mark'] ?? 0;
-            $grace = $subj['grace_mark'] ?? 0;
             $totalMark += $mark;
-            $graceTotal += $grace;
-
-            $gp = $this->markToGradePoint($mark, $gradeRules);
-            $grade = $this->gpToGrade($mark, $gradeRules);
 
             $parts[] = [
-                'subject_id'   => $subj['subject_id'],
+                'subject_id' => $subj['subject_id'],
                 'subject_name' => $subj['subject_name'],
-                'final_mark'   => (float) $mark,
-                'grade_point'  => $gp,
-                'grade'        => $grade,
-                'grace_mark'   => (float) $grace,
-                'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
-                'is_combined'  => true,
+                'final_mark' => (float)$mark,
+                'grade_point' => $this->markToGradePoint($mark, $gradeRules),
+                'grade' => $this->gpToGrade($mark, $gradeRules),
+                'grace_mark' => (float)($subj['grace_mark'] ?? 0),
+                'is_combined' => true,
             ];
-
-            if ($grade === 'F') {
-                $failed = true;
-            }
         }
 
         $avgMark = $totalMark / count($group);
-        $avgMarkRounded = round($avgMark, 2);
-
-        $combinedGP = $failed ? 0 : $this->markToGradePoint($avgMark, $gradeRules);
-        $combinedGrade = $failed ? 'F' : $this->gpToGrade($avgMark, $gradeRules);
-        $status = $failed ? 'Fail' : 'Pass';
+        $gp = $this->markToGradePoint($avgMark, $gradeRules);
+        $grade = $this->gpToGrade($avgMark, $gradeRules);
 
         return [
-            'combined_name'         => $combinedName,
-            'combined_final_mark'   => $avgMarkRounded,
-            'combined_grade_point'  => $combinedGP,
-            'combined_grade'        => $combinedGrade,
-            'combined_grace_mark'   => (float) $graceTotal,
-            'combined_status'       => $status,
-            'is_uncountable'        => false,
-            'parts'                 => $parts,
+            'combined_name' => $group->first()['combined_subject_name'] ?? 'Combined',
+            'combined_final_mark' => round($avgMark, 2),
+            'combined_grade_point' => $gp,
+            'combined_grade' => $grade,
+            'combined_status' => $grade === 'F' ? 'Fail' : 'Pass',
+            'parts' => $parts,
         ];
     }
-
     private function processSingle($subj, $gradeRules)
     {
         $mark = $subj['final_mark'] ?? 0;
