@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Services\ExamService;
 use App\Models\TempExamConfig;
+use App\Services\MeritProcessor;
 use App\Services\ResultCalculator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -241,6 +242,58 @@ class MarkEntryController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Marks Calculated Successfully',
+            'results' => $results
+        ], 202);
+    }
+
+    // Merit process
+     public function meritProcess(Request $request)
+    {
+        Log::channel('exam_flex_log')->info('Merit Process Request', [
+            'request' => $request->all()
+        ]);
+
+        $authHeader = $request->header('Authorization');
+        if (!$authHeader || !str_starts_with($authHeader, 'Basic ')) {
+            return response()->json(['error' => 'Missing or invalid Authorization header'], 401);
+        }
+
+        $credentials = base64_decode(substr($authHeader, 6));
+        [$username, $password] = explode(':', $credentials, 2);
+
+        $client = DB::table('client_domains')
+            ->where('username', $username)
+            ->first();
+
+        if (!$client || !Hash::check($password, $client->password_hash)) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'institute_id' => 'required',
+            'exam_name' => 'required|string',
+            'exam_config' => 'required',
+            'results' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            Log::channel('exam_flex_log')->warning('Merit Process Validation Failed', [
+                'errors' => $validator->errors()->toArray()
+            ]);
+            return response()->json([
+                'error' => 'Validation failed',
+                'details' => $validator->errors()
+            ], 422);
+        }
+
+        $results = app(MeritProcessor::class)->process($request->all());
+
+        Log::channel('exam_flex_log')->info('Merit Process Result', [
+            'results' => $results
+        ]);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Merit Calculated Successfully',
             'results' => $results
         ], 202);
     }
