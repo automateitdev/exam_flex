@@ -32,7 +32,6 @@ class ResultCalculator
             $result = $this->processStudent($student, $gradeRules, $mark_configs);
             $results[] = $result;
 
-            // === Collect highest marks from parts & single subjects ===
             foreach ($result['subjects'] as $s) {
                 if (isset($s['combined_name']) && isset($s['parts'])) {
                     foreach ($s['parts'] as $part) {
@@ -98,7 +97,6 @@ class ResultCalculator
             if ($group->isEmpty()) continue;
             $first = $group->first();
 
-            // === Combined Subject ===
             if ($first['is_combined']) {
                 $combinedResult = $this->processCombinedGroup($group, $gradeRules, $mark_configs);
                 $merged[] = $combinedResult;
@@ -111,9 +109,7 @@ class ResultCalculator
                 if ($combinedResult['combined_status'] === 'Fail') {
                     $failed = true;
                 }
-            }
-            // === Single Subject ===
-            else {
+            } else {
                 $single = $this->processSingle($first, $gradeRules);
                 $merged[] = $single;
 
@@ -143,15 +139,13 @@ class ResultCalculator
         }
 
         $finalGP = $failed ? 0 : max(0, $totalGP - $deductGP);
-
         $gpaWithoutOptional = $subjectCount > 0 ? round($totalGP / $subjectCount, 2) : 0;
         $finalGpa = $subjectCount > 0 ? round($finalGP / $subjectCount, 2) : 0;
 
         $status = $failed ? 'Fail' : ($finalGpa >= 2.00 ? 'Pass' : 'Fail');
 
-        // === দুটো Letter Grade ===
-        $letterGradeWithoutOptional = $this->gpaToLetterGrade($gpaWithoutOptional, $gradeRules);
-        $letterGrade = $this->gpaToLetterGrade($finalGpa, $gradeRules);
+        $letterGradeWithoutOptional = $this->gpaToLetterGrade($gpaWithoutOptional);
+        $letterGrade = $this->gpaToLetterGrade($finalGpa);
 
         return [
             'student_id' => $student['student_id'] ?? 0,
@@ -175,9 +169,12 @@ class ResultCalculator
         $combinedId = $group->first()['combined_id'];
         $combinedName = $group->first()['combined_subject_name'];
 
-        $parts = $group->map(function ($mark) use ($mark_configs) {
+        $totalMaxMark = 0;
+        $parts = $group->map(function ($mark) use ($mark_configs, &$totalMaxMark) {
             $subjectId = $mark['subject_id'];
             $config = $mark_configs[$subjectId] ?? null;
+            $maxMark = $config['max_mark'] ?? 100;
+            $totalMaxMark += $maxMark;
 
             return [
                 'subject_id' => $subjectId,
@@ -189,15 +186,18 @@ class ResultCalculator
                 'part_marks' => $mark['part_marks'] ?? [],
                 'pass_marks' => $config['pass_marks'] ?? [],
                 'overall_required' => $config['overall_required'] ?? 33.0,
+                'max_mark' => $maxMark,
             ];
         })->values()->toArray();
 
         $combinedFinalMark = $group->sum('final_mark');
-        $combinedGradePoint = $this->getGradePoint($combinedFinalMark, $gradeRules);
-        $combinedGrade = $this->getGrade($combinedFinalMark, $gradeRules);
+        $percentage = $totalMaxMark > 0 ? ($combinedFinalMark / $totalMaxMark) * 100 : 0;
+        $combinedGradePoint = $this->getGradePoint($percentage, $gradeRules);
+        $combinedGrade = $this->getGrade($percentage, $gradeRules);
 
-        $overallRequired = $group->first()['overall_required'] ?? 33.0;
-        $combinedStatus = $combinedFinalMark >= $overallRequired ? 'Pass' : 'Fail';
+        $overallRequiredPercent = $group->first()['overall_required'] ?? 33.0;
+        $requiredMark = ($overallRequiredPercent / 100) * $totalMaxMark;
+        $combinedStatus = $combinedFinalMark >= $requiredMark ? 'Pass' : 'Fail';
 
         return [
             'combined_id' => $combinedId,
@@ -208,77 +208,74 @@ class ResultCalculator
             'combined_status' => $combinedStatus,
             'is_uncountable' => false,
             'parts' => $parts,
-            'overall_required' => $overallRequired,
-            'fail_reason' => $combinedStatus === 'Fail' ? 'Total mark below required' : null,
+            'total_max_mark' => $totalMaxMark,
+            'percentage' => round($percentage, 2),
+            'fail_reason' => $combinedStatus === 'Fail' ? 'Below required mark' : null,
         ];
     }
 
     private function processSingle($subj, $gradeRules)
     {
         $mark = $subj['final_mark'] ?? 0;
+        $config = $subj['mark_config'] ?? null;
+        $maxMark = $config['max_mark'] ?? 100;
+        $percentage = $maxMark > 0 ? ($mark / $maxMark) * 100 : 0;
 
         return [
             'subject_id' => $subj['subject_id'],
             'subject_name' => $subj['subject_name'],
             'final_mark' => (float) $mark,
-            'grade_point' => $this->markToGradePoint($mark, $gradeRules),
-            'grade' => $this->gpToGrade($mark, $gradeRules),
+            'grade_point' => $this->getGradePoint($percentage, $gradeRules),
+            'grade' => $this->getGrade($percentage, $gradeRules),
             'grace_mark' => (float) ($subj['grace_mark'] ?? 0),
             'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
             'is_combined' => false,
+            'percentage' => round($percentage, 2),
         ];
     }
 
-    // === GPA থেকে Letter Grade ===
-    private function gpaToLetterGrade($gpa, $gradeRules)
+    // === GPA থেকে Letter Grade (SSC/HSC) ===
+    private function gpaToLetterGrade($gpa)
     {
-        foreach ($gradeRules as $rule) {
-            $gp = $rule['grade_point'] ?? 0;
-            $nextGp = $gp + 0.5;
-            if ($gpa >= $gp && $gpa < $nextGp) {
-                return $rule['grade'] ?? 'F';
-            }
-        }
+        if ($gpa >= 5.00) return 'A+';
+        if ($gpa >= 4.50) return 'A';
+        if ($gpa >= 4.00) return 'A-';
+        if ($gpa >= 3.50) return 'B';
+        if ($gpa >= 3.00) return 'C';
+        if ($gpa >= 2.00) return 'D';
         return 'F';
     }
 
-    private function getGradePoint($mark, $gradeRules)
+    private function getGradePoint($percentage, $gradeRules)
     {
         foreach ($gradeRules as $rule) {
-            if ($mark >= ($rule['from_mark'] ?? 0) && $mark <= ($rule['to_mark'] ?? 0)) {
+            if ($percentage >= ($rule['from_mark'] ?? 0) && $percentage <= ($rule['to_mark'] ?? 0)) {
                 return $rule['grade_point'] ?? 0.0;
             }
         }
         return 0.0;
     }
 
-    private function getGrade($mark, $gradeRules)
+    private function getGrade($percentage, $gradeRules)
     {
         foreach ($gradeRules as $rule) {
-            if ($mark >= ($rule['from_mark'] ?? 0) && $mark <= ($rule['to_mark'] ?? 0)) {
+            if ($percentage >= ($rule['from_mark'] ?? 0) && $percentage <= ($rule['to_mark'] ?? 0)) {
                 return $rule['grade'] ?? 'F';
             }
         }
         return 'F';
+    }
+
+    // Legacy - for single subjects with 100 marks
+    private function markToGradePoint($mark, $gradeRules)
+    {
+        return $this->getGradePoint($mark, $gradeRules);
     }
 
     private function gpToGrade($mark, $gradeRules)
-    {
-        foreach ($gradeRules as $rule) {
-            if ($mark >= ($rule['from_mark'] ?? 0) && $mark <= ($rule['to_mark'] ?? 0)) {
-                return $rule['grade'] ?? 'F';
-            }
-        }
-        return 'F';
-    }
 
-    private function markToGradePoint($mark, $gradeRules)
+
     {
-        foreach ($gradeRules as $rule) {
-            if ($mark >= ($rule['from_mark'] ?? 0) && $mark <= ($rule['to_mark'] ?? 0)) {
-                return $rule['grade_point'] ?? 0.0;
-            }
-        }
-        return 0.0;
+        return $this->getGrade($mark, $gradeRules);
     }
 }
