@@ -60,19 +60,17 @@ class MeritProcessor
         $all = collect($finalMerit);
 
         return [
-            'data' => [
-                'all_students'      => $finalMerit,
-                'total_students'    => $results->count(),
-                'merit_type'        => $meritType,
-                'grouped_by'        => $groupBy,
+            'all_students'      => $finalMerit,
+            'total_students'    => $results->count(),
+            'merit_type'        => $meritType,
+            'grouped_by'        => $groupBy,
 
-                // Separate Lists
-                'section_wise'   => $all->groupBy('section')->map->values()->toArray(),
-                'shift_wise'     => $all->groupBy('shift')->map->values()->toArray(),
-                'group_wise'     => $all->groupBy('group')->map->values()->toArray(),
-                'gender_wise'    => $all->groupBy('gender')->map->values()->toArray(),
-                'religion_wise'  => $all->groupBy('religion')->map->values()->toArray(),
-            ]
+            // Separate Lists
+            'section_wise'   => $all->groupBy('section')->map->values()->toArray(),
+            'shift_wise'     => $all->groupBy('shift')->map->values()->toArray(),
+            'group_wise'     => $all->groupBy('group')->map->values()->toArray(),
+            'gender_wise'    => $all->groupBy('gender')->map->values()->toArray(),
+            'religion_wise'  => $all->groupBy('religion')->map->values()->toArray(),
         ];
     }
 
