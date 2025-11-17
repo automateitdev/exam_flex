@@ -133,7 +133,8 @@ class MeritProcessor
     private function getTotalMark($student)
     {
         $bonus = $student['optional_bonus'] ?? 0;
-        $subjectsTotal = collect($student['subjects'] ?? [])->sum(fn($s) =>
+        $subjectsTotal = collect($student['subjects'] ?? [])->sum(
+            fn($s) =>
             $s['combined_final_mark'] ?? $s['final_mark'] ?? 0
         );
         return $subjectsTotal + $bonus;
@@ -141,15 +142,19 @@ class MeritProcessor
 
     private function assignRanks($sorted, $meritType, $academicDetails, $classDetailsMap, $studentDetails)
     {
-        $isSequential = str_contains($meritType, 'sequential') || str_contains($meritType, 'Sequential');
-        $isGpaBased   = str_contains($meritType, 'grade_point') || str_contains($meritType, 'GPA');
+        $isSequential = str_contains(strtolower($meritType), 'sequential');
+        $isGpaBased   = str_contains(strtolower($meritType), 'grade_point') || str_contains(strtolower($meritType), 'gpa');
 
-        $position = 1;
-        $nextSequentialRank = 1;
+        $rank = 1; // এটাই হবে merit_position
 
         return $sorted->map(function ($student, $index) use (
-            &$position, &$nextSequentialRank, $isSequential, $isGpaBased,
-            $academicDetails, $classDetailsMap, $studentDetails, $sorted
+            &$rank,
+            $isSequential,
+            $isGpaBased,
+            $sorted,
+            $academicDetails,
+            $classDetailsMap,
+            $studentDetails
         ) {
             $studentId = $student['student_id'];
             $academic  = $academicDetails->firstWhere('student_id', $studentId);
@@ -157,30 +162,37 @@ class MeritProcessor
             $classDetail = $classDetailsMap->get($pivotId);
             $stdDetail = $studentDetails->firstWhere('student_id', $studentId);
 
+            // প্রথম ছাত্র সবসময় ১
             if ($index === 0) {
-                $meritPosition = 1;
+                $currentRank = 1;
             } else {
                 $prev = $sorted[$index - 1];
-                $currKey = $isGpaBased ? ($student['gpa'] ?? 0) : $this->getTotalMark($student);
-                $prevKey = $isGpaBased ? ($prev['gpa'] ?? 0) : $this->getTotalMark($prev);
 
-                $currRoll = $student['roll'] ?? 999999;
-                $prevRoll = $prev['roll'] ?? 999999;
+                $currentValue = $isGpaBased ? ($student['gpa'] ?? 0) : $this->getTotalMark($student);
+                $prevValue    = $isGpaBased ? ($prev['gpa'] ?? 0)    : $this->getTotalMark($prev);
 
-                $sameValue = ($currKey == $prevKey);
-                $betterByRoll = ($sameValue && $currRoll < $prevRoll);
+                $currentRoll  = $student['roll'] ?? $academic['class_roll'] ?? 999999;
+                $prevRoll     = $prev['roll']    ?? $prev['class_roll'] ?? 999999;
+
+                // একই মান কিনা?
+                $sameAsPrevious = ($currentValue == $prevValue);
 
                 if ($isSequential) {
-                    // Sequential: No duplicate, always unique 1,2,3,...
-                    $meritPosition = $betterByRoll ? $nextSequentialRank++ : $nextSequentialRank++;
+                    // Sequential → কোনো ডুপ্লিকেট না, সবাই আলাদা র‍্যাঙ্ক
+                    $currentRank = $rank++;
                 } else {
-                    // Non-Sequential: Same value = Same rank
-                    $meritPosition = ($sameValue && !$betterByRoll) ? $prev['merit_position'] : $position++;
+                    // Non-Sequential → একই মান = একই র‍্যাঙ্ক
+                    if ($sameAsPrevious) {
+                        $currentRank = $prev['merit_position']; // আগেরটার মতোই
+                    } else {
+                        $currentRank = $rank++;
+                    }
                 }
             }
 
-            if ($index === 0 || !$isSequential) {
-                $position++;
+            // যদি প্রথম না হয় এবং Sequential হয় → র‍্যাঙ্ক বাড়বে
+            if ($index > 0 && $isSequential) {
+                $rank = $currentRank + 1;
             }
 
             return [
@@ -192,7 +204,7 @@ class MeritProcessor
                 'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
                 'letter_grade'         => $student['letter_grade'] ?? 'F',
                 'result_status'        => $student['result_status'],
-                'merit_position'       => $meritPosition,
+                'merit_position'       => $currentRank,
 
                 'shift'    => $classDetail['shift_name'] ?? null,
                 'section'  => $classDetail['section_name'] ?? null,
