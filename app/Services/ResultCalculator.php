@@ -208,6 +208,7 @@ class ResultCalculator
             'combined_grade_point' => $combinedGP,
             'combined_grade' => $combinedGrade,
             'combined_status' => $status,
+            'is_uncountable' => ($group->first()['subject_type'] ?? '') === 'Uncountable',
             'parts' => $parts,
         ];
     }
@@ -228,6 +229,7 @@ class ResultCalculator
                 'grade_point' => $this->markToGradePoint($mark, $gradeRules),
                 'grade' => $this->gpToGrade($mark, $gradeRules),
                 'grace_mark' => (float)($subj['grace_mark'] ?? 0),
+                'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
                 'is_combined' => true,
             ];
         }
@@ -242,9 +244,11 @@ class ResultCalculator
             'combined_grade_point' => $gp,
             'combined_grade' => $grade,
             'combined_status' => $grade === 'F' ? 'Fail' : 'Pass',
+            'is_uncountable' => ($group->first()['subject_type'] ?? '') === 'Uncountable', // ← এটাই মিসিং ছিল
             'parts' => $parts,
         ];
     }
+
     private function processSingle($subj, $gradeRules)
     {
         $mark = $subj['final_mark'] ?? 0;
