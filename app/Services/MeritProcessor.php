@@ -53,7 +53,6 @@ class MeritProcessor
         $all = collect($finalMerit);
 
         return [
-            'status'         => 'success',
             'total_students' => $results->count(),
             'merit_type'     => $meritType,
             'grouped_by'     => $groupBy,

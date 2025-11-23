@@ -130,10 +130,11 @@ class ResultCalculator
         if ($optionalId && isset($marks[$optionalId])) {
             $opt = $marks[$optionalId];
             $optMark = $opt['final_mark'] ?? 0;
+            $optionalCalMark = ($optMark * 40) / 100;
             $recalcGP = $this->markToGradePoint($optMark, $gradeRules);
 
-            if ($optMark >= 40 && $recalcGP >= 2) {
-                $optionalBonus = $optMark >= 53 ? 13 : ($optMark >= 41 ? 1 : 0);
+            if ($optionalCalMark > 0 && $recalcGP >= 2) {
+                $optionalBonus = $optionalCalMark;
                 $deductGP = 2;
             }
         }
@@ -144,8 +145,8 @@ class ResultCalculator
 
         $status = $failed ? 'Fail' : ($finalGpa >= 2.00 ? 'Pass' : 'Fail');
 
-        $letterGradeWithoutOptional = $this->gpaToLetterGrade($gpaWithoutOptional);
-        $letterGrade = $this->gpaToLetterGrade($finalGpa);
+        $letterGradeWithoutOptional = $this->gpaToLetterGrade($gpaWithoutOptional, $gradeRules);
+        $letterGrade = $this->gpaToLetterGrade($finalGpa, $gradeRules);
 
         return [
             'student_id' => $student['student_id'] ?? 0,
@@ -235,22 +236,27 @@ class ResultCalculator
     }
 
     // === GPA থেকে Letter Grade (SSC/HSC) ===
-    private function gpaToLetterGrade($gpa)
+    private function gpaToLetterGrade($gpa, $gradeRules)
     {
-        if ($gpa >= 5.00) return 'A+';
-        if ($gpa >= 4.50) return 'A';
-        if ($gpa >= 4.00) return 'A-';
-        if ($gpa >= 3.50) return 'B';
-        if ($gpa >= 3.00) return 'C';
-        if ($gpa >= 2.00) return 'D';
-        return 'F';
+        // if ($gpa >= 5.00) return 'A+';
+        // if ($gpa >= 4.50) return 'A';
+        // if ($gpa >= 4.00) return 'A-';
+        // if ($gpa >= 3.50) return 'B';
+        // if ($gpa >= 3.00) return 'C';
+        // if ($gpa >= 2.00) return 'D';
+        // return 'F';
+        foreach ($gradeRules->sortByDesc('grade_point') as $rule) {
+            if ($gpa >= $rule['grade_point']) {
+                return $rule['grade'];
+            }
+        }
     }
 
     private function getGradePoint($percentage, $gradeRules)
     {
         foreach ($gradeRules as $rule) {
-            if ($percentage >= ($rule['from_mark'] ?? 0) && $percentage <= ($rule['to_mark'] ?? 0)) {
-                return $rule['grade_point'] ?? 0.0;
+            if ($percentage >= ($rule['from_mark']) && $percentage <= ($rule['to_mark'])) {
+                return $rule['grade_point'];
             }
         }
         return 0.0;
@@ -259,8 +265,8 @@ class ResultCalculator
     private function getGrade($percentage, $gradeRules)
     {
         foreach ($gradeRules as $rule) {
-            if ($percentage >= ($rule['from_mark'] ?? 0) && $percentage <= ($rule['to_mark'] ?? 0)) {
-                return $rule['grade'] ?? 'F';
+            if ($percentage >= ($rule['from_mark']) && $percentage <= ($rule['to_mark'])) {
+                return $rule['grade'];
             }
         }
         return 'F';
