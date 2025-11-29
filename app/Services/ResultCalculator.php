@@ -126,24 +126,24 @@ class ResultCalculator
 
         // === 4th Subject Bonus ===
         $optionalBonus = 0;
-        $deductGP = 0;
+        $bonusGP = 0;
         if ($optionalId && isset($marks[$optionalId])) {
             $opt = $marks[$optionalId];
             $optMark = $opt['final_mark'] ?? 0;
             $optionalCalMark = ($optMark * 40) / 100;
             $recalcGP = $this->markToGradePoint($optMark, $gradeRules);
 
-            if ($optionalCalMark > 0 && $recalcGP >= 2) {
+            if ($recalcGP > 2) {
                 $optionalBonus = $optionalCalMark;
-                $deductGP = 2;
+                $bonusGP = $recalcGP - 2;
             }
         }
 
-        $finalGP = $failed ? 0 : max(0, $totalGP - $deductGP);
+        $finalGP = $failed ? 0 : ($totalGP + $bonusGP);
         $gpaWithoutOptional = $subjectCount > 0 ? round($totalGP / $subjectCount, 2) : 0;
         $finalGpa = $subjectCount > 0 ? round($finalGP / $subjectCount, 2) : 0;
 
-        $status = $failed ? 'Fail' : ($finalGpa >= 2.00 ? 'Pass' : 'Fail');
+        $status = $failed ? 'Fail' : 'Pass';
 
         $letterGradeWithoutOptional = $this->gpaToLetterGrade($gpaWithoutOptional, $gradeRules);
         $letterGrade = $this->gpaToLetterGrade($finalGpa, $gradeRules);
