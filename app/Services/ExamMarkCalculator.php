@@ -38,12 +38,13 @@ class ExamMarkCalculator
         $partMarks = $student['part_marks'];
         $isAbsent = $attendanceRequired && strtolower($student['attendance_status'] ?? 'absent') === 'absent';
 
-        if ($isAbsent) {
-            return $this->absentResult($studentId, $partMarks, $examName, $subjectName);
-        }
 
         // 1. obtained_mark = যোগ (CQ + MCQ)
         $obtainedMark = $details->sum(fn($d) => $partMarks[$d['exam_code_title']] ?? 0);
+
+        if ($isAbsent) {
+            return $this->absentResult($studentId, $partMarks, $examName, $subjectName, $obtainedMark);
+        }
 
         // 2. Individual Pass (pass_mark দিয়ে)
         $individualPass = true;
@@ -114,11 +115,11 @@ class ExamMarkCalculator
         ];
     }
 
-    private function absentResult($studentId, $partMarks, $examName, $subjectName)
+    private function absentResult($studentId, $partMarks, $examName, $subjectName, $obtainedMark)
     {
         return [
             'student_id' => $studentId,
-            'obtained_mark' => 0,
+            'obtained_mark' => $obtainedMark,
             'final_mark' => 0,
             'grace_mark' => 0,
             'result_status' => 'Fail',
