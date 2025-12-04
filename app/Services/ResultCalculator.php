@@ -178,7 +178,7 @@ class ResultCalculator
             $convertedMark = 0;
 
             foreach ($partMarks as $code => $obtained) {
-                $conversion = $config['conversion'][$code];
+                $conversion = $config['conversion'][$code] ?? 100;
                 $convertedMark += $obtained * ($conversion / 100);
             }
             $totalMaxMark += $convertedMark;
