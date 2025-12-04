@@ -174,8 +174,14 @@ class ResultCalculator
         $parts = $group->map(function ($mark) use ($mark_configs, &$totalMaxMark) {
             $subjectId = $mark['subject_id'];
             $config = $mark_configs[$subjectId] ?? null;
-            $maxMark = $config['max_mark'];
-            $totalMaxMark += $maxMark;
+            $partMarks = $mark['part_marks'] ?? [];
+            $convertedMark = 0;
+
+            foreach ($partMarks as $code => $obtained) {
+                $conversion = $config['conversion'][$code];
+                $convertedMark += $obtained * ($conversion / 100);
+            }
+            $totalMaxMark += $convertedMark;
 
             return [
                 'subject_id' => $subjectId,
@@ -187,7 +193,7 @@ class ResultCalculator
                 'part_marks' => $mark['part_marks'] ?? [],
                 'pass_marks' => $config['pass_marks'] ?? [],
                 'overall_required' => $config['overall_required'] ?? 33.0,
-                'max_mark' => $maxMark,
+                'max_mark' => $convertedMark,
             ];
         })->values()->toArray();
 
@@ -219,8 +225,16 @@ class ResultCalculator
     {
         $mark = $subj['final_mark'] ?? 0;
         $config = $subj['mark_config'] ?? null;
-        $maxMark = $config['max_mark'] ?? 100;
-        $percentage = $maxMark > 0 ? ($mark / $maxMark) * 100 : 0;
+
+        $partMarks = $subj['part_marks'] ?? [];
+
+        $convertedMark = 0;
+        foreach ($partMarks as $code => $obtained) {
+            $conversion = $config['conversion'][$code];
+            $convertedMark += $obtained * ($conversion / 100);
+        }
+
+        $percentage = $convertedMark > 0 ? ($convertedMark / $convertedMark) * 100 : 0; // 100%
 
         return [
             'subject_id' => $subj['subject_id'],
