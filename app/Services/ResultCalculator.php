@@ -192,7 +192,7 @@ class ResultCalculator
                 'grace_mark' => $mark['grace_mark'],
                 'part_marks' => $mark['part_marks'] ?? [],
                 'pass_marks' => $config['pass_marks'] ?? [],
-                'overall_required' => $config['overall_required'] ?? 33.0,
+                'overall_required' => $config['overall_required'],
                 'max_mark' => $convertedMark,
             ];
         })->values()->toArray();
@@ -202,7 +202,9 @@ class ResultCalculator
         $combinedGradePoint = $this->getGradePoint($percentage, $gradeRules);
         $combinedGrade = $this->getGrade($percentage, $gradeRules);
 
-        $overallRequiredPercent = $group->first()['overall_required'];
+        $sampleSubjectId = $group->first()['subject_id'];
+        $overallRequiredPercent = $mark_configs[$sampleSubjectId]['overall_required'];
+
         $requiredMark = ($overallRequiredPercent / 100) * $totalMaxMark;
         $combinedStatus = $combinedFinalMark >= $requiredMark ? 'Pass' : 'Fail';
 
