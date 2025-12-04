@@ -79,7 +79,7 @@ class ExamMarkCalculator
 
         // 5. Pass Before Grace
         $passBeforeGrace = $individualPass && $overallPass && ($obtainedMark >= $failThreshold);
-        $finalMark = $passBeforeGrace ? $obtainedMark : 0;
+        $finalMark = $obtainedMark;
 
         // 6. Grace Mark
         $appliedGrace = 0;

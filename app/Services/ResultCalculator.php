@@ -174,7 +174,7 @@ class ResultCalculator
         $parts = $group->map(function ($mark) use ($mark_configs, &$totalMaxMark) {
             $subjectId = $mark['subject_id'];
             $config = $mark_configs[$subjectId] ?? null;
-            $maxMark = $config['max_mark'] ?? 100;
+            $maxMark = $config['max_mark'];
             $totalMaxMark += $maxMark;
 
             return [
@@ -196,7 +196,7 @@ class ResultCalculator
         $combinedGradePoint = $this->getGradePoint($percentage, $gradeRules);
         $combinedGrade = $this->getGrade($percentage, $gradeRules);
 
-        $overallRequiredPercent = $group->first()['overall_required'] ?? 33.0;
+        $overallRequiredPercent = $group->first()['overall_required'];
         $requiredMark = ($overallRequiredPercent / 100) * $totalMaxMark;
         $combinedStatus = $combinedFinalMark >= $requiredMark ? 'Pass' : 'Fail';
 
