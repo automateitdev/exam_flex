@@ -212,8 +212,9 @@ class ResultCalculator
                     $failed = true;
                 }
 
-                // মার্ক যোগ (সিঙ্গেল সাবজেক্ট)
-                $totalMarkWithoutOptional += $single['final_mark'];
+                if (!$single['is_optional']) {
+                    $totalMarkWithoutOptional += $single['final_mark'];
+                }
             }
         }
 
