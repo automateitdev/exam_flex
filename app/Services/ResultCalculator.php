@@ -83,16 +83,103 @@ class ResultCalculator
         }
     }
 
+    // private function processStudent($student, $gradeRules, $mark_configs)
+    // {
+    //     $marks = $student['marks'] ?? [];
+    //     $optionalId = $student['optional_subject_id'] ?? null;
+    //     $groups = collect($marks)->groupBy(fn($m) => $m['combined_id'] ?? $m['subject_id']);
+
+    //     $merged = [];
+    //     $totalGP = 0;
+    //     $subjectCount = 0;
+    //     $failed = false;
+
+    //     foreach ($groups as $groupId => $group) {
+    //         if ($group->isEmpty()) continue;
+    //         $first = $group->first();
+
+    //         if ($first['is_combined']) {
+    //             $combinedResult = $this->processCombinedGroup($group, $gradeRules, $mark_configs);
+    //             $merged[] = $combinedResult;
+
+    //             if (!($combinedResult['is_uncountable'] ?? false)) {
+    //                 $totalGP += $combinedResult['combined_grade_point'];
+    //                 $subjectCount++;
+    //             }
+
+    //             if ($combinedResult['combined_status'] === 'Fail') {
+    //                 $failed = true;
+    //             }
+    //         } else {
+    //             $single = $this->processSingle($first, $gradeRules, $optionalId);
+    //             $single['is_optional'] = ($first['subject_id'] == $optionalId);
+    //             $merged[] = $single;
+
+    //             if (!$single['is_uncountable']) {
+    //                 $totalGP += $single['grade_point'];
+    //                 $subjectCount++;
+    //             }
+
+    //             if ($single['grade'] === 'F') {
+    //                 $failed = true;
+    //             }
+    //         }
+    //     }
+
+    //     // === 4th Subject Bonus ===
+    //     $optionalBonus = 0;
+    //     $bonusGP = 0;
+    //     if ($optionalId && isset($marks[$optionalId])) {
+    //         $opt = $marks[$optionalId];
+    //         $optMark = $opt['final_mark'] ?? 0;
+    //         $optionalCalMark = ($optMark * 40) / 100;
+    //         $recalcGP = $this->markToGradePoint($optMark, $gradeRules);
+
+    //         if ($recalcGP > 2) {
+    //             $optionalBonus = $optionalCalMark;
+    //             $bonusGP = $recalcGP - 2;
+    //         }
+    //     }
+
+    //     $finalGP = $failed ? 0 : ($totalGP + $bonusGP);
+    //     $gpaWithoutOptional = $subjectCount > 0 ? round($totalGP / $subjectCount, 2) : 0;
+    //     $finalGpa = $subjectCount > 0 ? round($finalGP / $subjectCount, 2) : 0;
+
+    //     $status = $failed ? 'Fail' : 'Pass';
+
+    //     $letterGradeWithoutOptional = $this->gpaToLetterGrade($gpaWithoutOptional, $gradeRules);
+    //     $letterGrade = $this->gpaToLetterGrade($finalGpa, $gradeRules);
+
+    //     return [
+    //         'student_id' => $student['student_id'] ?? 0,
+    //         'student_name' => $student['student_name'] ?? 'N/A',
+    //         'roll' => $student['roll'] ?? 'N/A',
+    //         'subjects' => $merged,
+
+    //         'gpa_without_optional' => $gpaWithoutOptional,
+    //         'letter_grade_without_optional' => $letterGradeWithoutOptional,
+
+    //         'gpa' => $finalGpa,
+    //         'letter_grade' => $letterGrade,
+
+    //         'result_status' => $status,
+    //         'optional_bonus' => $optionalBonus,
+    //     ];
+    // }
     private function processStudent($student, $gradeRules, $mark_configs)
     {
         $marks = $student['marks'] ?? [];
         $optionalId = $student['optional_subject_id'] ?? null;
+
         $groups = collect($marks)->groupBy(fn($m) => $m['combined_id'] ?? $m['subject_id']);
 
         $merged = [];
         $totalGP = 0;
         $subjectCount = 0;
         $failed = false;
+
+        $totalMarkWithoutOptional = 0.0;  // নতুন: মূল মার্ক (৪র্থ ছাড়া)
+        $totalMarkWithOptional    = 0.0;  // নতুন: ৪০% বোনাস সহ মার্ক
 
         foreach ($groups as $groupId => $group) {
             if ($group->isEmpty()) continue;
@@ -106,12 +193,14 @@ class ResultCalculator
                     $totalGP += $combinedResult['combined_grade_point'];
                     $subjectCount++;
                 }
-
                 if ($combinedResult['combined_status'] === 'Fail') {
                     $failed = true;
                 }
+
+                // মার্ক যোগ (কম্বাইন্ডের জন্য)
+                $totalMarkWithoutOptional += $combinedResult['combined_final_mark'];
             } else {
-                $single = $this->processSingle($first, $gradeRules, $optionalId);
+                $single = $this->processSingle($first, $gradeRules, $mark_configs);
                 $single['is_optional'] = ($first['subject_id'] == $optionalId);
                 $merged[] = $single;
 
@@ -119,36 +208,45 @@ class ResultCalculator
                     $totalGP += $single['grade_point'];
                     $subjectCount++;
                 }
-
                 if ($single['grade'] === 'F') {
                     $failed = true;
                 }
+
+                // মার্ক যোগ (সিঙ্গেল সাবজেক্ট)
+                $totalMarkWithoutOptional += $single['final_mark'];
             }
         }
 
-        // === 4th Subject Bonus ===
-        $optionalBonus = 0;
-        $bonusGP = 0;
+        // === 4th Subject Bonus (দুটো আলাদা আলাদা) ===
+        $bonusMarkFromOptional = 0.0;  // ৪০% মার্ক বোনাস
+        $bonusGPFromOptional   = 0.0;  // GP-2 বোনাস
+
         if ($optionalId && isset($marks[$optionalId])) {
             $opt = $marks[$optionalId];
             $optMark = $opt['final_mark'] ?? 0;
-            $optionalCalMark = ($optMark * 40) / 100;
-            $recalcGP = $this->markToGradePoint($optMark, $gradeRules);
+            $optGP   = $opt['grade_point'] ?? 0;
 
-            if ($recalcGP > 2) {
-                $optionalBonus = $optionalCalMark;
-                $bonusGP = $recalcGP - 2;
+            if ($optGP >= 2.00) {
+                // ৪০% মার্ক বোনাস
+                $bonusMarkFromOptional = round($optMark * 40 / 100, 2);
+
+                // GP থেকে ২ বাদ দিয়ে বোনাস
+                $bonusGPFromOptional = max(0, $optGP - 2.00);
             }
         }
 
-        $finalGP = $failed ? 0 : ($totalGP + $bonusGP);
+        // মোট মার্ক (বোনাস সহ)
+        $totalMarkWithOptional = $totalMarkWithoutOptional + $bonusMarkFromOptional;
+
+        // GPA হিসাব
+        $finalGP = $failed ? 0 : ($totalGP + $bonusGPFromOptional);
         $gpaWithoutOptional = $subjectCount > 0 ? round($totalGP / $subjectCount, 2) : 0;
-        $finalGpa = $subjectCount > 0 ? round($finalGP / $subjectCount, 2) : 0;
+        $gpaWithOptional    = $subjectCount > 0 ? round($finalGP / $subjectCount, 2) : 0;
 
         $status = $failed ? 'Fail' : 'Pass';
 
-        $letterGradeWithoutOptional = $this->gpaToLetterGrade($gpaWithoutOptional, $gradeRules);
-        $letterGrade = $this->gpaToLetterGrade($finalGpa, $gradeRules);
+        $letterGradeWithout = $this->gpaToLetterGrade($gpaWithoutOptional, $gradeRules);
+        $letterGradeWith     = $this->gpaToLetterGrade($gpaWithOptional, $gradeRules);
 
         return [
             'student_id' => $student['student_id'] ?? 0,
@@ -156,14 +254,21 @@ class ResultCalculator
             'roll' => $student['roll'] ?? 'N/A',
             'subjects' => $merged,
 
-            'gpa_without_optional' => $gpaWithoutOptional,
-            'letter_grade_without_optional' => $letterGradeWithoutOptional,
+            // মূল হিসাব (৪র্থ ছাড়া)
+            'total_mark_without_optional' => round($totalMarkWithoutOptional, 2),
+            'gpa_without_optional'        => $gpaWithoutOptional,
+            'letter_grade_without_optional' => $letterGradeWithout,
 
-            'gpa' => $finalGpa,
-            'letter_grade' => $letterGrade,
+            // বোনাস সহ হিসাব
+            'total_mark_with_optional'    => round($totalMarkWithOptional, 2),
+            'gpa_with_optional'           => $gpaWithOptional,
+            'letter_grade_with_optional'  => $letterGradeWith,
 
             'result_status' => $status,
-            'optional_bonus' => $optionalBonus,
+
+            // বোনাস ডিটেইলস
+            'optional_bonus_mark' => $bonusMarkFromOptional,
+            'optional_bonus_gp'   => $bonusGPFromOptional,
         ];
     }
 
