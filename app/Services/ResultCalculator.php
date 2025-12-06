@@ -87,7 +87,6 @@ class ResultCalculator
     {
         $marks = $student['marks'] ?? [];
         $optionalId = $student['optional_subject_id'] ?? null;
-        Log::channel('exam_flex_log')->info($optionalId);
         $groups = collect($marks)->groupBy(fn($m) => $m['combined_id'] ?? $m['subject_id']);
 
         $merged = [];
@@ -112,7 +111,7 @@ class ResultCalculator
                     $failed = true;
                 }
             } else {
-                $single = $this->processSingle($first, $gradeRules);
+                $single = $this->processSingle($first, $gradeRules, $optionalId);
                 $merged[] = $single;
 
                 if (!$single['is_uncountable']) {
@@ -226,7 +225,7 @@ class ResultCalculator
         ];
     }
 
-    private function processSingle($subj, $gradeRules)
+    private function processSingle($subj, $gradeRules, $optionalId)
     {
         Log::channel('exam_flex_log')->info($subj);
 
@@ -253,6 +252,7 @@ class ResultCalculator
             'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
             'is_combined' => false,
             'percentage' => round($percentage, 2),
+            'is_optional' => $optionalId ? true : false,
         ];
     }
 
