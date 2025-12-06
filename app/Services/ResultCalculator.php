@@ -200,7 +200,7 @@ class ResultCalculator
                 // মার্ক যোগ (কম্বাইন্ডের জন্য)
                 $totalMarkWithoutOptional += $combinedResult['combined_final_mark'];
             } else {
-                $single = $this->processSingle($first, $gradeRules, $mark_configs);
+                $single = $this->processSingle($first, $gradeRules);
                 $single['is_optional'] = ($first['subject_id'] == $optionalId);
                 $merged[] = $single;
 
