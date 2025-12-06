@@ -332,7 +332,7 @@ class ResultCalculator
         ];
     }
 
-    private function processSingle($subj, $gradeRules, $optionalId)
+    private function processSingle($subj, $gradeRules)
     {
         Log::channel('exam_flex_log')->info($subj);
 
