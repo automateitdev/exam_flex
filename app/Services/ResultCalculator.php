@@ -87,7 +87,7 @@ class ResultCalculator
     {
         $marks = $student['marks'] ?? [];
         $optionalId = $student['optional_subject_id'] ?? null;
-        Log::channel('exam_flex_log')->info("optional", $optionalId);
+        Log::channel('exam_flex_log')->info($optionalId);
         $groups = collect($marks)->groupBy(fn($m) => $m['combined_id'] ?? $m['subject_id']);
 
         $merged = [];
@@ -228,7 +228,7 @@ class ResultCalculator
 
     private function processSingle($subj, $gradeRules)
     {
-        Log::channel('exam_flex_log')->info("sing", $subj);
+        Log::channel('exam_flex_log')->info($subj);
 
         $mark = $subj['final_mark'] ?? 0;
         $config = $subj['mark_config'] ?? null;
