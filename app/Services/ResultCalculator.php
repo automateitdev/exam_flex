@@ -210,6 +210,7 @@ class ResultCalculator
 
         return [
             'combined_id' => $combinedId,
+            'is_combined' => true,
             'combined_name' => $combinedName,
             'combined_final_mark' => $combinedFinalMark,
             'combined_grade_point' => $combinedGradePoint,
