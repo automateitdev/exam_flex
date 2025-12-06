@@ -222,12 +222,14 @@ class ResultCalculator
         // === 4th Subject Bonus (দুটো আলাদা আলাদা) ===
         $bonusMarkFromOptional = 0.0;  // ৪০% মার্ক বোনাস
         $bonusGPFromOptional   = 0.0;  // GP-2 বোনাস
+        $optionalFullMark = 0.0;
 
         if ($optionalId && isset($marks[$optionalId])) {
             $opt = $marks[$optionalId];
             $optMark = $opt['final_mark'] ?? 0;
             $optGP   = $opt['grade_point'] ?? 0;
 
+            $optionalFullMark = $opt['final_mark'];
             if ($optGP >= 2.00) {
                 // ৪০% মার্ক বোনাস
                 $bonusMarkFromOptional = round($optMark * 40 / 100, 2);
@@ -238,7 +240,7 @@ class ResultCalculator
         }
 
         // মোট মার্ক (বোনাস সহ)
-        $totalMarkWithOptional = $totalMarkWithoutOptional + $bonusMarkFromOptional;
+        $totalMarkWithOptional = $totalMarkWithoutOptional + $optionalFullMark;
 
         // GPA হিসাব
         $finalGP = $failed ? 0 : ($totalGP + $bonusGPFromOptional);
