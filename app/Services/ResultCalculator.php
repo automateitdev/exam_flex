@@ -232,7 +232,7 @@ class ResultCalculator
 
         $convertedMark = 0;
         foreach ($partMarks as $code => $obtained) {
-            $conversion = $config['conversion'][$code] ?? 100;
+            $conversion = $config['conversion'][$code];
             $convertedMark += $obtained * ($conversion / 100);
         }
 
