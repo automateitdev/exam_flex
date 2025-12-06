@@ -381,6 +381,7 @@ class ResultCalculator
             'subject_id'     => $subjectId,
             'subject_name'   => $subj['subject_name'],
             'final_mark'     => round($convertedMark, 2),  // এখানে converted mark
+            'part_marks'     => $subj['part_marks'] ?? [],
             'grade_point'    => $this->getGradePoint($percentage, $gradeRules),
             'grade'          => $this->getGrade($percentage, $gradeRules),
             'grace_mark'     => $subj['grace_mark'] ?? 0,
