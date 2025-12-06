@@ -201,12 +201,13 @@ class ResultCalculator
                 $totalMarkWithoutOptional += $combinedResult['combined_final_mark'];
             } else {
                 $single = $this->processSingle($first, $gradeRules, $mark_configs);
-                // $single['is_optional'] = ($first['subject_id'] == $optionalId);
-                Log::channel('exam_flex_log')->info('Debug', [
-                    'subject_id' => $first['subject_id'],
-                    'optional_id' => $optionalId,
-                    'is_optional' => ($first['subject_id'] == $optionalId)
-                ]);
+
+                if($first['subject_id'] == $optionalId) $option = $single['is_optional'];
+                // Log::channel('exam_flex_log')->info('Debug', [
+                //     'subject_id' => $first['subject_id'],
+                //     'optional_id' => $optionalId,
+                //     'is_optional' => ($first['subject_id'] == $optionalId)
+                // ]);
                 $merged[] = $single;
 
                 if (!$single['is_uncountable']) {
@@ -217,7 +218,7 @@ class ResultCalculator
                     $failed = true;
                 }
 
-                if (!$single['is_optional']) {
+                if (!$option) {
                     $totalMarkWithoutOptional += $single['final_mark'];
                 }
             }
