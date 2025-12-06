@@ -200,7 +200,7 @@ class ResultCalculator
                 // মার্ক যোগ (কম্বাইন্ডের জন্য)
                 $totalMarkWithoutOptional += $combinedResult['combined_final_mark'];
             } else {
-                $single = $this->processSingle($first, $gradeRules);
+                $single = $this->processSingle($first, $gradeRules, $mark_configs);
                 $single['is_optional'] = ($first['subject_id'] == $optionalId);
                 $merged[] = $single;
 
@@ -332,33 +332,60 @@ class ResultCalculator
         ];
     }
 
-    private function processSingle($subj, $gradeRules)
+    // private function processSingle($subj, $gradeRules)
+    // {
+    //     Log::channel('exam_flex_log')->info($subj);
+
+    //     $mark = $subj['final_mark'] ?? 0;
+    //     $config = $subj['mark_config'] ?? null;
+
+    //     $partMarks = $subj['part_marks'] ?? [];
+
+    //     $convertedMark = 0;
+    //     foreach ($partMarks as $code => $obtained) {
+    //         $conversion = $config['conversion'][$code] ?? 100;
+    //         $convertedMark += $obtained * ($conversion / 100);
+    //     }
+
+    //     $percentage = $convertedMark > 0 ? ($convertedMark / $convertedMark) * 100 : 0; // 100%
+
+    //     return [
+    //         'subject_id' => $subj['subject_id'],
+    //         'subject_name' => $subj['subject_name'],
+    //         'final_mark' => (float) $mark,
+    //         'grade_point' => $this->getGradePoint($percentage, $gradeRules),
+    //         'grade' => $this->getGrade($percentage, $gradeRules),
+    //         'grace_mark' => (float) ($subj['grace_mark'] ?? 0),
+    //         'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
+    //         'is_combined' => false,
+    //         'percentage' => round($percentage, 2),
+    //     ];
+    // }
+    private function processSingle($subj, $gradeRules, $mark_configs)
     {
-        Log::channel('exam_flex_log')->info($subj);
-
-        $mark = $subj['final_mark'] ?? 0;
-        $config = $subj['mark_config'] ?? null;
-
+        $subjectId = $subj['subject_id'];
+        $config = $mark_configs[$subjectId] ?? [];
         $partMarks = $subj['part_marks'] ?? [];
 
+        // Conversion দিয়ে সঠিক মার্ক বের করি
         $convertedMark = 0;
         foreach ($partMarks as $code => $obtained) {
             $conversion = $config['conversion'][$code] ?? 100;
             $convertedMark += $obtained * ($conversion / 100);
         }
 
-        $percentage = $convertedMark > 0 ? ($convertedMark / $convertedMark) * 100 : 0; // 100%
+        $percentage = $convertedMark > 0 ? 100 : 0;
 
         return [
-            'subject_id' => $subj['subject_id'],
-            'subject_name' => $subj['subject_name'],
-            'final_mark' => (float) $mark,
-            'grade_point' => $this->getGradePoint($percentage, $gradeRules),
-            'grade' => $this->getGrade($percentage, $gradeRules),
-            'grace_mark' => (float) ($subj['grace_mark'] ?? 0),
+            'subject_id'     => $subjectId,
+            'subject_name'   => $subj['subject_name'],
+            'final_mark'     => round($convertedMark, 2),  // এখানে converted mark
+            'grade_point'    => $this->getGradePoint($percentage, $gradeRules),
+            'grade'          => $this->getGrade($percentage, $gradeRules),
+            'grace_mark'     => $subj['grace_mark'] ?? 0,
             'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
-            'is_combined' => false,
-            'percentage' => round($percentage, 2),
+            'is_combined'    => false,
+            'percentage'     => 100.00,
         ];
     }
 
