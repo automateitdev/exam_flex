@@ -112,6 +112,7 @@ class ResultCalculator
                 }
             } else {
                 $single = $this->processSingle($first, $gradeRules, $optionalId);
+                $single['is_optional'] = ($first['subject_id'] == $optionalId);
                 $merged[] = $single;
 
                 if (!$single['is_uncountable']) {
@@ -252,7 +253,6 @@ class ResultCalculator
             'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
             'is_combined' => false,
             'percentage' => round($percentage, 2),
-            'is_optional' => ($subj['subject_id'] == $optionalId),
         ];
     }
 
