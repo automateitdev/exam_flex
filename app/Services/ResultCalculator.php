@@ -252,7 +252,7 @@ class ResultCalculator
             'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
             'is_combined' => false,
             'percentage' => round($percentage, 2),
-            'is_optional' => $optionalId ? true : false,
+            'is_optional' => ($subj['subject_id'] == $optionalId),
         ];
     }
 
