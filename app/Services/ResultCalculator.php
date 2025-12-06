@@ -238,7 +238,7 @@ class ResultCalculator
         }
 
         // মোট মার্ক (বোনাস সহ)
-        $totalMarkWithOptional = $totalMarkWithoutOptional + $optMark;
+        $totalMarkWithOptional = $totalMarkWithoutOptional + $opt['final_mark'];
 
         // GPA হিসাব
         $finalGP = $failed ? 0 : ($totalGP + $bonusGPFromOptional);
