@@ -113,43 +113,100 @@ class MeritProcessor
             ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
     }
 
+    // private function assignRanks(Collection $sorted, string $meritType, Collection $academicDetails, Collection $studentDetails): array
+    // {
+    //     $isSequential = str_contains(strtolower($meritType), 'sequential');
+    //     $isGpaBased   = str_contains(strtolower($meritType), 'gpa') || str_contains($meritType, 'grade_point');
+
+    //     $rank = 1;
+
+    //     return $sorted->map(function ($student, $index) use (&$rank, $isSequential, $isGpaBased, $sorted, $academicDetails, $studentDetails) {
+    //         $stdId   = $student['student_id'];
+    //         $acad    = $academicDetails[$stdId] ?? [];
+    //         $std     = $studentDetails[$stdId] ?? [];
+
+    //         if ($index === 0) {
+    //             $currentRank = 1;
+    //         } else {
+    //             $prev = $sorted[$index - 1];
+    //             $currVal = $isGpaBased ? ($student['gpa'] ?? 0) : $this->getTotalMark($student);
+    //             $prevVal = $isGpaBased ? ($prev['gpa'] ?? 0) : $this->getTotalMark($prev);
+
+    //             $currentRank = ($isSequential || $currVal != $prevVal) ? $rank++ : $prev['merit_position'];
+    //         }
+
+    //         return [
+    //             'student_id'           => $stdId,
+    //             'student_name'         => $student['student_name'] ?? 'Unknown',
+    //             'roll'                 => $student['roll'] ?? $acad['class_roll'] ?? null,
+    //             'total_mark'           => $this->getTotalMark($student),
+    //             'gpa'                  => round($student['gpa'] ?? 0, 2),
+    //             'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
+    //             'letter_grade'         => $student['letter_grade'] ?? 'F',
+    //             'result_status'        => $student['result_status'] ?? 'Unknown',
+    //             'merit_position'       => $currentRank,
+    //             'shift'                => $acad['shift'] ?? null,
+    //             'section'              => $acad['section'] ?? null,
+    //             'group'                => $acad['group'] ?? null,
+    //             'gender'               => $std['student_gender'] ?? null,
+    //             'religion'             => $std['student_religion'] ?? null,
+    //         ];
+    //     })->values()->toArray();
+    // }
     private function assignRanks(Collection $sorted, string $meritType, Collection $academicDetails, Collection $studentDetails): array
     {
+        $isGpaBased = str_contains(strtolower($meritType), 'gpa') || str_contains($meritType, 'grade_point');
         $isSequential = str_contains(strtolower($meritType), 'sequential');
-        $isGpaBased   = str_contains(strtolower($meritType), 'gpa') || str_contains($meritType, 'grade_point');
 
         $rank = 1;
+        $previousValue = null;
+        $previousRank = null;
 
-        return $sorted->map(function ($student, $index) use (&$rank, $isSequential, $isGpaBased, $sorted, $academicDetails, $studentDetails) {
-            $stdId   = $student['student_id'];
-            $acad    = $academicDetails[$stdId] ?? [];
-            $std     = $studentDetails[$stdId] ?? [];
+        return $sorted->map(function ($student, $index) use (
+            &$rank,
+            &$previousValue,
+            &$previousRank,
+            $isGpaBased,
+            $isSequential,
+            $academicDetails,
+            $studentDetails
+        ) {
+            $stdId = $student['student_id'];
+            $acad  = $academicDetails[$stdId] ?? [];
+            $std   = $studentDetails[$stdId] ?? [];
 
-            if ($index === 0) {
-                $currentRank = 1;
+            // মান বের করি (GPA বা টোটাল মার্ক)
+            $currentValue = $isGpaBased
+                ? ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0)
+                : $this->getTotalMark($student);
+
+            // প্রথম স্টুডেন্ট অথবা মান ভিন্ন হলে → নতুন র‍্যাঙ্ক
+            if ($index === 0 || $currentValue != $previousValue) {
+                $currentRank = $rank;
+                $rank++; // পরের জন্য র‍্যাঙ্ক বাড়াই
             } else {
-                $prev = $sorted[$index - 1];
-                $currVal = $isGpaBased ? ($student['gpa'] ?? 0) : $this->getTotalMark($student);
-                $prevVal = $isGpaBased ? ($prev['gpa'] ?? 0) : $this->getTotalMark($prev);
-
-                $currentRank = ($isSequential || $currVal != $prevVal) ? $rank++ : $prev['merit_position'];
+                // একই মান → আগের র‍্যাঙ্কই থাকবে (যদি sequential না হয়)
+                $currentRank = $isSequential ? $rank++ : $previousRank;
             }
 
+            $previousValue = $currentValue;
+            $previousRank  = $currentRank;
+
             return [
-                'student_id'           => $stdId,
-                'student_name'         => $student['student_name'] ?? 'Unknown',
-                'roll'                 => $student['roll'] ?? $acad['class_roll'] ?? null,
-                'total_mark'           => $this->getTotalMark($student),
-                'gpa'                  => round($student['gpa'] ?? 0, 2),
-                'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
-                'letter_grade'         => $student['letter_grade'] ?? 'F',
-                'result_status'        => $student['result_status'] ?? 'Unknown',
-                'merit_position'       => $currentRank,
-                'shift'                => $acad['shift'] ?? null,
-                'section'              => $acad['section'] ?? null,
-                'group'                => $acad['group'] ?? null,
-                'gender'               => $std['student_gender'] ?? null,
-                'religion'             => $std['student_religion'] ?? null,
+                'student_id'            => $stdId,
+                'student_name'          => $student['student_name'] ?? 'Unknown',
+                'roll'                  => $student['roll'] ?? $acad['class_roll'] ?? null,
+                'total_mark'            => $this->getTotalMark($student),
+                'gpa'                   => round($student['gpa_with_optional'] ?? $student['gpa'] ?? 0, 2),
+                'gpa_without_optional'  => round($student['gpa_without_optional'] ?? 0, 2),
+                'letter_grade'          => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
+                'result_status'         => $student['result_status'] ?? 'Unknown',
+                'merit_position'        => $currentRank,   // এটাই আসল র‍্যাঙ্ক
+                'shift'                 => $acad['shift'] ?? null,
+                'section'               => $acad['section'] ?? null,
+                'group'                 => $acad['group'] ?? null,
+                'gender'                => $std['student_gender'] ?? null,
+                'religion'              => $std['student_religion'] ?? null,
             ];
         })->values()->toArray();
     }
