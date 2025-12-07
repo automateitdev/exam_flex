@@ -5,7 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
-class ResultCalculator
+class ResultCalculatorcopy
 {
     public function calculate($payload)
     {
@@ -83,6 +83,7 @@ class ResultCalculator
         }
     }
 
+
     private function processStudent($student, $gradeRules, $mark_configs)
     {
         $marks = $student['marks'] ?? [];
@@ -95,8 +96,8 @@ class ResultCalculator
         $subjectCount = 0;
         $failed = false;
 
-        $totalMarkWithoutOptional = 0.0;  // মূল মার্ক (৪র্থ ছাড়া)
-        $totalMarkWithOptional    = 0.0;  // ৪র্থ পুরো মার্ক যোগ
+        $totalMarkWithoutOptional = 0.0;  // নতুন: মূল মার্ক (৪র্থ ছাড়া)
+        $totalMarkWithOptional    = 0.0;  // নতুন: ৪০% বোনাস সহ মার্ক
 
         foreach ($groups as $groupId => $group) {
             if ($group->isEmpty()) continue;
@@ -114,10 +115,12 @@ class ResultCalculator
                     $failed = true;
                 }
 
+                // মার্ক যোগ (কম্বাইন্ডের জন্য)
                 $totalMarkWithoutOptional += $combinedResult['combined_final_mark'];
             } else {
                 $single = $this->processSingle($first, $gradeRules, $mark_configs);
                 $single['is_optional'] = ($first['subject_id'] == $optionalId);
+
                 $merged[] = $single;
 
                 if (!$single['is_uncountable']) {
@@ -134,22 +137,30 @@ class ResultCalculator
             }
         }
 
-        // === 4th Subject Bonus ===
+        // === 4th Subject Bonus (দুটো আলাদা আলাদা) ===
+        $bonusMarkFromOptional = 0.0;  // ৪০% মার্ক বোনাস
+        $bonusGPFromOptional   = 0.0;  // GP-2 বোনাস
         $optionalFullMark = 0.0;
-        $bonusGPFromOptional = 0.0;
 
         if ($optionalId && isset($marks[$optionalId])) {
             $opt = $marks[$optionalId];
-            $optionalFullMark = $opt['final_mark'] ?? 0;
-            $optGP = $opt['grade_point'] ?? 0;
+            $optMark = $opt['final_mark'] ?? 0;
+            $optGP   = $opt['grade_point'] ?? 0;
 
+            $optionalFullMark = $opt['final_mark'];
             if ($optGP >= 2.00) {
+                // ৪০% মার্ক বোনাস
+                $bonusMarkFromOptional = round($optMark * 40 / 100, 2);
+
+                // GP থেকে ২ বাদ দিয়ে বোনাস
                 $bonusGPFromOptional = max(0, $optGP - 2.00);
             }
         }
 
+        // মোট মার্ক (বোনাস সহ)
         $totalMarkWithOptional = $totalMarkWithoutOptional + $optionalFullMark;
 
+        // GPA হিসাব
         $finalGP = $failed ? 0 : ($totalGP + $bonusGPFromOptional);
         $gpaWithoutOptional = $subjectCount > 0 ? round($totalGP / $subjectCount, 2) : 0;
         $gpaWithOptional    = $subjectCount > 0 ? round($finalGP / $subjectCount, 2) : 0;
@@ -164,14 +175,22 @@ class ResultCalculator
             'student_name' => $student['student_name'] ?? 'N/A',
             'roll' => $student['roll'] ?? 'N/A',
             'subjects' => $merged,
+
+            // মূল হিসাব (৪র্থ ছাড়া)
             'total_mark_without_optional' => round($totalMarkWithoutOptional, 2),
-            'gpa_without_optional' => $gpaWithoutOptional,
+            'gpa_without_optional'        => $gpaWithoutOptional,
             'letter_grade_without_optional' => $letterGradeWithout,
-            'total_mark_with_optional' => round($totalMarkWithOptional, 2),
-            'gpa_with_optional' => $gpaWithOptional,
-            'letter_grade_with_optional' => $letterGradeWith,
+
+            // বোনাস সহ হিসাব
+            'total_mark_with_optional'    => round($totalMarkWithOptional, 2),
+            'gpa_with_optional'           => $gpaWithOptional,
+            'letter_grade_with_optional'  => $letterGradeWith,
+
             'result_status' => $status,
-            'optional_bonus_gp' => $bonusGPFromOptional,
+
+            // বোনাস ডিটেইলস
+            'optional_bonus_mark' => $bonusMarkFromOptional,
+            'optional_bonus_gp'   => $bonusGPFromOptional,
         ];
     }
 
@@ -181,9 +200,7 @@ class ResultCalculator
         $combinedName = $group->first()['combined_subject_name'];
 
         $totalMaxMark = 0;
-        $totalConvertedMark = 0;
-
-        $parts = $group->map(function ($mark) use ($mark_configs, &$totalConvertedMark) {
+        $parts = $group->map(function ($mark) use ($mark_configs, &$totalMaxMark) {
             $subjectId = $mark['subject_id'];
             $config = $mark_configs[$subjectId] ?? null;
             $partMarks = $mark['part_marks'] ?? [];
@@ -193,8 +210,7 @@ class ResultCalculator
                 $conversion = $config['conversion'][$code] ?? 100;
                 $convertedMark += $obtained * ($conversion / 100);
             }
-
-            $totalConvertedMark += $convertedMark;
+            $totalMaxMark += $convertedMark;
 
             return [
                 'subject_id' => $subjectId,
@@ -210,14 +226,15 @@ class ResultCalculator
             ];
         })->values()->toArray();
 
-        $combinedFinalMark = $totalConvertedMark;
-        $percentage = $totalConvertedMark > 0 ? ($combinedFinalMark / $totalConvertedMark) * 100 : 0;
+        $combinedFinalMark = $group->sum('final_mark');
+        $percentage = $totalMaxMark > 0 ? ($combinedFinalMark / $totalMaxMark) * 100 : 0;
         $combinedGradePoint = $this->getGradePoint($percentage, $gradeRules);
         $combinedGrade = $this->getGrade($percentage, $gradeRules);
 
         $sampleSubjectId = $group->first()['subject_id'];
         $overallRequiredPercent = $mark_configs[$sampleSubjectId]['overall_required'];
-        $requiredMark = ($overallRequiredPercent / 100) * $totalConvertedMark;
+
+        $requiredMark = ($overallRequiredPercent / 100) * $totalMaxMark;
         $combinedStatus = $combinedFinalMark >= $requiredMark ? 'Pass' : 'Fail';
 
         return [
@@ -230,11 +247,12 @@ class ResultCalculator
             'combined_status' => $combinedStatus,
             'is_uncountable' => false,
             'parts' => $parts,
-            'total_max_mark' => $totalConvertedMark,
+            'total_max_mark' => $totalMaxMark,
             'percentage' => round($percentage, 2),
             'fail_reason' => $combinedStatus === 'Fail' ? 'Below required mark' : null,
         ];
     }
+
 
     private function processSingle($subj, $gradeRules, $mark_configs)
     {
@@ -242,30 +260,39 @@ class ResultCalculator
         $config = $mark_configs[$subjectId] ?? [];
         $partMarks = $subj['part_marks'] ?? [];
 
+        // Conversion দিয়ে সঠিক মার্ক বের করি
         $convertedMark = 0;
         foreach ($partMarks as $code => $obtained) {
             $conversion = $config['conversion'][$code] ?? 100;
             $convertedMark += $obtained * ($conversion / 100);
         }
 
-        $percentage = $convertedMark;
+        $percentage = $convertedMark > 0 ? 100 : 0;
 
         return [
-            'subject_id' => $subjectId,
-            'subject_name' => $subj['subject_name'],
-            'final_mark' => round($convertedMark, 2),
-            'grade_point' => $this->getGradePoint($percentage, $gradeRules),
-            'grade' => $this->getGrade($percentage, $gradeRules),
-            'grace_mark' => $subj['grace_mark'] ?? 0,
+            'subject_id'     => $subjectId,
+            'subject_name'   => $subj['subject_name'],
+            'final_mark'     => round($convertedMark, 2),  // এখানে converted mark
+            'part_marks'     => $subj['part_marks'] ?? [],
+            'grade_point'    => $this->getGradePoint($percentage, $gradeRules),
+            'grade'          => $this->getGrade($percentage, $gradeRules),
+            'grace_mark'     => $subj['grace_mark'] ?? 0,
             'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
-            'is_combined' => false,
-            'percentage' => round($percentage, 2),
+            'is_combined'    => false,
+            'percentage'     => 100.00,
         ];
     }
 
     // === GPA থেকে Letter Grade (SSC/HSC) ===
     private function gpaToLetterGrade($gpa, $gradeRules)
     {
+        // if ($gpa >= 5.00) return 'A+';
+        // if ($gpa >= 4.50) return 'A';
+        // if ($gpa >= 4.00) return 'A-';
+        // if ($gpa >= 3.50) return 'B';
+        // if ($gpa >= 3.00) return 'C';
+        // if ($gpa >= 2.00) return 'D';
+        // return 'F';
         foreach ($gradeRules->sortByDesc('grade_point') as $rule) {
             if ($gpa >= $rule['grade_point']) {
                 return $rule['grade'];
@@ -276,7 +303,7 @@ class ResultCalculator
     private function getGradePoint($percentage, $gradeRules)
     {
         foreach ($gradeRules as $rule) {
-            if ($percentage >= $rule['from_mark'] && $percentage <= $rule['to_mark']) {
+            if ($percentage >= ($rule['from_mark']) && $percentage <= ($rule['to_mark'])) {
                 return $rule['grade_point'];
             }
         }
@@ -286,19 +313,22 @@ class ResultCalculator
     private function getGrade($percentage, $gradeRules)
     {
         foreach ($gradeRules as $rule) {
-            if ($percentage >= $rule['from_mark'] && $percentage <= $rule['to_mark']) {
+            if ($percentage >= ($rule['from_mark']) && $percentage <= ($rule['to_mark'])) {
                 return $rule['grade'];
             }
         }
         return 'F';
     }
 
+    // Legacy - for single subjects with 100 marks
     private function markToGradePoint($mark, $gradeRules)
     {
         return $this->getGradePoint($mark, $gradeRules);
     }
 
     private function gpToGrade($mark, $gradeRules)
+
+
     {
         return $this->getGrade($mark, $gradeRules);
     }
