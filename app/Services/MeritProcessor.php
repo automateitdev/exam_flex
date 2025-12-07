@@ -14,18 +14,22 @@ class MeritProcessor
         }
 
         $examConfig      = $payload['exam_config'] ?? [];
-        $academicDetails = collect($payload['academic_details'] ?? []);   // student_id => [shift, section, group, class_roll]
-        $studentDetails  = collect($payload['student_details'] ?? []);    // student_id => [gender, religion]
+        $academicDetails = collect($payload['academic_details'] ?? []);
+        $studentDetails  = collect($payload['student_details'] ?? []);
+        $meritType       = $examConfig['merit_process_type'] ?? 'total_mark_sequential';
+        $groupBy         = $this->getGroupByFields($examConfig);
 
-        $meritType = $examConfig['merit_process_type'] ?? 'total_mark_sequential';
-        $groupBy   = $this->getGroupByFields($examConfig);
+        // প্রথমে সবাইকে একসাথে সর্ট করি (Pass আগে, Fail পরে)
+        $allSorted = $this->sortStudents($results, $meritType, $academicDetails);
 
-        // Group by selected fields (shift|section|group etc.)
-        $grouped = $results->groupBy(function ($student) use ($groupBy, $academicDetails, $studentDetails) {
-            $stdId   = $student['student_id'] ?? null;
-            $acad    = $academicDetails[$stdId] ?? null;
-            $std     = $studentDetails[$stdId] ?? null;
+        // তারপর র‍্যাঙ্ক দিই (একবারই, পুরো ক্লাসের জন্য)
+        $allRanked = $this->assignRanks($allSorted, $meritType, $academicDetails, $studentDetails);
 
+        // এখন group-wise আলাদা করে দিই (শুধু দেখানোর জন্য)
+        $grouped = collect($allRanked)->groupBy(function ($student) use ($groupBy, $academicDetails, $studentDetails) {
+            $stdId = $student['student_id'];
+            $acad  = $academicDetails[$stdId] ?? null;
+            $std   = $studentDetails[$stdId] ?? null;
             if (!$acad) return 'unknown';
 
             $keys = [];
@@ -44,10 +48,8 @@ class MeritProcessor
         });
 
         $finalMerit = [];
-        foreach ($grouped as $students) {
-            $sorted = $this->sortStudents($students, $meritType, $academicDetails);
-            $ranked = $this->assignRanks($sorted, $meritType, $academicDetails, $studentDetails);
-            $finalMerit = array_merge($finalMerit, $ranked);
+        foreach ($grouped as $groupStudents) {
+            $finalMerit = array_merge($finalMerit, $groupStudents->toArray());
         }
 
         $all = collect($finalMerit);
@@ -66,6 +68,66 @@ class MeritProcessor
             ]
         ];
     }
+    // public function process(array $payload): array
+    // {
+    //     $results = $this->normalizeResults($payload['results'] ?? []);
+    //     if ($results->isEmpty()) {
+    //         return ['status' => 'error', 'message' => 'No results found'];
+    //     }
+
+    //     $examConfig      = $payload['exam_config'] ?? [];
+    //     $academicDetails = collect($payload['academic_details'] ?? []);   // student_id => [shift, section, group, class_roll]
+    //     $studentDetails  = collect($payload['student_details'] ?? []);    // student_id => [gender, religion]
+
+    //     $meritType = $examConfig['merit_process_type'];
+    //     $groupBy   = $this->getGroupByFields($examConfig);
+
+    //     // Group by selected fields (shift|section|group etc.)
+    //     $grouped = $results->groupBy(function ($student) use ($groupBy, $academicDetails, $studentDetails) {
+    //         $stdId   = $student['student_id'] ?? null;
+    //         $acad    = $academicDetails[$stdId] ?? null;
+    //         $std     = $studentDetails[$stdId] ?? null;
+
+    //         if (!$acad) return 'unknown';
+
+    //         $keys = [];
+    //         foreach ($groupBy as $field) {
+    //             $value = match ($field) {
+    //                 'shift'    => $acad['shift'] ?? null,
+    //                 'section'  => $acad['section'] ?? null,
+    //                 'group'    => $acad['group'] ?? null,
+    //                 'gender'   => $std['student_gender'] ?? null,
+    //                 'religion' => $std['student_religion'] ?? null,
+    //                 default    => null,
+    //             };
+    //             $keys[] = $value ?? 'unknown';
+    //         }
+    //         return implode('|', $keys);
+    //     });
+
+    //     $finalMerit = [];
+    //     foreach ($grouped as $students) {
+    //         $sorted = $this->sortStudents($students, $meritType, $academicDetails);
+    //         $ranked = $this->assignRanks($sorted, $meritType, $academicDetails, $studentDetails);
+    //         $finalMerit = array_merge($finalMerit, $ranked);
+    //     }
+
+    //     $all = collect($finalMerit);
+
+    //     return [
+    //         'total_students' => $results->count(),
+    //         'merit_type'     => $meritType,
+    //         'grouped_by'     => $groupBy,
+    //         'data'           => [
+    //             'all_students'   => $finalMerit,
+    //             'section_wise'   => $all->groupBy('section')->map->values()->toArray(),
+    //             'shift_wise'     => $all->groupBy('shift')->map->values()->toArray(),
+    //             'group_wise'     => $all->groupBy('group')->map->values()->toArray(),
+    //             'gender_wise'    => $all->groupBy('gender')->map->values()->toArray(),
+    //             'religion_wise'  => $all->groupBy('religion')->map->values()->toArray(),
+    //         ]
+    //     ];
+    // }
 
     private function normalizeResults($raw): Collection
     {
