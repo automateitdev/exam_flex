@@ -176,8 +176,8 @@ class MeritProcessor
             $bId = $b['student_id'];
 
             // ১. প্রথমে Result Status দিয়ে সর্ট — Pass আগে, Fail পরে
-            $aStatus = $a['result_status'] ?? 'Fail';
-            $bStatus = $b['result_status'] ?? 'Fail';
+            $aStatus = $a['result_status'];
+            $bStatus = $b['result_status'];
 
             if ($aStatus !== $bStatus) {
                 return ($aStatus === 'Pass') ? -1 : 1; // Pass আগে
