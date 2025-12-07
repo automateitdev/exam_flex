@@ -87,21 +87,65 @@ class MeritProcessor
         return empty($fields) ? [] : $fields; // ← [] মানে পুরো ক্লাস একসাথে
     }
 
+    // private function sortStudents(Collection $students, string $meritType, Collection $academicDetails): Collection
+    // {
+    //     $isGpa = str_contains(strtolower($meritType), 'gpa') || str_contains($meritType, 'grade_point');
+
+    //     return $students->sort(function ($a, $b) use ($isGpa, $academicDetails) {
+    //         $aId = $a['student_id'];
+    //         $bId = $b['student_id'];
+
+    //         $aRoll = $academicDetails[$aId]['class_roll'] ?? 999999;
+    //         $bRoll = $academicDetails[$bId]['class_roll'] ?? 999999;
+
+    //         $aVal = $isGpa ? ($a['gpa'] ?? 0) : $this->getTotalMark($a);
+    //         $bVal = $isGpa ? ($b['gpa'] ?? 0) : $this->getTotalMark($b);
+
+    //         if ($aVal !== $bVal) return $bVal <=> $aVal;
+    //         return $aRoll <=> $bRoll;
+    //     })->values();
+    // }
     private function sortStudents(Collection $students, string $meritType, Collection $academicDetails): Collection
     {
-        $isGpa = str_contains(strtolower($meritType), 'gpa') || str_contains($meritType, 'grade_point');
+        $isGpaBased = str_contains(strtolower($meritType), 'gpa') || str_contains($meritType, 'grade_point');
 
-        return $students->sort(function ($a, $b) use ($isGpa, $academicDetails) {
+        return $students->sort(function ($a, $b) use ($isGpaBased, $academicDetails) {
             $aId = $a['student_id'];
             $bId = $b['student_id'];
 
-            $aRoll = $academicDetails[$aId]['class_roll'] ?? 999999;
-            $bRoll = $academicDetails[$bId]['class_roll'] ?? 999999;
+            // ১. প্রথমে Result Status দিয়ে সর্ট — Pass আগে, Fail পরে
+            $aStatus = $a['result_status'] ?? 'Fail';
+            $bStatus = $b['result_status'] ?? 'Fail';
 
-            $aVal = $isGpa ? ($a['gpa'] ?? 0) : $this->getTotalMark($a);
-            $bVal = $isGpa ? ($b['gpa'] ?? 0) : $this->getTotalMark($b);
+            if ($aStatus !== $bStatus) {
+                return ($aStatus === 'Pass') ? -1 : 1; // Pass আগে
+            }
 
-            if ($aVal !== $bVal) return $bVal <=> $aVal;
+            // ২. Pass হলে GPA/মার্ক দিয়ে সর্ট
+            if ($aStatus === 'Pass') {
+                $aVal = $isGpaBased
+                    ? ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0)
+                    : $this->getTotalMark($a);
+                $bVal = $isGpaBased
+                    ? ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0)
+                    : $this->getTotalMark($b);
+
+                if ($aVal !== $bVal) {
+                    return $bVal <=> $aVal; // বেশি থেকে কম
+                }
+            }
+
+            // ৩. Fail হলে টোটাল মার্ক দিয়ে সর্ট (বেশি মার্ক আগে)
+            $aMark = $this->getTotalMark($a);
+            $bMark = $this->getTotalMark($b);
+            if ($aMark !== $bMark) {
+                return $bMark <=> $aMark;
+            }
+
+            // ৪. শেষে রোল নম্বর দিয়ে
+            $aRoll = $academicDetails[$aId]['class_roll'];
+            $bRoll = $academicDetails[$bId]['class_roll'];
+
             return $aRoll <=> $bRoll;
         })->values();
     }
@@ -155,42 +199,27 @@ class MeritProcessor
     // }
     private function assignRanks(Collection $sorted, string $meritType, Collection $academicDetails, Collection $studentDetails): array
     {
-        $isGpaBased = str_contains(strtolower($meritType), 'gpa') || str_contains($meritType, 'grade_point');
         $isSequential = str_contains(strtolower($meritType), 'sequential');
-
         $rank = 1;
         $previousValue = null;
-        $previousRank = null;
 
-        return $sorted->map(function ($student, $index) use (
-            &$rank,
-            &$previousValue,
-            &$previousRank,
-            $isGpaBased,
-            $isSequential,
-            $academicDetails,
-            $studentDetails
-        ) {
+        return $sorted->map(function ($student, $index) use (&$rank, &$previousValue, $isSequential, $academicDetails, $studentDetails) {
             $stdId = $student['student_id'];
             $acad  = $academicDetails[$stdId] ?? [];
             $std   = $studentDetails[$stdId] ?? [];
 
-            // মান বের করি (GPA বা টোটাল মার্ক)
-            $currentValue = $isGpaBased
+            // Pass এবং Fail আলাদা র‍্যাঙ্কিং
+            $currentValue = ($student['result_status'] ?? 'Fail') === 'Pass'
                 ? ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0)
-                : $this->getTotalMark($student);
+                : ($this->getTotalMark($student) * -1); // Fail এর জন্য negative (যাতে আলাদা থাকে)
 
-            // প্রথম স্টুডেন্ট অথবা মান ভিন্ন হলে → নতুন র‍্যাঙ্ক
             if ($index === 0 || $currentValue != $previousValue) {
-                $currentRank = $rank;
-                $rank++; // পরের জন্য র‍্যাঙ্ক বাড়াই
+                $currentRank = $rank++;
             } else {
-                // একই মান → আগের র‍্যাঙ্কই থাকবে (যদি sequential না হয়)
-                $currentRank = $isSequential ? $rank++ : $previousRank;
+                $currentRank = $isSequential ? $rank++ : $previousRank ?? $rank - 1;
             }
 
             $previousValue = $currentValue;
-            $previousRank  = $currentRank;
 
             return [
                 'student_id'            => $stdId,
@@ -201,7 +230,7 @@ class MeritProcessor
                 'gpa_without_optional'  => round($student['gpa_without_optional'] ?? 0, 2),
                 'letter_grade'          => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
                 'result_status'         => $student['result_status'] ?? 'Unknown',
-                'merit_position'        => $currentRank,   // এটাই আসল র‍্যাঙ্ক
+                'merit_position'        => $currentRank,
                 'shift'                 => $acad['shift'] ?? null,
                 'section'               => $acad['section'] ?? null,
                 'group'                 => $acad['group'] ?? null,
