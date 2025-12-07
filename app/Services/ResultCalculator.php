@@ -111,7 +111,10 @@ class ResultCalculator
                     $subjectCount++;
                 }
                 if ($combinedResult['combined_status'] === 'Fail') {
-                    $failed = true;
+                    // $failed = true;
+                    if (!($combinedResult['is_uncountable'] ?? false)) {
+                        $failed = true;
+                    }
                 }
 
                 $totalMarkWithoutOptional += $combinedResult['combined_final_mark'];
@@ -124,11 +127,11 @@ class ResultCalculator
                     $totalGP += $single['grade_point'];
                     $subjectCount++;
                 }
-                if ($single['grade'] === 'F') {
+                if ($single['grade'] === 'F' && !$single['is_uncountable']) {
                     $failed = true;
                 }
 
-                if (!$single['is_optional']) {
+                if (!$single['is_optional'] && !$single['is_uncountable']) {
                     $totalMarkWithoutOptional += $single['final_mark'];
                 }
             }
@@ -175,66 +178,6 @@ class ResultCalculator
         ];
     }
 
-    // private function processCombinedGroup($group, $gradeRules, $mark_configs)
-    // {
-    //     $combinedId = $group->first()['combined_id'];
-    //     $combinedName = $group->first()['combined_subject_name'];
-
-    //     $totalMaxMark = 0;
-    //     $totalConvertedMark = 0;
-
-    //     $parts = $group->map(function ($mark) use ($mark_configs, &$totalConvertedMark) {
-    //         $subjectId = $mark['subject_id'];
-    //         $config = $mark_configs[$subjectId] ?? null;
-    //         $partMarks = $mark['part_marks'] ?? [];
-    //         $convertedMark = 0;
-
-    //         foreach ($partMarks as $code => $obtained) {
-    //             $conversion = $config['conversion'][$code] ?? 100;
-    //             $convertedMark += $obtained * ($conversion / 100);
-    //         }
-
-    //         $totalConvertedMark += $convertedMark;
-
-    //         return [
-    //             'subject_id' => $subjectId,
-    //             'subject_name' => $mark['subject_name'],
-    //             'final_mark' => $mark['final_mark'],
-    //             'grade_point' => $mark['grade_point'],
-    //             'grade' => $mark['grade'],
-    //             'grace_mark' => $mark['grace_mark'],
-    //             'part_marks' => $mark['part_marks'] ?? [],
-    //             'pass_marks' => $config['pass_marks'] ?? [],
-    //             'overall_required' => $config['overall_required'],
-    //             'max_mark' => $convertedMark,
-    //         ];
-    //     })->values()->toArray();
-
-    //     $combinedFinalMark = $totalConvertedMark;
-    //     $percentage = $totalConvertedMark > 0 ? ($combinedFinalMark / $totalConvertedMark) * 100 : 0;
-    //     $combinedGradePoint = $this->getGradePoint($percentage, $gradeRules);
-    //     $combinedGrade = $this->getGrade($percentage, $gradeRules);
-
-    //     $sampleSubjectId = $group->first()['subject_id'];
-    //     $overallRequiredPercent = $mark_configs[$sampleSubjectId]['overall_required'];
-    //     $requiredMark = ($overallRequiredPercent / 100) * $totalConvertedMark;
-    //     $combinedStatus = $combinedFinalMark >= $requiredMark ? 'Pass' : 'Fail';
-
-    //     return [
-    //         'combined_id' => $combinedId,
-    //         'is_combined' => true,
-    //         'combined_name' => $combinedName,
-    //         'combined_final_mark' => $combinedFinalMark,
-    //         'combined_grade_point' => $combinedGradePoint,
-    //         'combined_grade' => $combinedGrade,
-    //         'combined_status' => $combinedStatus,
-    //         'is_uncountable' => false,
-    //         'parts' => $parts,
-    //         'total_max_mark' => $totalConvertedMark,
-    //         'percentage' => round($percentage, 2),
-    //         'fail_reason' => $combinedStatus === 'Fail' ? 'Below required mark' : null,
-    //     ];
-    // }
     private function processCombinedGroup($group, $gradeRules, $mark_configs)
     {
         $combinedId = $group->first()['combined_id'];
