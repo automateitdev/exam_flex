@@ -35,34 +35,37 @@ class ExamMarkCalculator
         $subjectName    = $subject['subject_name'] ?? null;
         $attendanceReq  = $subject['attendance_required'] ?? false;
 
+        // ABSENT CHECK
         $isAbsent = $attendanceReq && strtolower($student['attendance_status'] ?? 'absent') === 'absent';
         if ($isAbsent) {
             return $this->absentResult($studentId, $partMarks, $examName, $subjectName);
         }
 
-        // ১. টোটাল অবটেইনড মার্ক
+        // 1. TOTAL OBTAINED MARK
         $obtainedMark = $details->sum(fn($d) => $partMarks[$d['exam_code_title']] ?? 0);
 
-        // ২. টোটাল ম্যাক্স মার্ক (converted) — পার্সেন্টেজের জন্য
+        // 2. TOTAL MAX MARK (for percentage)
         $totalMaxMark = $details->sum(function ($d) {
             $total = $d['total_mark'] ?? 100;
             $conversion = ($d['conversion'] ?? 100) / 100;
             return $total * $conversion;
         });
 
-        // ৩. Individual Pass চেক
+        // 3. INDIVIDUAL PASS CHECK
         $individualPass = true;
         $failedParts = [];
+
         foreach ($details->where('pass_mark', '>', 0) as $d) {
             $code = $d['exam_code_title'];
             $got  = $partMarks[$code] ?? 0;
+
             if ($got < $d['pass_mark']) {
                 $individualPass = false;
                 $failedParts[] = "$code ($got < {$d['pass_mark']})";
             }
         }
 
-        // ৪. Overall Pass চেক
+        // 4. OVERALL PASS CHECK
         $overallDetail = $details->where('is_overall', true)->first();
         $hasOverallCheck = $overallDetail && ($overallDetail['overall_mark'] ?? 0) > 0;
 
@@ -76,29 +79,43 @@ class ExamMarkCalculator
                 $percent = ($d['conversion'] ?? 100) / 100;
                 $overallCalc += $mark * $percent;
             }
+
             $overallRequired = $overallDetail['overall_mark'];
             $overallPass = $overallCalc >= $overallRequired;
         }
 
-        // ৫. Threshold চেক (highest_fail_mark)
-        $thresholdPass = true;
-        $failThreshold = 0;
+        // 5. THRESHOLD PASS CHECK (highest_fail_mark)
+        $failThreshold = $highestFail > 0 ? $highestFail + 0.01 : 0;
+        $thresholdPass = $highestFail > 0 ? $obtainedMark >= $failThreshold : true;
 
-        if ($highestFail > 0) {
-            $failThreshold = $highestFail + 0.01;
-            $thresholdPass = $obtainedMark >= $failThreshold;
-        }
-
-        // ৬. ফাইনাল পাস/ফেল
+        // 6. PASS BEFORE GRACE
         $passBeforeGrace = $individualPass && $overallPass && $thresholdPass;
 
+        $pass = $passBeforeGrace;
         $finalMark = $obtainedMark;
         $appliedGrace = 0;
-        $pass = $passBeforeGrace;
         $remark = '';
 
-        // ৭. গ্রেস মার্ক — শুধু পাস হলে যোগ হবে
+        // FAILED REASONS (before grace)
+        if (!$passBeforeGrace) {
+            $reasons = [];
+
+            if (!$individualPass) {
+                $reasons[] = 'Failed Individual: ' . implode(', ', $failedParts);
+            }
+            if (!$overallPass) {
+                $reasons[] = "Overall: $overallCalc < $overallRequired";
+            }
+            if (!$thresholdPass) {
+                $reasons[] = "Below threshold: $obtainedMark < $failThreshold";
+            }
+
+            $remark = implode(' | ', $reasons);
+        }
+
+        // 7. APPLY GRACE (IF POSSIBLE)
         if (!$passBeforeGrace && $graceMark > 0 && $obtainedMark < $failThreshold) {
+
             $needed = ceil($failThreshold - $obtainedMark);
             $possibleGrace = min($needed, $graceMark);
             $tempMark = $obtainedMark + $possibleGrace;
@@ -111,10 +128,12 @@ class ExamMarkCalculator
             }
         }
 
-        // ৮. পার্সেন্টেজ বের করুন
-        $percentage = $totalMaxMark > 0 ? ($finalMark / $totalMaxMark) * 100 : 0;
+        // 8. PERCENTAGE
+        $percentage = ($totalMaxMark > 0)
+            ? ($finalMark / $totalMaxMark) * 100
+            : 0;
 
-        // ৯. গ্রেড পার্সেন্টেজ দিয়ে
+        // 9. GRADE USING PERCENTAGE
         $gradeInfo = $this->getGradeByPercentage($percentage, $gradePoints);
 
         return [
