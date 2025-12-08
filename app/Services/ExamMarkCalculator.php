@@ -92,14 +92,6 @@ class ExamMarkCalculator
         $pass = $passBeforeGrace;
         $remark = '';
 
-        if (!$passBeforeGrace) {
-            $reasons = [];
-            if (!$individualPass) $reasons[] = 'Failed Individual: ' . implode(', ', $failedParts);
-            if (!$overallPass) $reasons[] = "Overall";
-            if (!$thresholdPass) $reasons[] = "Below threshold";
-            $remark = implode(' | ', $reasons);
-        }
-
         // ৭. গ্রেস মার্ক — শুধু পাস হলে যোগ হবে
         if (!$passBeforeGrace && $graceMark > 0 && $obtainedMark < $failThreshold) {
             $needed = ceil($failThreshold - $obtainedMark);
