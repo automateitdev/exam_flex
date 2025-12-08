@@ -310,6 +310,7 @@ class ResultCalculator
         return [
             'subject_id'     => $subjectId,
             'subject_name'   => $subj['subject_name'],
+            'part_marks'     => $subj['part_marks'] ?? [],
             'total_marks'    => $totalMarks,                    // নতুন
             'converted_mark' => round($convertedMark, 2),       // নতুন
             'final_mark'     => round($finalMark, 2),           // গ্রেস যোগ হয়েছে
@@ -368,6 +369,7 @@ class ResultCalculator
                 'percentage'      => $maxConv > 0 ? round((($convMark + $grace) / $maxConv) * 100, 2) : 0,
                 'grade'           => $mark['grade'],
                 'grade_point'     => $mark['grade_point'],
+                'part_marks'      => $partMarks,
             ];
         })->values()->toArray();
 
