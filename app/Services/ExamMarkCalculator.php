@@ -127,13 +127,14 @@ class ExamMarkCalculator
         $subjectName    = $subject['subject_name'] ?? null;
         $attendanceReq  = $subject['attendance_required'] ?? false;
 
-        $isAbsent = $attendanceReq && strtolower($student['attendance_status'] ?? 'absent') === 'absent';
-        if ($isAbsent) {
-            return $this->absentResult($studentId, $partMarks, $examName, $subjectName);
-        }
-
         // ১. টোটাল অবটেইনড মার্ক
         $obtainedMark = $details->sum(fn($d) => $partMarks[$d['exam_code_title']] ?? 0);
+        
+        $isAbsent = $attendanceReq && strtolower($student['attendance_status'] ?? 'absent') === 'absent';
+        if ($isAbsent) {
+            return $this->absentResult($studentId, $partMarks, $examName, $subjectName, $obtainedMark);
+        }
+
 
         // ২. Individual Pass চেক (শুধু যদি pass_mark > 0 থাকে)
         $hasIndividualCheck = $details->where('pass_mark', '>', 0)->isNotEmpty();
