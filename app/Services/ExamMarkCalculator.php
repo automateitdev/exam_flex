@@ -95,8 +95,8 @@ class ExamMarkCalculator
         if (!$passBeforeGrace) {
             $reasons = [];
             if (!$individualPass) $reasons[] = 'Failed Individual: ' . implode(', ', $failedParts);
-            if (!$overallPass) $reasons[] = "Overall: $overallCalc < $overallRequired";
-            if (!$thresholdPass) $reasons[] = "Below threshold: $obtainedMark < " . round($failThreshold, 2);
+            if (!$overallPass) $reasons[] = "Overall";
+            if (!$thresholdPass) $reasons[] = "Below threshold";
             $remark = implode(' | ', $reasons);
         }
 
