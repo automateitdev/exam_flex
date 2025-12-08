@@ -293,7 +293,8 @@ class ResultCalculator
             $totalMarkForPart = $config['total_marks'][$code] ?? 100;
 
             $convertedMark += $obtained * ($conversion / 100);
-            $totalMaxConverted += $totalMarkForPart * ($conversion / 100);
+            // $totalMaxConverted += $totalMarkForPart * ($conversion / 100);
+            $totalMaxConverted += $totalMarkForPart;
         }
 
         // ৩. grace_mark যোগ (যদি থাকে)
@@ -350,7 +351,8 @@ class ResultCalculator
                 $totalPart  = $config['total_marks'][$code] ?? 100;
 
                 $convMark += $obtained * ($conv / 100);
-                $maxConv  += $totalPart * ($conv / 100);
+                // $maxConv  += $totalPart * ($conv / 100);
+                $maxConv  += $totalPart;
             }
 
             $grace = $mark['grace_mark'] ?? 0;
