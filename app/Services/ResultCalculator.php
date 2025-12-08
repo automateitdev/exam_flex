@@ -281,44 +281,41 @@ class ResultCalculator
         $config = $mark_configs[$subjectId] ?? [];
         $partMarks = $subj['part_marks'] ?? [];
 
-        // ১. total_marks = সব পার্টের অরিজিনাল মার্ক যোগ
+        // শুধু ডিসপ্লের জন্য total_marks এবং converted_mark হিসাব করছি
+        // গ্রেড বা পার্সেন্টেজ হিসাব করছি না — Mark Entry থেকে নিচ্ছি
         $totalMarks = collect($partMarks)->sum();
 
-        // ২. converted_mark = conversion অনুযায়ী
         $convertedMark = 0;
         $totalMaxConverted = 0;
 
         foreach ($partMarks as $code => $obtained) {
             $conversion = $config['conversion'][$code] ?? 100;
-            $totalMarkForPart = $config['total_marks'][$code] ?? 100;
+            $totalPart = $config['total_marks'][$code] ?? 100;
 
             $convertedMark += $obtained * ($conversion / 100);
-            // $totalMaxConverted += $totalMarkForPart * ($conversion / 100);
-            $totalMaxConverted += $totalMarkForPart;
+            $totalMaxConverted += $totalPart; // PR সহ সব পার্ট যোগ হবে
         }
 
-        // ৩. grace_mark যোগ (যদি থাকে)
         $grace = $subj['grace_mark'] ?? 0;
         $finalMark = $convertedMark + $grace;
 
-        // ৪. পার্সেন্টেজ
+        // পার্সেন্টেজ হিসাব করছি শুধু ডিসপ্লের জন্য — কিন্তু গ্রেড এর জন্য ব্যবহার করছি না!
         $percentage = $totalMaxConverted > 0 ? ($finalMark / $totalMaxConverted) * 100 : 0;
-
-        // ৫. গ্রেড পার্সেন্টেজ দিয়ে
-        $gradePoint = $this->getGradePoint($percentage, $gradeRules);
-        $grade = $this->getGrade($percentage, $gradeRules);
 
         return [
             'subject_id'     => $subjectId,
             'subject_name'   => $subj['subject_name'],
-            'part_marks'     => $subj['part_marks'] ?? [],
-            'total_marks'    => $totalMarks,                    // নতুন
-            'converted_mark' => round($convertedMark, 2),       // নতুন
-            'final_mark'     => round($finalMark, 2),           // গ্রেস যোগ হয়েছে
+            'part_marks'     => $partMarks,
+            'total_marks'    => $totalMarks,
+            'converted_mark' => round($convertedMark, 2),
+            'final_mark'     => round($finalMark, 2),
             'grace_mark'     => $grace,
             'percentage'     => round($percentage, 2),
-            'grade_point'    => $gradePoint,
-            'grade'          => $grade,
+
+            // গুরুত্বপূর্ণ: গ্রেড ও গ্রেড পয়েন্ট Mark Entry থেকে নিচ্ছি — নতুন হিসাব করছি না!
+            'grade_point'    => $subj['grade_point'],
+            'grade'          => $subj['grade'],
+
             'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
             'is_combined'    => false,
         ];
