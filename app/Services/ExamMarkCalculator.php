@@ -81,8 +81,13 @@ class ExamMarkCalculator
         }
 
         // ৫. Threshold চেক (highest_fail_mark)
-        $failThreshold = $highestFail > 0 ? $highestFail + 0.01 : PHP_INT_MAX;
-        $thresholdPass = $obtainedMark >= $failThreshold;
+        $thresholdPass = true;
+        $failThreshold = 0;
+
+        if ($highestFail > 0) {
+            $failThreshold = $highestFail + 0.01;
+            $thresholdPass = $obtainedMark >= $failThreshold;
+        }
 
         // ৬. ফাইনাল পাস/ফেল
         $passBeforeGrace = $individualPass && $overallPass && $thresholdPass;
