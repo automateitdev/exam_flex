@@ -75,7 +75,7 @@ class ExamMarkCalculator
         }
 
         // 4. Fail Threshold
-        $failThreshold = $highestFail > 0 ? $highestFail + 0.01 : 33;
+        $failThreshold = $highestFail + 0.01;
 
         // 5. Pass Before Grace
         $passBeforeGrace = $individualPass && $overallPass && ($obtainedMark >= $failThreshold);
