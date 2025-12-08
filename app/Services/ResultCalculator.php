@@ -325,9 +325,6 @@ class ResultCalculator
 
     private function processCombinedGroup($group, $gradeRules, $mark_configs)
     {
-        Log::info('Processing combined group', [
-            'group' => $group
-        ]);
         $combinedId   = $group->first()['combined_id'];
         $combinedName = $group->first()['combined_subject_name'];
 
@@ -387,8 +384,8 @@ class ResultCalculator
         $combinedGrade      = $this->getGrade($percentage, $gradeRules);
 
         // Overall Pass/Fail চেক
-        $sampleSubjectId = $group->first()['subject_id'];
-        $overallReqPercent = $mark_configs[$sampleSubjectId]['overall_required'] ?? 33.0;
+        $sampleSubjectId = (string) $group->first()['subject_id'];
+        $overallReqPercent = $mark_configs[$sampleSubjectId]['overall_required'];
         $requiredMark = ($overallReqPercent / 100) * $totalMaxConverted;
         $combinedStatus = $combinedFinalMark >= $requiredMark ? 'Pass' : 'Fail';
 
