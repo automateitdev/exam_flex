@@ -281,140 +281,88 @@ class ResultCalculator
         $config = $mark_configs[$subjectId] ?? [];
         $partMarks = $subj['part_marks'] ?? [];
 
-        // ১. total_marks = সব পার্টের অরিজিনাল মার্ক যোগ
+        // Original total
         $totalMarks = collect($partMarks)->sum();
 
-        // ২. converted_mark = conversion অনুযায়ী
+        // Converted mark (same as mark entry)
         $convertedMark = 0;
-        $totalMaxConverted = 0;
-
         foreach ($partMarks as $code => $obtained) {
             $conversion = $config['conversion'][$code] ?? 100;
-            $totalMarkForPart = $config['total_marks'][$code] ?? 100;
-
             $convertedMark += $obtained * ($conversion / 100);
-            // $totalMaxConverted += $totalMarkForPart * ($conversion / 100);
-            $totalMaxConverted += $totalMarkForPart;
         }
 
-        // ৩. grace_mark যোগ (যদি থাকে)
-        $grace = $subj['grace_mark'] ?? 0;
-        $finalMark = $convertedMark + $grace;
+        // Use already calculated grade + grade_point from mark entry
+        $grade = $subj['grade'];
+        $gradePoint = $subj['grade_point'];
 
-        // ৪. পার্সেন্টেজ
-        $percentage = $totalMaxConverted > 0 ? ($finalMark / $totalMaxConverted) * 100 : 0;
-
-        // ৫. গ্রেড পার্সেন্টেজ দিয়ে
-        $gradePoint = $this->getGradePoint($percentage, $gradeRules);
-        $grade = $this->getGrade($percentage, $gradeRules);
+        $finalMark = round($convertedMark + ($subj['grace_mark'] ?? 0), 2);
 
         return [
             'subject_id'     => $subjectId,
             'subject_name'   => $subj['subject_name'],
-            'part_marks'     => $subj['part_marks'] ?? [],
-            'total_marks'    => $totalMarks,                    // নতুন
-            'converted_mark' => round($convertedMark, 2),       // নতুন
-            'final_mark'     => round($finalMark, 2),           // গ্রেস যোগ হয়েছে
-            'grace_mark'     => $grace,
-            'percentage'     => round($percentage, 2),
-            'grade_point'    => $gradePoint,
+            'final_mark'     => $finalMark,
+            'converted_mark' => round($convertedMark, 2),
             'grade'          => $grade,
+            'grade_point'    => $gradePoint,
+            'grace_mark'     => $subj['grace_mark'] ?? 0,
             'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
             'is_combined'    => false,
+            'part_marks'     => $partMarks,
         ];
     }
+
 
     private function processCombinedGroup($group, $gradeRules, $mark_configs)
     {
         $combinedId   = $group->first()['combined_id'];
         $combinedName = $group->first()['combined_subject_name'];
 
-        $totalMarks       = 0;      // CQ + MCQ + PR (অরিজিনাল)
-        $convertedMark    = 0;      // conversion পরে
-        $totalMaxConverted = 0;     // সর্বোচ্চ converted মার্ক
-        $totalGrace       = 0;
+        $totalConverted = 0;
+        $totalGrace = 0;
+        $totalMarks = 0;
 
-        $parts = $group->map(function ($mark) use ($mark_configs, &$totalMarks, &$convertedMark, &$totalMaxConverted, &$totalGrace) {
-            $subjectId = $mark['subject_id'];
-            $config    = $mark_configs[$subjectId] ?? [];
-            $partMarks = $mark['part_marks'] ?? [];
+        $allPass = true;
 
-            // অরিজিনাল মার্ক যোগ
-            $partTotal = collect($partMarks)->sum();
-            $totalMarks += $partTotal;
+        $parts = $group->map(function ($mark) use (&$totalConverted, &$totalMarks, &$totalGrace, &$allPass) {
 
-            $convMark = 0;
-            $maxConv  = 0;
+            $totalMarks += collect($mark['part_marks'])->sum();
 
-            foreach ($partMarks as $code => $obtained) {
-                $conv       = $config['conversion'][$code] ?? 100;
-                $totalPart  = $config['total_marks'][$code] ?? 100;
+            $converted = $mark['converted_mark'];  // already calculated in mark entry
+            $grace = $mark['grace_mark'];
 
-                $convMark += $obtained * ($conv / 100);
-                // $maxConv  += $totalPart * ($conv / 100);
-                $maxConv  += $totalPart;
-            }
-
-            $grace = $mark['grace_mark'] ?? 0;
+            $totalConverted += $converted;
             $totalGrace += $grace;
 
-            $convertedMark    += $convMark;
-            $totalMaxConverted += $maxConv;
+            if ($mark['grade'] === 'F') {
+                $allPass = false;
+            }
 
             return [
-                'subject_id'      => $subjectId,
-                'subject_name'    => $mark['subject_name'],
-                'total_marks'     => $partTotal,
-                'converted_mark'  => round($convMark, 2),
-                'final_mark'      => round($convMark + $grace, 2),
-                'grace_mark'      => $grace,
-                'percentage'      => $maxConv > 0 ? round((($convMark + $grace) / $maxConv) * 100, 2) : 0,
-                'grade'           => $mark['grade'],
-                'grade_point'     => $mark['grade_point'],
-                'part_marks'      => $partMarks,
+                'subject_id'     => $mark['subject_id'],
+                'subject_name'   => $mark['subject_name'],
+                'final_mark'     => $mark['final_mark'],
+                'grade'          => $mark['grade'],
+                'grade_point'    => $mark['grade_point'],
+                'part_marks'     => $mark['part_marks'],
+                'grace_mark'     => $grace,
             ];
         })->values()->toArray();
 
-        // কম্বাইন্ডের ফাইনাল মার্ক (গ্রেস সহ)
-        $combinedFinalMark = $convertedMark + $totalGrace;
-
-        // পার্সেন্টেজ
-        $percentage = $totalMaxConverted > 0 ? ($combinedFinalMark / $totalMaxConverted) * 100 : 0;
-
-        // গ্রেড এবং পয়েন্ট (পার্সেন্টেজ দিয়ে)
-        $combinedGradePoint = $this->getGradePoint($percentage, $gradeRules);
-        $combinedGrade      = $this->getGrade($percentage, $gradeRules);
-
-        // Overall Pass/Fail চেক
-        $sampleSubjectId = (string) $group->first()['subject_id'];
-        $overallReqPercent = $mark_configs[$sampleSubjectId]['overall_required'];
-        $requiredMark = ($overallReqPercent / 100) * $totalMaxConverted;
-        $combinedStatus = $combinedFinalMark >= $requiredMark ? 'Pass' : 'Fail';
+        $final = $totalConverted + $totalGrace;
 
         return [
-            'combined_id'           => $combinedId,
-            'is_combined'           => true,
-            'combined_name'         => $combinedName,
-
-            // আপনার চাওয়া সব ফিল্ড
-            'total_marks'           => $totalMarks,
-            'converted_mark'        => round($convertedMark, 2),
-            'final_mark'            => round($combinedFinalMark, 2),
-            'grace_mark'            => $totalGrace,
-            'percentage'            => round($percentage, 2),
-
-            // কম্বাইন্ডের গ্রেড
-            'combined_final_mark'   => round($combinedFinalMark, 2),
-            'combined_grade_point'  => $combinedGradePoint,
-            'combined_grade'        => $combinedGrade,
-            'combined_status'       => $combinedStatus,
-
-            'is_uncountable'        => false,
-            'parts'                 => $parts,
-            'total_max_mark'        => round($totalMaxConverted, 2),
-            'fail_reason'           => $combinedStatus === 'Fail' ? 'Below required mark' : null,
+            'combined_id'          => $combinedId,
+            'is_combined'          => true,
+            'combined_name'        => $combinedName,
+            'combined_final_mark'  => round($final, 2),
+            'combined_grade'       => $allPass ? 'Pass' : 'Fail',
+            'combined_grade_point' => $allPass ? max(array_column($parts, 'grade_point')) : 0,
+            'combined_status'      => $allPass ? 'Pass' : 'Fail',
+            'parts'                => $parts,
+            'is_uncountable'       => false,
         ];
     }
+
     // === GPA থেকে Letter Grade (SSC/HSC) ===
     private function gpaToLetterGrade($gpa, $gradeRules)
     {
