@@ -326,7 +326,7 @@ class ResultCalculator
     private function processCombinedGroup($group, $gradeRules, $mark_configs)
     {
         Log::info('Processing combined group', [
-            'mark_configs' => $mark_configs
+            'group' => $group
         ]);
         $combinedId   = $group->first()['combined_id'];
         $combinedName = $group->first()['combined_subject_name'];
