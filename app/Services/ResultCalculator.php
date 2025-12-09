@@ -509,30 +509,80 @@ class ResultCalculator
         $combinedId   = $group->first()['combined_id'];
         $combinedName = $group->first()['combined_subject_name'];
 
-        // Collect grade points and parts
-        $parts = $group->map(function ($mark) {
+        $totalGradePoint = 0;
+        $partCount = 0;
+        $totalObtained = 0;
+        $totalMax = 0;
+
+        $parts = $group->map(function ($mark) use (&$totalGradePoint, &$partCount, &$totalObtained, &$totalMax, $mark_configs) {
+            $subjectId = $mark['subject_id'];
+            $config    = $mark_configs[$subjectId] ?? [];
+            $partMarks = $mark['part_marks'] ?? [];
+
+            // শুধু ডিসপ্লের জন্য converted mark হিসাব (যদি দেখাতে চান)
+            $converted = 0;
+            $maxForThisSubject = 0;
+            foreach ($partMarks as $code => $obtainedMark) {
+                $conv = $config['conversion'][$code] ?? 100;
+                $totalPart = $config['total_marks'][$code] ?? 100;
+
+                $converted += $obtainedMark * ($conv / 100);
+                $maxForThisSubject += $totalPart;
+            }
+
+            $totalObtained += $converted;
+            $totalMax += $maxForThisSubject;
+
+            // গ্রেড পয়েন্ট যোগ করুন (Mark Entry থেকে আসা)
+            $totalGradePoint += $mark['grade_point'];
+            $partCount++;
+
             return [
-                'subject_id'   => $mark['subject_id'],
-                'subject_name' => $mark['subject_name'],
-                'grade_point'  => $mark['grade_point'] ?? 0,
-                'grade'        => $mark['grade'] ?? 'F',
-                'part_marks'   => $mark['part_marks'] ?? [],
+                'subject_id'      => $subjectId,
+                'subject_name'    => $mark['subject_name'],
+                'total_marks'     => collect($partMarks)->sum(),
+                'converted_mark'  => round($converted, 2),
+                'final_mark'      => $mark['final_mark'], // Mark Entry থেকে
+                'grace_mark'      => $mark['grace_mark'] ?? 0,
+                'percentage'      => $maxForThisSubject > 0 ? round(($converted / $maxForThisSubject) * 100, 2) : 0,
+                'grade'           => $mark['grade'],
+                'grade_point'     => $mark['grade_point'],
+                'part_marks'      => $partMarks,
             ];
         })->values()->toArray();
 
-        // Average grade point for combined
-        $combinedGradePoint = round(collect($parts)->avg('grade_point'), 2);
-        $combinedGrade      = $this->gpToGrade($combinedGradePoint, $gradeRules);
+        // কম্বাইন্ডের গ্রেড পয়েন্ট = গড়
+        $combinedGradePoint = $partCount > 0 ? round($totalGradePoint / $partCount, 2) : 0;
+
+        // গ্রেড পয়েন্ট থেকে লেটার গ্রেড (যেমন 4.25 → A)
+        $combinedGrade = $this->gpaToLetterGrade($combinedGradePoint, $gradeRules);
+
+        // overall_required চেক (যদি লাগে)
+        $totalPercentage = $totalMax > 0 ? ($totalObtained / $totalMax) * 100 : 0;
+        $sampleSubjectId = (string) $group->first()['subject_id'];
+        $overallRequired = $mark_configs[$sampleSubjectId]['overall_required'] ?? 33;
+        $combinedStatus = $totalPercentage >= $overallRequired ? 'Pass' : 'Fail';
 
         return [
-            'combined_id'          => $combinedId,
-            'is_combined'          => true,
-            'combined_name'        => $combinedName,
-            'combined_grade_point' => $combinedGradePoint,
-            'combined_grade'       => $combinedGrade,
-            'combined_status'      => $combinedGrade === 'F' ? 'Fail' : 'Pass',
-            'parts'                => $parts,
-            'is_uncountable'       => false,
+            'combined_id'           => $combinedId,
+            'is_combined'           => true,
+            'combined_name'         => $combinedName,
+
+            'total_marks'           => $totalObtained, // অরিজিনাল যোগ (যদি দেখাতে চান)
+            'converted_mark'        => round($totalObtained, 2),
+            'final_mark'            => round($totalObtained, 2), // গ্রেস লাগবে না
+            'grace_mark'            => 0,
+            'percentage'            => round($totalPercentage, 2),
+
+            'combined_final_mark'   => null, // দরকার নেই
+            'combined_grade_point'  => $combinedGradePoint,
+            'combined_grade'        => $combinedGrade,
+            'combined_status'       => $combinedStatus,
+
+            'is_uncountable'        => false,
+            'parts'                 => $parts,
+            'total_max_mark'        => $totalMax,
+            'fail_reason'           => $combinedStatus === 'Fail' ? 'Below required percentage' : null,
         ];
     }
 
