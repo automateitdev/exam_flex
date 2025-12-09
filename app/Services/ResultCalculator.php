@@ -509,19 +509,47 @@ class ResultCalculator
     //         'fail_reason'           => $combinedStatus === 'Fail' ? 'Below required mark' : null,
     //     ];
     // }
+
+    
     private function processCombinedGroup($group, $gradeRules, $mark_configs)
     {
         $combinedId   = $group->first()['combined_id'];
         $combinedName = $group->first()['combined_subject_name'];
 
-        // Collect grade points and parts
-        $parts = $group->map(function ($mark) {
+        $totalMarks = 0;
+        $totalConverted = 0;
+        $totalGrace = 0;
+
+        $parts = $group->map(function ($mark) use ($mark_configs, &$totalMarks, &$totalConverted, &$totalGrace) {
+            $subjectId = $mark['subject_id'];
+            $partMarks = $mark['part_marks'] ?? [];
+            $config = $mark_configs[$subjectId] ?? [];
+
+            $convertedMark = 0;
+            $totalPartMarks = collect($partMarks)->sum();
+
+            foreach ($partMarks as $code => $obtained) {
+                $conversion = $config['conversion'][$code] ?? 100;
+                $convertedMark += $obtained * ($conversion / 100);
+            }
+
+            $grace = $mark['grace_mark'] ?? 0;
+            $finalMark = $convertedMark + $grace;
+
+            $totalMarks += $totalPartMarks;
+            $totalConverted += $convertedMark;
+            $totalGrace += $grace;
+
             return [
-                'subject_id'   => $mark['subject_id'],
-                'subject_name' => $mark['subject_name'],
-                'grade_point'  => $mark['grade_point'] ?? 0,
-                'grade'        => $mark['grade'] ?? 'F',
-                'part_marks'   => $mark['part_marks'] ?? [],
+                'subject_id'     => $subjectId,
+                'subject_name'   => $mark['subject_name'],
+                'part_marks'     => $partMarks,
+                'total_marks'    => $totalPartMarks,
+                'converted_mark' => round($convertedMark, 2),
+                'final_mark'     => round($finalMark, 2),
+                'grace_mark'     => $grace,
+                'grade_point'    => $mark['grade_point'] ?? 0,
+                'grade'          => $mark['grade'] ?? 'F',
             ];
         })->values()->toArray();
 
@@ -533,6 +561,10 @@ class ResultCalculator
             'combined_id'          => $combinedId,
             'is_combined'          => true,
             'combined_name'        => $combinedName,
+            'total_marks'          => $totalMarks,
+            'converted_mark'       => round($totalConverted, 2),
+            'final_mark'           => round($totalConverted + $totalGrace, 2),
+            'grace_mark'           => $totalGrace,
             'combined_grade_point' => $combinedGradePoint,
             'combined_grade'       => $combinedGrade,
             'combined_status'      => $combinedGrade === 'F' ? 'Fail' : 'Pass',
@@ -540,8 +572,6 @@ class ResultCalculator
             'is_uncountable'       => false,
         ];
     }
-
-
 
     // === GPA থেকে Letter Grade (SSC/HSC) ===
     private function gpaToLetterGrade($gpa, $gradeRules)
