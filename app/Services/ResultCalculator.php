@@ -412,98 +412,130 @@ class ResultCalculator
     //     ];
     // }
 
+    // private function processCombinedGroup($group, $gradeRules, $mark_configs)
+    // {
+    //     $combinedId   = $group->first()['combined_id'];
+    //     $combinedName = $group->first()['combined_subject_name'];
+
+    //     $totalMarks       = 0;
+    //     $convertedMark    = 0;
+    //     $totalGrace       = 0;
+
+    //     // ❗ We will not calculate wrong max from part configs.
+    //     // Instead: max mark = number_of_parts × 100 (because frontend uses 100 scale)
+    //     $totalMaxConverted = $group->count() * 100;
+
+    //     $parts = $group->map(function ($mark) use (&$totalMarks, &$convertedMark, &$totalGrace) {
+
+    //         $partTotal      = $mark['total_marks'] ?? collect($mark['part_marks'])->sum();
+    //         $finalMark      = $mark['final_mark'];
+    //         $converted      = $mark['final_mark'] - ($mark['grace_mark'] ?? 0);
+    //         $grace          = $mark['grace_mark'] ?? 0;
+
+    //         $totalMarks    += $partTotal;
+    //         $convertedMark += $converted;
+    //         $totalGrace    += $grace;
+
+    //         // ❗ percentage must be based on 100 because FE uses 100-scale conversion
+    //         $percentage = round(($finalMark / 100) * 100, 2);
+
+    //         return [
+    //             'subject_id'      => $mark['subject_id'],
+    //             'subject_name'    => $mark['subject_name'],
+    //             'total_marks'     => $partTotal,
+    //             'converted_mark'  => $converted,
+    //             'final_mark'      => $finalMark,
+    //             'grace_mark'      => $grace,
+    //             'percentage'      => $percentage,
+    //             'grade'           => $mark['grade'],         // ✔ Use frontend grade
+    //             'grade_point'     => $mark['grade_point'],   // ✔ Use frontend grade_point
+    //             'part_marks'      => $mark['part_marks'],
+    //         ];
+    //     })->values()->toArray();
+
+    //     // -------------------------
+    //     // 💡 Combined Calculations
+    //     // -------------------------
+
+    //     $combinedFinalMark = $convertedMark + $totalGrace;
+
+    //     // ❗ BASED ON 100-SCALE — correct logic
+    //     $percentage = round(($combinedFinalMark / $totalMaxConverted) * 100, 2);
+
+    //     // ❗ DO NOT CALCULATE GRADE FROM % — use average grade_point
+    //     $combinedGradePoint = round(collect($parts)->avg('grade_point'), 2);
+    //     $combinedGrade      = $this->gpToGrade($combinedGradePoint, $gradeRules);
+
+    //     // -------------------------
+    //     // Pass/Fail rule
+    //     // -------------------------
+
+    //     // overall_required is % (like 33)
+    //     $sampleSubjectId = (string) $group->first()['subject_id'];
+    //     $overallReqPercent = $mark_configs[$sampleSubjectId]['overall_required'] ?? 33;
+
+    //     $requiredMark = ($overallReqPercent / 100) * $totalMaxConverted;
+
+    //     if ($combinedGrade === 'F') {
+    //         $combinedStatus = 'Fail';
+    //     } else {
+    //         $combinedStatus = $combinedFinalMark >= $requiredMark ? 'Pass' : 'Fail';
+    //     }
+
+    //     return [
+    //         'combined_id'           => $combinedId,
+    //         'is_combined'           => true,
+    //         'combined_name'         => $combinedName,
+    //         'total_marks'           => $totalMarks,
+    //         'converted_mark'        => round($convertedMark, 2),
+    //         'final_mark'            => round($combinedFinalMark, 2),
+    //         'grace_mark'            => $totalGrace,
+    //         'percentage'            => $percentage,
+    //         'combined_final_mark'   => round($combinedFinalMark, 2),
+    //         'combined_grade_point'  => $combinedGradePoint,
+    //         'combined_grade'        => $combinedGrade,
+    //         'combined_status'       => $combinedStatus,
+    //         'is_uncountable'        => false,
+    //         'parts'                 => $parts,
+
+    //         // ✔ SAFE: FE expects total_max_mark → send 100 × parts_count
+    //         'total_max_mark'        => $totalMaxConverted,
+
+    //         'fail_reason'           => $combinedStatus === 'Fail' ? 'Below required mark' : null,
+    //     ];
+    // }
     private function processCombinedGroup($group, $gradeRules, $mark_configs)
     {
         $combinedId   = $group->first()['combined_id'];
         $combinedName = $group->first()['combined_subject_name'];
 
-        $totalMarks       = 0;
-        $convertedMark    = 0;
-        $totalGrace       = 0;
-
-        // ❗ We will not calculate wrong max from part configs.
-        // Instead: max mark = number_of_parts × 100 (because frontend uses 100 scale)
-        $totalMaxConverted = $group->count() * 100;
-
-        $parts = $group->map(function ($mark) use (&$totalMarks, &$convertedMark, &$totalGrace) {
-
-            $partTotal      = $mark['total_marks'] ?? collect($mark['part_marks'])->sum();
-            $finalMark      = $mark['final_mark'];
-            $converted      = $mark['final_mark'] - ($mark['grace_mark'] ?? 0);
-            $grace          = $mark['grace_mark'] ?? 0;
-
-            $totalMarks    += $partTotal;
-            $convertedMark += $converted;
-            $totalGrace    += $grace;
-
-            // ❗ percentage must be based on 100 because FE uses 100-scale conversion
-            $percentage = round(($finalMark / 100) * 100, 2);
-
+        // Collect grade points and parts
+        $parts = $group->map(function ($mark) {
             return [
-                'subject_id'      => $mark['subject_id'],
-                'subject_name'    => $mark['subject_name'],
-                'total_marks'     => $partTotal,
-                'converted_mark'  => $converted,
-                'final_mark'      => $finalMark,
-                'grace_mark'      => $grace,
-                'percentage'      => $percentage,
-                'grade'           => $mark['grade'],         // ✔ Use frontend grade
-                'grade_point'     => $mark['grade_point'],   // ✔ Use frontend grade_point
-                'part_marks'      => $mark['part_marks'],
+                'subject_id'   => $mark['subject_id'],
+                'subject_name' => $mark['subject_name'],
+                'grade_point'  => $mark['grade_point'] ?? 0,
+                'grade'        => $mark['grade'] ?? 'F',
+                'part_marks'   => $mark['part_marks'] ?? [],
             ];
         })->values()->toArray();
 
-        // -------------------------
-        // 💡 Combined Calculations
-        // -------------------------
-
-        $combinedFinalMark = $convertedMark + $totalGrace;
-
-        // ❗ BASED ON 100-SCALE — correct logic
-        $percentage = round(($combinedFinalMark / $totalMaxConverted) * 100, 2);
-
-        // ❗ DO NOT CALCULATE GRADE FROM % — use average grade_point
+        // Average grade point for combined
         $combinedGradePoint = round(collect($parts)->avg('grade_point'), 2);
         $combinedGrade      = $this->gpToGrade($combinedGradePoint, $gradeRules);
 
-        // -------------------------
-        // Pass/Fail rule
-        // -------------------------
-
-        // overall_required is % (like 33)
-        $sampleSubjectId = (string) $group->first()['subject_id'];
-        $overallReqPercent = $mark_configs[$sampleSubjectId]['overall_required'] ?? 33;
-
-        $requiredMark = ($overallReqPercent / 100) * $totalMaxConverted;
-
-        if ($combinedGrade === 'F') {
-            $combinedStatus = 'Fail';
-        } else {
-            $combinedStatus = $combinedFinalMark >= $requiredMark ? 'Pass' : 'Fail';
-        }
-
         return [
-            'combined_id'           => $combinedId,
-            'is_combined'           => true,
-            'combined_name'         => $combinedName,
-            'total_marks'           => $totalMarks,
-            'converted_mark'        => round($convertedMark, 2),
-            'final_mark'            => round($combinedFinalMark, 2),
-            'grace_mark'            => $totalGrace,
-            'percentage'            => $percentage,
-            'combined_final_mark'   => round($combinedFinalMark, 2),
-            'combined_grade_point'  => $combinedGradePoint,
-            'combined_grade'        => $combinedGrade,
-            'combined_status'       => $combinedStatus,
-            'is_uncountable'        => false,
-            'parts'                 => $parts,
-
-            // ✔ SAFE: FE expects total_max_mark → send 100 × parts_count
-            'total_max_mark'        => $totalMaxConverted,
-
-            'fail_reason'           => $combinedStatus === 'Fail' ? 'Below required mark' : null,
+            'combined_id'          => $combinedId,
+            'is_combined'          => true,
+            'combined_name'        => $combinedName,
+            'combined_grade_point' => $combinedGradePoint,
+            'combined_grade'       => $combinedGrade,
+            'combined_status'      => $combinedGrade === 'F' ? 'Fail' : 'Pass',
+            'parts'                => $parts,
+            'is_uncountable'       => false,
         ];
     }
+
 
 
     // === GPA থেকে Letter Grade (SSC/HSC) ===
