@@ -476,7 +476,11 @@ class ResultCalculator
 
         $requiredMark = ($overallReqPercent / 100) * $totalMaxConverted;
 
-        $combinedStatus = $combinedFinalMark >= $requiredMark ? 'Pass' : 'Fail';
+        if ($combinedGrade === 'F') {
+            $combinedStatus = 'Fail';
+        } else {
+            $combinedStatus = $combinedFinalMark >= $requiredMark ? 'Pass' : 'Fail';
+        }
 
         return [
             'combined_id'           => $combinedId,
