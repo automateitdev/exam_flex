@@ -433,8 +433,8 @@ class ResultCalculator
             $maxConv  = 0;
 
             foreach ($partMarks as $code => $obtained) {
-                $conv      = $config['conversion'][$code];
-                $totalPart = $config['total_marks'][$code];
+                $conv      = $config['conversion'][$code] ?? 100;
+                $totalPart = $config['total_marks'][$code] ?? 100;
 
                 $convMark += $obtained * ($conv / 100);
                 $maxConv  += $totalPart; // শুধু total_marks যোগ করুন
@@ -463,8 +463,13 @@ class ResultCalculator
         $combinedFinalMark = $convertedMark + $totalGrace;
         $percentage = $totalMaxConverted > 0 ? ($combinedFinalMark / $totalMaxConverted) * 100 : 0;
 
-        $combinedGradePoint = $this->getGradePoint($percentage, $gradeRules);
-        $combinedGrade      = $this->getGrade($percentage, $gradeRules);
+        // $combinedGradePoint = $this->getGradePoint($percentage, $gradeRules);
+        // $combinedGrade      = $this->getGrade($percentage, $gradeRules);
+        // Do NOT re-calc grade from %.
+        // Combined grade = average of part grade_points
+        $combinedGradePoint = round(collect($parts)->avg('grade_point'), 2);
+        $combinedGrade      = $this->gpToGrade($combinedGradePoint, $gradeRules);
+
 
         $sampleSubjectId = (string) $group->first()['subject_id'];
         $overallReqPercent = $mark_configs[$sampleSubjectId]['overall_required'];
