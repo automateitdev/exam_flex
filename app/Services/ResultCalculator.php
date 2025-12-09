@@ -429,7 +429,7 @@ class ResultCalculator
 
             $partTotal      = $mark['total_marks'] ?? collect($mark['part_marks'])->sum();
             $finalMark      = $mark['final_mark'];
-            $converted      = $mark['converted_mark'];
+            $converted      = $mark['final_mark'] - ($mark['grace_mark'] ?? 0);
             $grace          = $mark['grace_mark'] ?? 0;
 
             $totalMarks    += $partTotal;
