@@ -467,7 +467,7 @@ class ResultCalculator
         $combinedGrade      = $this->getGrade($percentage, $gradeRules);
 
         $sampleSubjectId = (string) $group->first()['subject_id'];
-        $overallReqPercent = $mark_configs[$sampleSubjectId]['overall_required'] ?? 33;
+        $overallReqPercent = $mark_configs[$sampleSubjectId]['overall_required'];
         $requiredMark = ($overallReqPercent / 100) * $totalMaxConverted;
         $combinedStatus = $combinedFinalMark >= $requiredMark ? 'Pass' : 'Fail';
 
