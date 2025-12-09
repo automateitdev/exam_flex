@@ -433,8 +433,8 @@ class ResultCalculator
             $maxConv  = 0;
 
             foreach ($partMarks as $code => $obtained) {
-                $conv      = $config['conversion'][$code] ?? 100;
-                $totalPart = $config['total_marks'][$code] ?? 100;
+                $conv      = $config['conversion'][$code];
+                $totalPart = $config['total_marks'][$code];
 
                 $convMark += $obtained * ($conv / 100);
                 $maxConv  += $totalPart; // শুধু total_marks যোগ করুন
