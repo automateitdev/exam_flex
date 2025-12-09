@@ -123,7 +123,7 @@ class ResultCalculator
                 $single['is_optional'] = ($first['subject_id'] == $optionalId);
                 $merged[] = $single;
 
-                if (!$single['is_uncountable']) {
+                if (!$single['is_uncountable'] && !$single['is_optional']) {
                     $totalGP += $single['grade_point'];
                     $subjectCount++;
                 }
