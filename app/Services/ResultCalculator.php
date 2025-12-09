@@ -277,6 +277,10 @@ class ResultCalculator
 
     private function processSingle($subj, $gradeRules, $mark_configs)
     {
+        Log::channel('exam_flex_log')->info('subject: ', $subj);
+        Log::channel('exam_flex_log')->info('mark_configs: ',  $mark_configs);
+        Log::channel('exam_flex_log')->info('gradeRules: ', $gradeRules);
+
         $subjectId = $subj['subject_id'];
         $config = $mark_configs[$subjectId] ?? [];
         $partMarks = $subj['part_marks'] ?? [];
