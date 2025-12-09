@@ -127,7 +127,7 @@ class ResultCalculator
                     $totalGP += $single['grade_point'];
                     $subjectCount++;
                 }
-                if ($single['grade'] === 'F' && !$single['is_uncountable']) {
+                if ($single['grade'] === 'F' && !$single['is_uncountable'] && !$single['is_optional']) {
                     $failed = true;
                 }
 
@@ -510,7 +510,7 @@ class ResultCalculator
     //     ];
     // }
 
-    
+
     private function processCombinedGroup($group, $gradeRules, $mark_configs)
     {
         $combinedId   = $group->first()['combined_id'];
