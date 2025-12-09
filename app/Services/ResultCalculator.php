@@ -321,94 +321,169 @@ class ResultCalculator
         ];
     }
 
+    // private function processCombinedGroup($group, $gradeRules, $mark_configs)
+    // {
+    //     $combinedId   = $group->first()['combined_id'];
+    //     $combinedName = $group->first()['combined_subject_name'];
+
+    //     $totalMarks       = 0;      // CQ + MCQ + PR (অরিজিনাল)
+    //     $convertedMark    = 0;      // conversion পরে
+    //     $totalMaxConverted = 0;     // সর্বোচ্চ converted মার্ক
+    //     $totalGrace       = 0;
+
+    //     $parts = $group->map(function ($mark) use ($mark_configs, &$totalMarks, &$convertedMark, &$totalMaxConverted, &$totalGrace) {
+    //         $subjectId = $mark['subject_id'];
+    //         $config    = $mark_configs[$subjectId] ?? [];
+    //         $partMarks = $mark['part_marks'] ?? [];
+
+    //         // অরিজিনাল মার্ক যোগ
+    //         $partTotal = collect($partMarks)->sum();
+    //         $totalMarks += $partTotal;
+
+    //         $convMark = 0;
+    //         $maxConv  = 0;
+
+    //         foreach ($partMarks as $code => $obtained) {
+    //             $conv       = $config['conversion'][$code] ?? 100;
+    //             $totalPart  = $config['total_marks'][$code] ?? 100;
+
+    //             $convMark += $obtained * ($conv / 100);
+    //             $maxConv  += $totalPart;
+    //         }
+
+    //         $grace = $mark['grace_mark'] ?? 0;
+    //         $totalGrace += $grace;
+
+    //         $convertedMark    += $convMark;
+    //         $totalMaxConverted += $maxConv;
+
+    //         return [
+    //             'subject_id'      => $subjectId,
+    //             'subject_name'    => $mark['subject_name'],
+    //             'total_marks'     => $partTotal,
+    //             'converted_mark'  => round($convMark, 2),
+    //             'final_mark'      => round($convMark + $grace, 2),
+    //             'grace_mark'      => $grace,
+    //             'percentage'      => $maxConv > 0 ? round((($convMark + $grace) / $maxConv) * 100, 2) : 0,
+    //             'grade'           => $mark['grade'],
+    //             'grade_point'     => $mark['grade_point'],
+    //             'part_marks'      => $partMarks,
+    //         ];
+    //     })->values()->toArray();
+
+    //     // কম্বাইন্ডের ফাইনাল মার্ক (গ্রেস সহ)
+    //     $combinedFinalMark = $convertedMark + $totalGrace;
+
+    //     // পার্সেন্টেজ
+    //     $percentage = $totalMaxConverted > 0 ? ($combinedFinalMark / $totalMaxConverted) * 100 : 0;
+
+    //     // গ্রেড এবং পয়েন্ট (পার্সেন্টেজ দিয়ে)
+    //     $combinedGradePoint = $this->getGradePoint($percentage, $gradeRules);
+    //     $combinedGrade      = $this->getGrade($percentage, $gradeRules);
+
+    //     // Overall Pass/Fail চেক
+    //     $sampleSubjectId = (string) $group->first()['subject_id'];
+    //     $overallReqPercent = $mark_configs[$sampleSubjectId]['overall_required'];
+    //     $requiredMark = ($overallReqPercent / 100) * $totalMaxConverted;
+    //     $combinedStatus = $combinedFinalMark >= $requiredMark ? 'Pass' : 'Fail';
+
+    //     return [
+    //         'combined_id'           => $combinedId,
+    //         'is_combined'           => true,
+    //         'combined_name'         => $combinedName,
+
+    //         // আপনার চাওয়া সব ফিল্ড
+    //         'total_marks'           => $totalMarks,
+    //         'converted_mark'        => round($convertedMark, 2),
+    //         'final_mark'            => round($combinedFinalMark, 2),
+    //         'grace_mark'            => $totalGrace,
+    //         'percentage'            => round($percentage, 2),
+
+    //         // কম্বাইন্ডের গ্রেড
+    //         'combined_final_mark'   => round($combinedFinalMark, 2),
+    //         'combined_grade_point'  => $combinedGradePoint,
+    //         'combined_grade'        => $combinedGrade,
+    //         'combined_status'       => $combinedStatus,
+
+    //         'is_uncountable'        => false,
+    //         'parts'                 => $parts,
+    //         'total_max_mark'        => round($totalMaxConverted, 2),
+    //         'fail_reason'           => $combinedStatus === 'Fail' ? 'Below required mark' : null,
+    //     ];
+    // }
     private function processCombinedGroup($group, $gradeRules, $mark_configs)
     {
         $combinedId   = $group->first()['combined_id'];
         $combinedName = $group->first()['combined_subject_name'];
 
-        $totalMarks       = 0;      // CQ + MCQ + PR (অরিজিনাল)
-        $convertedMark    = 0;      // conversion পরে
-        $totalMaxConverted = 0;     // সর্বোচ্চ converted মার্ক
-        $totalGrace       = 0;
+        $totalObtained = 0;
+        $totalMax      = 0;
+        $totalGrace    = 0;
+        $parts         = [];
 
-        $parts = $group->map(function ($mark) use ($mark_configs, &$totalMarks, &$convertedMark, &$totalMaxConverted, &$totalGrace) {
+        foreach ($group as $mark) {
             $subjectId = $mark['subject_id'];
             $config    = $mark_configs[$subjectId] ?? [];
             $partMarks = $mark['part_marks'] ?? [];
 
-            // অরিজিনাল মার্ক যোগ
-            $partTotal = collect($partMarks)->sum();
-            $totalMarks += $partTotal;
-
-            $convMark = 0;
-            $maxConv  = 0;
+            $partObtained = 0;
+            $partMax      = 0;
 
             foreach ($partMarks as $code => $obtained) {
-                $conv       = $config['conversion'][$code] ?? 100;
-                $totalPart  = $config['total_marks'][$code] ?? 100;
+                $conv      = $config['conversion'][$code] ?? 100;
+                $totalPart = $config['total_marks'][$code] ?? 100;
 
-                $convMark += $obtained * ($conv / 100);
-                // $maxConv  += $totalPart * ($conv / 100);
-                $maxConv  += $totalPart;
+                $partObtained += $obtained * ($conv / 100);
+                $partMax      += $totalPart; // conversion ছাড়া!
             }
 
             $grace = $mark['grace_mark'] ?? 0;
-            $totalGrace += $grace;
 
-            $convertedMark    += $convMark;
-            $totalMaxConverted += $maxConv;
+            $totalObtained += $partObtained;
+            $totalMax      += $partMax;
+            $totalGrace    += $grace;
 
-            return [
-                'subject_id'      => $subjectId,
-                'subject_name'    => $mark['subject_name'],
-                'total_marks'     => $partTotal,
-                'converted_mark'  => round($convMark, 2),
-                'final_mark'      => round($convMark + $grace, 2),
-                'grace_mark'      => $grace,
-                'percentage'      => $maxConv > 0 ? round((($convMark + $grace) / $maxConv) * 100, 2) : 0,
-                'grade'           => $mark['grade'],
-                'grade_point'     => $mark['grade_point'],
-                'part_marks'      => $partMarks,
+            $parts[] = [
+                'subject_id'     => $subjectId,
+                'subject_name'   => $mark['subject_name'],
+                'total_marks'    => collect($partMarks)->sum(),
+                'converted_mark' => round($partObtained, 2),
+                'final_mark'     => round($partObtained + $grace, 2),
+                'grace_mark'     => $grace,
+                'percentage'     => $partMax > 0 ? round((($partObtained + $grace) / $partMax) * 100, 2) : 0,
+                'grade'          => $mark['grade'],
+                'grade_point'    => $mark['grade_point'],
+                'part_marks'     => $partMarks,
             ];
-        })->values()->toArray();
+        }
 
-        // কম্বাইন্ডের ফাইনাল মার্ক (গ্রেস সহ)
-        $combinedFinalMark = $convertedMark + $totalGrace;
+        $finalMark   = $totalObtained + $totalGrace;
+        $percentage  = $totalMax > 0 ? ($finalMark / $totalMax) * 100 : 0;
 
-        // পার্সেন্টেজ
-        $percentage = $totalMaxConverted > 0 ? ($combinedFinalMark / $totalMaxConverted) * 100 : 0;
-
-        // গ্রেড এবং পয়েন্ট (পার্সেন্টেজ দিয়ে)
         $combinedGradePoint = $this->getGradePoint($percentage, $gradeRules);
         $combinedGrade      = $this->getGrade($percentage, $gradeRules);
 
-        // Overall Pass/Fail চেক
         $sampleSubjectId = (string) $group->first()['subject_id'];
-        $overallReqPercent = $mark_configs[$sampleSubjectId]['overall_required'];
-        $requiredMark = ($overallReqPercent / 100) * $totalMaxConverted;
-        $combinedStatus = $combinedFinalMark >= $requiredMark ? 'Pass' : 'Fail';
+        $overallReqPercent = $mark_configs[$sampleSubjectId]['overall_required'] ?? 33;
+        $requiredMark = ($overallReqPercent / 100) * $totalMax;
+        $combinedStatus = $finalMark >= $requiredMark ? 'Pass' : 'Fail';
 
         return [
             'combined_id'           => $combinedId,
             'is_combined'           => true,
             'combined_name'         => $combinedName,
-
-            // আপনার চাওয়া সব ফিল্ড
-            'total_marks'           => $totalMarks,
-            'converted_mark'        => round($convertedMark, 2),
-            'final_mark'            => round($combinedFinalMark, 2),
+            'total_marks'           => $totalObtained,
+            'converted_mark'        => round($totalObtained, 2),
+            'final_mark'            => round($finalMark, 2),
             'grace_mark'            => $totalGrace,
             'percentage'            => round($percentage, 2),
-
-            // কম্বাইন্ডের গ্রেড
-            'combined_final_mark'   => round($combinedFinalMark, 2),
+            'combined_final_mark'   => round($finalMark, 2),
             'combined_grade_point'  => $combinedGradePoint,
             'combined_grade'        => $combinedGrade,
             'combined_status'       => $combinedStatus,
-
             'is_uncountable'        => false,
             'parts'                 => $parts,
-            'total_max_mark'        => round($totalMaxConverted, 2),
+            'total_max_mark'        => $totalMax,
             'fail_reason'           => $combinedStatus === 'Fail' ? 'Below required mark' : null,
         ];
     }
