@@ -222,6 +222,7 @@ class ResultCalculator
 
             'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
             'is_combined'    => false,
+            'attendance_status' => $subj['attendance_status'] ?? null,
         ];
     }
 
@@ -264,12 +265,13 @@ class ResultCalculator
                 'grace_mark'     => $grace,
                 'grade_point'    => $mark['grade_point'] ?? 0,
                 'grade'          => $mark['grade'] ?? 'F',
+                'attendance_status' => $mark['attendance_status'] ?? null
+
             ];
         })->values()->toArray();
 
         // Average grade point for combined
         $combinedGradePoint = round(collect($parts)->avg('grade_point'), 2);
-        // $combinedGrade      = $this->gpToGrade($combinedGradePoint, $gradeRules);
         $combinedGrade = $this->gpaToLetterGrade($combinedGradePoint, $gradeRules);
 
         return [
