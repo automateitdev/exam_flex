@@ -171,7 +171,7 @@ class ResultCalculator
             'total_mark_without_optional' => round($totalMarkWithoutOptional, 2),
             'gpa_without_optional' => $failed ? 0 : $gpaWithoutOptional,
             'letter_grade_without_optional' => $failed ? 'F' : $letterGradeWithout,
-            'total_mark_with_optional' => round($totalMarkWithOptional, 2),
+            'total_mark_with_optional' => ceil($totalMarkWithOptional),
             'gpa_with_optional' => $gpaWithOptional,
             'letter_grade_with_optional' => $letterGradeWith,
             'result_status' => $status,
@@ -278,11 +278,6 @@ class ResultCalculator
 
     private function processSingle($subj, $gradeRules, $mark_configs)
     {
-        Log::channel('exam_flex_log')->info('subject: ' . json_encode($subj));
-        Log::channel('exam_flex_log')->info('mark_configs: ' . json_encode($mark_configs));
-        Log::channel('exam_flex_log')->info('gradeRules: ' . json_encode($gradeRules));
-
-
         $subjectId = $subj['subject_id'];
         $config = $mark_configs[$subjectId] ?? [];
         $partMarks = $subj['part_marks'] ?? [];
