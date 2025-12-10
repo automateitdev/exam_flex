@@ -152,7 +152,7 @@ class ResultCalculator
             }
         }
 
-        $totalMarkWithOptional = $totalMarkWithoutOptional + $optionalFullMark;
+        $totalMarkWithOptional = $totalMarkWithoutOptional + ($optionalFullMark * 0.40);
 
         $finalGP = $failed ? 0 : ($totalGP + $bonusGPFromOptional);
         $gpaWithoutOptional = $subjectCount > 0 ? round($totalGP / $subjectCount, 2) : 0;
