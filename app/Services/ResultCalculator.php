@@ -129,6 +129,7 @@ class ResultCalculator
                 }
                 if ($single['grade'] === 'F' && !$single['is_uncountable'] && !$single['is_optional']) {
                     $failed = true;
+                    $totalGP = 0;
                 }
 
                 if (!$single['is_optional'] && !$single['is_uncountable']) {
