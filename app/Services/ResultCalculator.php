@@ -152,6 +152,7 @@ class ResultCalculator
             }
         }
 
+        $optionalBonusMark = $optionalFullMark * 0.40;
         $totalMarkWithOptional = $totalMarkWithoutOptional + ($optionalFullMark * 0.40);
 
         $finalGP = $failed ? 0 : ($totalGP + $bonusGPFromOptional);
@@ -228,6 +229,7 @@ class ResultCalculator
 
     private function processCombinedGroup($group, $gradeRules, $mark_configs)
     {
+        Log::info('Processing combined group', ['group' => $group->toArray()]);
         $combinedId   = $group->first()['combined_id'];
         $combinedName = $group->first()['combined_subject_name'];
 
