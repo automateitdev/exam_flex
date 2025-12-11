@@ -117,9 +117,10 @@ class ResultCalculator
                     }
                 }
 
-                // $totalMarkWithoutOptional += $combinedResult['combined_final_mark'];
             } else {
                 $single = $this->processSingle($first, $gradeRules, $mark_configs);
+
+                Log::channel('exam_flex_log')->info('Single Subject Processed', $first);
                 $single['is_optional'] = ($first['subject_id'] == $optionalId);
                 $merged[] = $single;
 
