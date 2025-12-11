@@ -116,16 +116,7 @@ class ResultCalculator
                     // $failed = true;
                     if (!($combinedResult['is_uncountable'] ?? false)) {
                         $failed = true;
-                    }
-                }
-                if ($combinedResult['combined_status'] === 'Fail') {
-                    foreach ($combinedResult['parts'] as $part) {
-                        if (($part['grade'] ?? '') === 'F' && !($part['is_optional'] ?? false)) {
-                            $totalFailCount++;
-                        }
-                    }
-                    if (!($combinedResult['is_uncountable'] ?? false)) {
-                        $failed = true;
+                        $totalFailCount++;
                     }
                 }
 
