@@ -117,6 +117,9 @@ class ResultCalculator
                         $failed = true;
                     }
                 }
+
+                $totalMarkWithoutOptional += $combinedResult['final_mark'];
+                
             } else {
                 $single = $this->processSingle($first, $gradeRules, $mark_configs);
 

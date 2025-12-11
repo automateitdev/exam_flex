@@ -1,930 +1,203 @@
-local.INFO: Result Process Request {
-    "request": {
-        "institute_id": "10001",
-        "exam_name": "Final Semester",
-        "has_combined": true,
-        "grade_rules": [{
-            "from_mark": 80,
-            "to_mark": 100,
-            "grade_point": 5,
-            "grade": "A+"
-        }, {
-            "from_mark": 70,
-            "to_mark": 79.99,
-            "grade_point": 4.5,
-            "grade": "A"
-        }, {
-            "from_mark": 60,
-            "to_mark": 69.99,
-            "grade_point": 4,
-            "grade": "A-"
-        }, {
-            "from_mark": 50,
-            "to_mark": 59.99,
-            "grade_point": 3,
-            "grade": "B"
-        }, {
-            "from_mark": 40,
-            "to_mark": 49.99,
-            "grade_point": 2,
-            "grade": "C"
-        }, {
-            "from_mark": 33,
-            "to_mark": 39.99,
-            "grade_point": 1,
-            "grade": "D"
-        }, {
-            "from_mark": 0,
-            "to_mark": 32.99,
-            "grade_point": 0,
-            "grade": "F"
-        }],
-        "students": [{
-            "student_id": 65991,
-            "student_name": "S1",
-            "roll": 1,
-            "marks": {
-                "25": {
-                    "subject_id": 25,
-                    "subject_name": "Bangla 1st",
-                    "subject_type": "Compulsory",
-                    "is_combined": true,
+ "student_id": 65991,
+                "student_name": "S1",
+                "roll": 1,
+                "subjects": [{
                     "combined_id": 1,
-                    "combined_subject_name": "Bangla",
-                    "final_mark": 89,
-                    "grace_mark": 0,
-                    "grade_point": 5,
-                    "grade": "A+",
-                    "part_marks": {
-                        "CQ": 55,
-                        "MCQ": 34
-                    },
-                    "attendance_status": "present"
-                },
-                "26": {
-                    "subject_id": 26,
-                    "subject_name": "Bangla 2nd",
-                    "subject_type": "Compulsory",
                     "is_combined": true,
-                    "combined_id": 1,
-                    "combined_subject_name": "Bangla",
-                    "final_mark": 60,
-                    "grace_mark": 0,
-                    "grade_point": 4,
-                    "grade": "A-",
-                    "part_marks": {
-                        "CQ": 20,
-                        "MCQ": 40
-                    },
-                    "attendance_status": "present"
-                },
-                "27": {
-                    "subject_id": 27,
-                    "subject_name": "English 1st",
-                    "subject_type": "Compulsory",
-                    "is_combined": true,
+                    "combined_name": "Bangla",
+                    "total_marks": 149,
+                    "final_mark": 149,
+                    "total_max_mark": 200,
+                    "percentage": 74.5,
+                    "combined_grade_point": 4.5,
+                    "combined_grade": "A",
+                    "combined_status": "Pass",
+                    "parts": [{
+                        "subject_id": 25,
+                        "subject_name": "Bangla 1st",
+                        "part_marks": {
+                            "CQ": 55,
+                            "MCQ": 34
+                        },
+                        "total_marks": 89,
+                        "final_mark": 89,
+                        "grace_mark": 0,
+                        "grade": "A+",
+                        "grade_point": 5,
+                        "attendance_status": "present"
+                    }, {
+                        "subject_id": 26,
+                        "subject_name": "Bangla 2nd",
+                        "part_marks": {
+                            "CQ": 20,
+                            "MCQ": 40
+                        },
+                        "total_marks": 60,
+                        "final_mark": 60,
+                        "grace_mark": 0,
+                        "grade": "A-",
+                        "grade_point": 4,
+                        "attendance_status": "present"
+                    }],
+                    "is_uncountable": false
+                }, {
                     "combined_id": 2,
-                    "combined_subject_name": "English",
-                    "final_mark": 79,
-                    "grace_mark": 0,
-                    "grade_point": 4.5,
-                    "grade": "A",
-                    "part_marks": {
-                        "CQ": 59,
-                        "MCQ": 20
-                    },
-                    "attendance_status": "present"
-                },
-                "28": {
-                    "subject_id": 28,
-                    "subject_name": "English 2nd",
-                    "subject_type": "Compulsory",
                     "is_combined": true,
-                    "combined_id": 2,
-                    "combined_subject_name": "English",
-                    "final_mark": 79,
-                    "grace_mark": 0,
-                    "grade_point": 4.5,
-                    "grade": "A",
-                    "part_marks": {
-                        "CQ": 47,
-                        "MCQ": 32
-                    },
-                    "attendance_status": "present"
-                },
-                "29": {
+                    "combined_name": "English",
+                    "total_marks": 158,
+                    "final_mark": 158,
+                    "total_max_mark": 200,
+                    "percentage": 79,
+                    "combined_grade_point": 4.5,
+                    "combined_grade": "A",
+                    "combined_status": "Pass",
+                    "parts": [{
+                        "subject_id": 27,
+                        "subject_name": "English 1st",
+                        "part_marks": {
+                            "CQ": 59,
+                            "MCQ": 20
+                        },
+                        "total_marks": 79,
+                        "final_mark": 79,
+                        "grace_mark": 0,
+                        "grade": "A",
+                        "grade_point": 4.5,
+                        "attendance_status": "present"
+                    }, {
+                        "subject_id": 28,
+                        "subject_name": "English 2nd",
+                        "part_marks": {
+                            "CQ": 47,
+                            "MCQ": 32
+                        },
+                        "total_marks": 79,
+                        "final_mark": 79,
+                        "grace_mark": 0,
+                        "grade": "A",
+                        "grade_point": 4.5,
+                        "attendance_status": "present"
+                    }],
+                    "is_uncountable": false
+                }, {
                     "subject_id": 29,
                     "subject_name": "Math",
-                    "subject_type": "Compulsory",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 25,
-                    "grace_mark": 0,
-                    "grade_point": 0,
-                    "grade": "F",
                     "part_marks": {
                         "CQ": 12,
                         "MCQ": 13
                     },
-                    "attendance_status": "present"
-                },
-                "30": {
+                    "total_marks": 25,
+                    "converted_mark": 25,
+                    "final_mark": 25,
+                    "grace_mark": 0,
+                    "percentage": 25,
+                    "grade_point": 0,
+                    "grade": "F",
+                    "is_uncountable": false,
+                    "is_combined": false,
+                    "attendance_status": "present",
+                    "is_optional": false
+                }, {
                     "subject_id": 30,
                     "subject_name": "Information & Technology",
-                    "subject_type": "Compulsory",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 69,
-                    "grace_mark": 0,
-                    "grade_point": 4,
-                    "grade": "A-",
                     "part_marks": {
                         "CQ": 30,
                         "MCQ": 39
                     },
-                    "attendance_status": "present"
-                },
-                "736": {
-                    "subject_id": 736,
-                    "subject_name": "Physics",
-                    "subject_type": "Group Based",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 61,
+                    "total_marks": 69,
+                    "converted_mark": 69,
+                    "final_mark": 69,
                     "grace_mark": 0,
+                    "percentage": 69,
                     "grade_point": 4,
                     "grade": "A-",
+                    "is_uncountable": false,
+                    "is_combined": false,
+                    "attendance_status": "present",
+                    "is_optional": false
+                }, {
+                    "subject_id": 736,
+                    "subject_name": "Physics",
                     "part_marks": {
                         "CQ": 24,
                         "MCQ": 20,
                         "PR": 17
                     },
-                    "attendance_status": "present"
-                },
-                "737": {
-                    "subject_id": 737,
-                    "subject_name": "Chemistry",
-                    "subject_type": "Group Based",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 64,
+                    "total_marks": 61,
+                    "converted_mark": 61,
+                    "final_mark": 61,
                     "grace_mark": 0,
+                    "percentage": 33.89,
                     "grade_point": 4,
                     "grade": "A-",
+                    "is_uncountable": false,
+                    "is_combined": false,
+                    "attendance_status": "present",
+                    "is_optional": false
+                }, {
+                    "subject_id": 737,
+                    "subject_name": "Chemistry",
                     "part_marks": {
                         "CQ": 25,
                         "MCQ": 21,
                         "PR": 18
                     },
-                    "attendance_status": "present"
-                },
-                "738": {
+                    "total_marks": 64,
+                    "converted_mark": 64,
+                    "final_mark": 64,
+                    "grace_mark": 0,
+                    "percentage": 35.56,
+                    "grade_point": 4,
+                    "grade": "A-",
+                    "is_uncountable": false,
+                    "is_combined": false,
+                    "attendance_status": "present",
+                    "is_optional": false
+                }, {
                     "subject_id": 738,
                     "subject_name": "Biology",
-                    "subject_type": "Choosable",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 78,
-                    "grace_mark": 0,
-                    "grade_point": 4.5,
-                    "grade": "A",
                     "part_marks": {
                         "CQ": 30,
                         "MCQ": 30,
                         "PR": 18
                     },
-                    "attendance_status": "present"
-                },
-                "739": {
+                    "total_marks": 78,
+                    "converted_mark": 78,
+                    "final_mark": 78,
+                    "grace_mark": 0,
+                    "percentage": 43.33,
+                    "grade_point": 4.5,
+                    "grade": "A",
+                    "is_uncountable": false,
+                    "is_combined": false,
+                    "attendance_status": "present",
+                    "is_optional": false
+                }, {
                     "subject_id": 739,
                     "subject_name": "Higher Math",
-                    "subject_type": "Choosable",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
+                    "part_marks": {
+                        "CQ": 45,
+                        "MCQ": 30,
+                        "PR": 17
+                    },
+                    "total_marks": 92,
+                    "converted_mark": 92,
                     "final_mark": 92,
                     "grace_mark": 0,
+                    "percentage": 51.11,
                     "grade_point": 5,
                     "grade": "A+",
-                    "part_marks": {
-                        "CQ": 45,
-                        "MCQ": 30,
-                        "PR": 17
-                    },
-                    "attendance_status": "present"
-                }
-            },
-            "optional_subject_id": 739
-        }, {
-            "student_id": 65992,
-            "student_name": "S2",
-            "roll": 2,
-            "marks": {
-                "25": {
-                    "subject_id": 25,
-                    "subject_name": "Bangla 1st",
-                    "subject_type": "Compulsory",
-                    "is_combined": true,
-                    "combined_id": 1,
-                    "combined_subject_name": "Bangla",
-                    "final_mark": 58,
-                    "grace_mark": 0,
-                    "grade_point": 3,
-                    "grade": "B",
-                    "part_marks": {
-                        "CQ": 25,
-                        "MCQ": 33
-                    },
-                    "attendance_status": "present"
-                },
-                "26": {
-                    "subject_id": 26,
-                    "subject_name": "Bangla 2nd",
-                    "subject_type": "Compulsory",
-                    "is_combined": true,
-                    "combined_id": 1,
-                    "combined_subject_name": "Bangla",
-                    "final_mark": 72,
-                    "grace_mark": 0,
-                    "grade_point": 4.5,
-                    "grade": "A",
-                    "part_marks": {
-                        "CQ": 34,
-                        "MCQ": 38
-                    },
-                    "attendance_status": "present"
-                },
-                "27": {
-                    "subject_id": 27,
-                    "subject_name": "English 1st",
-                    "subject_type": "Compulsory",
-                    "is_combined": true,
-                    "combined_id": 2,
-                    "combined_subject_name": "English",
-                    "final_mark": 59,
-                    "grace_mark": 0,
-                    "grade_point": 3,
-                    "grade": "B",
-                    "part_marks": {
-                        "CQ": 38,
-                        "MCQ": 21
-                    },
-                    "attendance_status": "present"
-                },
-                "28": {
-                    "subject_id": 28,
-                    "subject_name": "English 2nd",
-                    "subject_type": "Compulsory",
-                    "is_combined": true,
-                    "combined_id": 2,
-                    "combined_subject_name": "English",
-                    "final_mark": 75,
-                    "grace_mark": 0,
-                    "grade_point": 4.5,
-                    "grade": "A",
-                    "part_marks": {
-                        "CQ": 40,
-                        "MCQ": 35
-                    },
-                    "attendance_status": "present"
-                },
-                "29": {
-                    "subject_id": 29,
-                    "subject_name": "Math",
-                    "subject_type": "Compulsory",
+                    "is_uncountable": false,
                     "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 85,
-                    "grace_mark": 0,
-                    "grade_point": 5,
-                    "grade": "A+",
-                    "part_marks": {
-                        "CQ": 45,
-                        "MCQ": 40
-                    },
-                    "attendance_status": "present"
-                },
-                "30": {
-                    "subject_id": 30,
-                    "subject_name": "Information & Technology",
-                    "subject_type": "Compulsory",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 68,
-                    "grace_mark": 0,
-                    "grade_point": 4,
-                    "grade": "A-",
-                    "part_marks": {
-                        "CQ": 41,
-                        "MCQ": 27
-                    },
-                    "attendance_status": "present"
-                },
-                "736": {
-                    "subject_id": 736,
-                    "subject_name": "Physics",
-                    "subject_type": "Group Based",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 84,
-                    "grace_mark": 0,
-                    "grade_point": 5,
-                    "grade": "A+",
-                    "part_marks": {
-                        "CQ": 45,
-                        "MCQ": 25,
-                        "PR": 14
-                    },
-                    "attendance_status": "present"
-                },
-                "737": {
-                    "subject_id": 737,
-                    "subject_name": "Chemistry",
-                    "subject_type": "Group Based",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 84,
-                    "grace_mark": 0,
-                    "grade_point": 5,
-                    "grade": "A+",
-                    "part_marks": {
-                        "CQ": 45,
-                        "MCQ": 25,
-                        "PR": 14
-                    },
-                    "attendance_status": "present"
-                },
-                "738": {
-                    "subject_id": 738,
-                    "subject_name": "Biology",
-                    "subject_type": "Choosable",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 79,
-                    "grace_mark": 0,
-                    "grade_point": 4.5,
-                    "grade": "A",
-                    "part_marks": {
-                        "CQ": 32,
-                        "MCQ": 28,
-                        "PR": 19
-                    },
-                    "attendance_status": "present"
-                },
-                "739": {
-                    "subject_id": 739,
-                    "subject_name": "Higher Math",
-                    "subject_type": "Choosable",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 87,
-                    "grace_mark": 0,
-                    "grade_point": 5,
-                    "grade": "A+",
-                    "part_marks": {
-                        "CQ": 47,
-                        "MCQ": 21,
-                        "PR": 19
-                    },
-                    "attendance_status": "present"
-                }
-            },
-            "optional_subject_id": 739
-        }, {
-            "student_id": 65993,
-            "student_name": "S3",
-            "roll": 3,
-            "marks": {
-                "25": {
-                    "subject_id": 25,
-                    "subject_name": "Bangla 1st",
-                    "subject_type": "Compulsory",
-                    "is_combined": true,
-                    "combined_id": 1,
-                    "combined_subject_name": "Bangla",
-                    "final_mark": 64,
-                    "grace_mark": 0,
-                    "grade_point": 4,
-                    "grade": "A-",
-                    "part_marks": {
-                        "CQ": 37,
-                        "MCQ": 27
-                    },
-                    "attendance_status": "present"
-                },
-                "26": {
-                    "subject_id": 26,
-                    "subject_name": "Bangla 2nd",
-                    "subject_type": "Compulsory",
-                    "is_combined": true,
-                    "combined_id": 1,
-                    "combined_subject_name": "Bangla",
-                    "final_mark": 78,
-                    "grace_mark": 0,
-                    "grade_point": 4.5,
-                    "grade": "A",
-                    "part_marks": {
-                        "CQ": 57,
-                        "MCQ": 21
-                    },
-                    "attendance_status": "present"
-                },
-                "27": {
-                    "subject_id": 27,
-                    "subject_name": "English 1st",
-                    "subject_type": "Compulsory",
-                    "is_combined": true,
-                    "combined_id": 2,
-                    "combined_subject_name": "English",
-                    "final_mark": 65,
-                    "grace_mark": 0,
-                    "grade_point": 4,
-                    "grade": "A-",
-                    "part_marks": {
-                        "CQ": 47,
-                        "MCQ": 18
-                    },
-                    "attendance_status": "present"
-                },
-                "28": {
-                    "subject_id": 28,
-                    "subject_name": "English 2nd",
-                    "subject_type": "Compulsory",
-                    "is_combined": true,
-                    "combined_id": 2,
-                    "combined_subject_name": "English",
-                    "final_mark": 60,
-                    "grace_mark": 0,
-                    "grade_point": 4,
-                    "grade": "A-",
-                    "part_marks": {
-                        "CQ": 25,
-                        "MCQ": 35
-                    },
-                    "attendance_status": "present"
-                },
-                "29": {
-                    "subject_id": 29,
-                    "subject_name": "Math",
-                    "subject_type": "Compulsory",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 93,
-                    "grace_mark": 0,
-                    "grade_point": 5,
-                    "grade": "A+",
-                    "part_marks": {
-                        "CQ": 54,
-                        "MCQ": 39
-                    },
-                    "attendance_status": "present"
-                },
-                "30": {
-                    "subject_id": 30,
-                    "subject_name": "Information & Technology",
-                    "subject_type": "Compulsory",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 47,
-                    "grace_mark": 0,
-                    "grade_point": 2,
-                    "grade": "C",
-                    "part_marks": {
-                        "CQ": 25,
-                        "MCQ": 22
-                    },
-                    "attendance_status": "present"
-                },
-                "736": {
-                    "subject_id": 736,
-                    "subject_name": "Physics",
-                    "subject_type": "Group Based",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 68,
-                    "grace_mark": 0,
-                    "grade_point": 4,
-                    "grade": "A-",
-                    "part_marks": {
-                        "CQ": 28,
-                        "MCQ": 28,
-                        "PR": 12
-                    },
-                    "attendance_status": "present"
-                },
-                "737": {
-                    "subject_id": 737,
-                    "subject_name": "Chemistry",
-                    "subject_type": "Group Based",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 75,
-                    "grace_mark": 0,
-                    "grade_point": 4.5,
-                    "grade": "A",
-                    "part_marks": {
-                        "CQ": 30,
-                        "MCQ": 28,
-                        "PR": 17
-                    },
-                    "attendance_status": "present"
-                },
-                "738": {
-                    "subject_id": 738,
-                    "subject_name": "Biology",
-                    "subject_type": "Choosable",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 87,
-                    "grace_mark": 0,
-                    "grade_point": 5,
-                    "grade": "A+",
-                    "part_marks": {
-                        "CQ": 50,
-                        "MCQ": 25,
-                        "PR": 12
-                    },
-                    "attendance_status": "present"
-                },
-                "739": {
-                    "subject_id": 739,
-                    "subject_name": "Higher Math",
-                    "subject_type": "Choosable",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 79,
-                    "grace_mark": 0,
-                    "grade_point": 4.5,
-                    "grade": "A",
-                    "part_marks": {
-                        "CQ": 31,
-                        "MCQ": 28,
-                        "PR": 20
-                    },
-                    "attendance_status": "present"
-                }
-            },
-            "optional_subject_id": 739
-        }, {
-            "student_id": 65994,
-            "student_name": "S4",
-            "roll": 4,
-            "marks": {
-                "25": {
-                    "subject_id": 25,
-                    "subject_name": "Bangla 1st",
-                    "subject_type": "Compulsory",
-                    "is_combined": true,
-                    "combined_id": 1,
-                    "combined_subject_name": "Bangla",
-                    "final_mark": 48,
-                    "grace_mark": 0,
-                    "grade_point": 2,
-                    "grade": "C",
-                    "part_marks": {
-                        "CQ": 12,
-                        "MCQ": 36
-                    },
-                    "attendance_status": "present"
-                },
-                "26": {
-                    "subject_id": 26,
-                    "subject_name": "Bangla 2nd",
-                    "subject_type": "Compulsory",
-                    "is_combined": true,
-                    "combined_id": 1,
-                    "combined_subject_name": "Bangla",
-                    "final_mark": 82,
-                    "grace_mark": 0,
-                    "grade_point": 5,
-                    "grade": "A+",
-                    "part_marks": {
-                        "CQ": 48,
-                        "MCQ": 34
-                    },
-                    "attendance_status": "present"
-                },
-                "27": {
-                    "subject_id": 27,
-                    "subject_name": "English 1st",
-                    "subject_type": "Compulsory",
-                    "is_combined": true,
-                    "combined_id": 2,
-                    "combined_subject_name": "English",
-                    "final_mark": 67,
-                    "grace_mark": 0,
-                    "grade_point": 4,
-                    "grade": "A-",
-                    "part_marks": {
-                        "CQ": 32,
-                        "MCQ": 35
-                    },
-                    "attendance_status": "present"
-                },
-                "28": {
-                    "subject_id": 28,
-                    "subject_name": "English 2nd",
-                    "subject_type": "Compulsory",
-                    "is_combined": true,
-                    "combined_id": 2,
-                    "combined_subject_name": "English",
-                    "final_mark": 57,
-                    "grace_mark": 0,
-                    "grade_point": 3,
-                    "grade": "B",
-                    "part_marks": {
-                        "CQ": 32,
-                        "MCQ": 25
-                    },
-                    "attendance_status": "present"
-                },
-                "29": {
-                    "subject_id": 29,
-                    "subject_name": "Math",
-                    "subject_type": "Compulsory",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 97,
-                    "grace_mark": 0,
-                    "grade_point": 5,
-                    "grade": "A+",
-                    "part_marks": {
-                        "CQ": 60,
-                        "MCQ": 37
-                    },
-                    "attendance_status": "present"
-                },
-                "30": {
-                    "subject_id": 30,
-                    "subject_name": "Information & Technology",
-                    "subject_type": "Compulsory",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 90,
-                    "grace_mark": 0,
-                    "grade_point": 5,
-                    "grade": "A+",
-                    "part_marks": {
-                        "CQ": 55,
-                        "MCQ": 35
-                    },
-                    "attendance_status": "present"
-                },
-                "736": {
-                    "subject_id": 736,
-                    "subject_name": "Physics",
-                    "subject_type": "Group Based",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 69,
-                    "grace_mark": 0,
-                    "grade_point": 4,
-                    "grade": "A-",
-                    "part_marks": {
-                        "CQ": 30,
-                        "MCQ": 21,
-                        "PR": 18
-                    },
-                    "attendance_status": "present"
-                },
-                "737": {
-                    "subject_id": 737,
-                    "subject_name": "Chemistry",
-                    "subject_type": "Group Based",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 60,
-                    "grace_mark": 0,
-                    "grade_point": 4,
-                    "grade": "A-",
-                    "part_marks": {
-                        "CQ": 28,
-                        "MCQ": 20,
-                        "PR": 12
-                    },
-                    "attendance_status": "present"
-                },
-                "738": {
-                    "subject_id": 738,
-                    "subject_name": "Biology",
-                    "subject_type": "Choosable",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 81,
-                    "grace_mark": 0,
-                    "grade_point": 5,
-                    "grade": "A+",
-                    "part_marks": {
-                        "CQ": 41,
-                        "MCQ": 27,
-                        "PR": 13
-                    },
-                    "attendance_status": "present"
-                },
-                "739": {
-                    "subject_id": 739,
-                    "subject_name": "Higher Math",
-                    "subject_type": "Choosable",
-                    "is_combined": false,
-                    "combined_id": null,
-                    "combined_subject_name": null,
-                    "final_mark": 31,
-                    "grace_mark": 0,
-                    "grade_point": 0,
-                    "grade": "F",
-                    "part_marks": {
-                        "CQ": 12,
-                        "MCQ": 5,
-                        "PR": 14
-                    },
-                    "attendance_status": "present"
-                }
-            },
-            "optional_subject_id": 739
-        }],
-        "mark_configs": {
-            "25": {
-                "codes": ["CQ", "MCQ"],
-                "pass_marks": {
-                    "CQ": "17.00",
-                    "MCQ": "16.00"
-                },
-                "overall_required": 33,
-                "conversion": {
-                    "CQ": "100.00",
-                    "MCQ": "100.00"
-                },
-                "total_marks": {
-                    "CQ": "60.00",
-                    "MCQ": "40.00"
-                }
-            },
-            "26": {
-                "codes": ["CQ", "MCQ"],
-                "pass_marks": {
-                    "CQ": "17.00",
-                    "MCQ": "16.00"
-                },
-                "overall_required": 33,
-                "conversion": {
-                    "CQ": "100.00",
-                    "MCQ": "100.00"
-                },
-                "total_marks": {
-                    "CQ": "60.00",
-                    "MCQ": "40.00"
-                }
-            },
-            "27": {
-                "codes": ["CQ", "MCQ"],
-                "pass_marks": {
-                    "CQ": "17.00",
-                    "MCQ": "16.00"
-                },
-                "overall_required": 33,
-                "conversion": {
-                    "CQ": "100.00",
-                    "MCQ": "100.00"
-                },
-                "total_marks": {
-                    "CQ": "60.00",
-                    "MCQ": "40.00"
-                }
-            },
-            "28": {
-                "codes": ["CQ", "MCQ"],
-                "pass_marks": {
-                    "CQ": "17.00",
-                    "MCQ": "16.00"
-                },
-                "overall_required": 33,
-                "conversion": {
-                    "CQ": "100.00",
-                    "MCQ": "100.00"
-                },
-                "total_marks": {
-                    "CQ": "60.00",
-                    "MCQ": "40.00"
-                }
-            },
-            "29": {
-                "codes": ["CQ", "MCQ"],
-                "pass_marks": {
-                    "CQ": "17.00",
-                    "MCQ": "16.00"
-                },
-                "overall_required": 33,
-                "conversion": {
-                    "CQ": "100.00",
-                    "MCQ": "100.00"
-                },
-                "total_marks": {
-                    "CQ": "60.00",
-                    "MCQ": "40.00"
-                }
-            },
-            "30": {
-                "codes": ["CQ", "MCQ"],
-                "pass_marks": {
-                    "CQ": "17.00",
-                    "MCQ": "16.00"
-                },
-                "overall_required": 33,
-                "conversion": {
-                    "CQ": "100.00",
-                    "MCQ": "100.00"
-                },
-                "total_marks": {
-                    "CQ": "60.00",
-                    "MCQ": "40.00"
-                }
-            },
-            "736": {
-                "codes": ["CQ", "MCQ"],
-                "pass_marks": {
-                    "CQ": "25.00",
-                    "MCQ": "17.00"
-                },
-                "overall_required": 33,
-                "conversion": {
-                    "CQ": "100.00",
-                    "MCQ": "100.00"
-                },
-                "total_marks": {
-                    "CQ": "50.00",
-                    "MCQ": "30.00"
-                }
-            },
-            "737": {
-                "codes": ["CQ", "MCQ"],
-                "pass_marks": {
-                    "CQ": "25.00",
-                    "MCQ": "17.00"
-                },
-                "overall_required": 33,
-                "conversion": {
-                    "CQ": "100.00",
-                    "MCQ": "100.00"
-                },
-                "total_marks": {
-                    "CQ": "50.00",
-                    "MCQ": "30.00"
-                }
-            },
-            "738": {
-                "codes": ["CQ", "MCQ"],
-                "pass_marks": {
-                    "CQ": "25.00",
-                    "MCQ": "17.00"
-                },
-                "overall_required": 33,
-                "conversion": {
-                    "CQ": "100.00",
-                    "MCQ": "100.00"
-                },
-                "total_marks": {
-                    "CQ": "50.00",
-                    "MCQ": "30.00"
-                }
-            },
-            "739": {
-                "codes": ["CQ", "MCQ"],
-                "pass_marks": {
-                    "CQ": "25.00",
-                    "MCQ": "17.00"
-                },
-                "overall_required": 33,
-                "conversion": {
-                    "CQ": "100.00",
-                    "MCQ": "100.00"
-                },
-                "total_marks": {
-                    "CQ": "50.00",
-                    "MCQ": "30.00"
-                }
-            }
-        }
-    }
-}
+                    "attendance_status": "present",
+                    "is_optional": true
+                }],
+                "total_mark_without_optional": 297,
+                "gpa_without_optional": 0,
+                "letter_grade_without_optional": "F",
+                "total_mark_with_optional": 357,
+                "gpa_with_optional": 0,
+                "letter_grade_with_optional": "F",
+                "result_status": "Fail",
+                "optional_bonus_gp": 3,
+                "optional_bonus_mark": 60,
