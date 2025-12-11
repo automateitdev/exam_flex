@@ -164,7 +164,7 @@ class ResultCalculator
 
                 if ($optGP >= 2.00) {
                     $bonusGPFromOptional = max(0, $optGP - 2.00);
-                    $bonusMarkFromOptional = $optionalFullMark - $percentage_of_optional;
+                    $bonusMarkFromOptional = max(0, $optionalFullMark - $percentage_of_optional);
                 }
             }
         }
