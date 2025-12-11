@@ -119,7 +119,6 @@ class ResultCalculator
                 }
 
                 $totalMarkWithoutOptional += $combinedResult['final_mark'];
-                
             } else {
                 $single = $this->processSingle($first, $gradeRules, $mark_configs);
 
@@ -253,6 +252,9 @@ class ResultCalculator
         $totalObtained = 0;     // যত মার্ক পেয়েছে (final_mark যোগ)
         $totalMaxMark  = 0;     // সব পেপারের টোটাল মার্ক যোগ
 
+        $convertedTotal = 0;
+        $maxConvertedTotal = 0;
+
         $parts = $group->map(function ($mark) use ($mark_configs, &$totalObtained, &$totalMaxMark) {
             $subjectId = $mark['subject_id'];
             $config    = $mark_configs[$subjectId] ?? [];
@@ -265,6 +267,15 @@ class ResultCalculator
             $totalObtained += $mark['final_mark'];
             $totalMaxMark  += $thisPaperMax;
 
+            // Converted marks calculation (NEW)
+            foreach ($partMarks as $code => $obtained) {
+                $conversion = $config['conversion'][$code] ?? 100;
+                $totalPart  = $config['total_marks'][$code] ?? 0;
+
+                $convertedTotal += ($obtained * ($conversion / 100));
+                $maxConvertedTotal += $totalPart;
+            }
+
             return [
                 'subject_id'     => $subjectId,
                 'subject_name'   => $mark['subject_name'],
@@ -272,6 +283,7 @@ class ResultCalculator
                 'total_marks'    => collect($partMarks)->sum(),
                 'final_mark'     => $mark['final_mark'],
                 'grace_mark'     => $mark['grace_mark'] ?? 0,
+                'converted_mark'  => round($convertedTotal, 2),
                 'grade'          => $mark['grade'],
                 'grade_point'    => $mark['grade_point'],
                 'attendance_status' => $mark['attendance_status'] ?? null,
@@ -303,6 +315,9 @@ class ResultCalculator
             'combined_grade_point'  => $combinedGradePoint,      // 4.5
             'combined_grade'        => $combinedGrade,           // A
             'combined_status'       => $combinedStatus,          // Pass/Fail
+
+            // NEW: Converted marks
+            'max_converted_mark'    => $maxConvertedTotal,
 
             'parts'                 => $parts,
             'is_uncountable'        => false,
