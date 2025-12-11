@@ -95,6 +95,7 @@ class ResultCalculator
         $subjectCount = 0;
         $failed = false;
         $fourthSubjectPassed = false;
+        $totalFailCount = 0;
 
         $totalMarkWithoutOptional = 0.0;  // মূল মার্ক (৪র্থ ছাড়া)
         $totalMarkWithOptional    = 0.0;  // ৪র্থ পুরো মার্ক যোগ
@@ -117,6 +118,16 @@ class ResultCalculator
                         $failed = true;
                     }
                 }
+                if ($combinedResult['combined_status'] === 'Fail') {
+                    foreach ($combinedResult['parts'] as $part) {
+                        if (($part['grade'] ?? '') === 'F' && !($part['is_optional'] ?? false)) {
+                            $totalFailCount++;
+                        }
+                    }
+                    if (!($combinedResult['is_uncountable'] ?? false)) {
+                        $failed = true;
+                    }
+                }
 
                 $totalMarkWithoutOptional += $combinedResult['final_mark'];
             } else {
@@ -132,6 +143,7 @@ class ResultCalculator
                 if ($single['grade'] === 'F' && !$single['is_uncountable'] && !$single['is_optional']) {
                     $failed = true;
                     $totalGP = 0;
+                    $totalFailCount++;
                 }
 
                 if (!$single['is_optional'] && !$single['is_uncountable']) {
@@ -193,7 +205,8 @@ class ResultCalculator
             'letter_grade_with_optional' => $letterGradeWith,
             'result_status' => $status,
             'optional_bonus_gp' => $bonusGPFromOptional,
-            'optional_bonus_mark' => ceil($bonusMarkFromOptional)
+            'optional_bonus_mark' => ceil($bonusMarkFromOptional),
+            'failed_subject_count' => $totalFailCount,
         ];
     }
 
