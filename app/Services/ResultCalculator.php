@@ -264,6 +264,7 @@ class ResultCalculator
             $totalObtained += $mark['final_mark'];
             $totalMaxMark  += $thisPaperMax;
 
+            $convertedTotal = 0;
             // Converted marks calculation (NEW)
             foreach ($partMarks as $code => $obtained) {
                 $conversion = $config['conversion'][$code] ?? 100;
