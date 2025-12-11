@@ -1,42 +1,56 @@
- "student_id": 65991,
-                "student_name": "S1",
+{
+    "errors": null,
+    "message": "Success",
+    "status_code": 200,
+    "payload": {
+        "data": {
+            "status": "success",
+            "message": "Result fetched successfully",
+
+            "result": [
+                {
+                "student_id": 65479,
+                "student_name": "Nabil Sultana Fahmida",
                 "roll": 1,
                 "subjects": [{
                     "combined_id": 1,
                     "is_combined": true,
                     "combined_name": "Bangla",
-                    "total_marks": 149,
-                    "final_mark": 149,
-                    "total_max_mark": 200,
-                    "percentage": 74.5,
-                    "combined_grade_point": 4.5,
+                    "total_marks": 196,
+                    "final_mark": 196,
+                    "total_max_mark": 260,
+                    "percentage": 75.38,
+                    "combined_grade_point": 4,
                     "combined_grade": "A",
                     "combined_status": "Pass",
+                    "max_converted_mark": 260,
                     "parts": [{
-                        "subject_id": 25,
+                        "subject_id": 970,
                         "subject_name": "Bangla 1st",
                         "part_marks": {
-                            "CQ": 55,
-                            "MCQ": 34
+                            "WR": 55,
+                            "MCQ": 19
                         },
-                        "total_marks": 89,
-                        "final_mark": 89,
+                        "total_marks": 74,
+                        "final_mark": 74,
                         "grace_mark": 0,
-                        "grade": "A+",
-                        "grade_point": 5,
+                        "converted_mark": 57.5,
+                        "grade": "A",
+                        "grade_point": 4,
                         "attendance_status": "present"
                     }, {
-                        "subject_id": 26,
+                        "subject_id": 971,
                         "subject_name": "Bangla 2nd",
                         "part_marks": {
-                            "CQ": 20,
-                            "MCQ": 40
+                            "WR": 100,
+                            "MCQ": 22
                         },
-                        "total_marks": 60,
-                        "final_mark": 60,
+                        "total_marks": 122,
+                        "final_mark": 122,
                         "grace_mark": 0,
-                        "grade": "A-",
-                        "grade_point": 4,
+                        "converted_mark": 149.5,
+                        "grade": "F",
+                        "grade_point": 0,
                         "attendance_status": "present"
                     }],
                     "is_uncountable": false
@@ -44,53 +58,56 @@
                     "combined_id": 2,
                     "is_combined": true,
                     "combined_name": "English",
-                    "total_marks": 158,
-                    "final_mark": 158,
-                    "total_max_mark": 200,
-                    "percentage": 79,
-                    "combined_grade_point": 4.5,
-                    "combined_grade": "A",
+                    "total_marks": 234,
+                    "final_mark": 234,
+                    "total_max_mark": 260,
+                    "percentage": 90,
+                    "combined_grade_point": 5,
+                    "combined_grade": "A+",
                     "combined_status": "Pass",
+                    "max_converted_mark": 260,
                     "parts": [{
-                        "subject_id": 27,
+                        "subject_id": 972,
                         "subject_name": "English 1st",
                         "part_marks": {
-                            "CQ": 59,
-                            "MCQ": 20
+                            "WR": 99,
+                            "MCQ": 25
                         },
-                        "total_marks": 79,
-                        "final_mark": 79,
+                        "total_marks": 124,
+                        "final_mark": 124,
                         "grace_mark": 0,
-                        "grade": "A",
-                        "grade_point": 4.5,
+                        "converted_mark": 94.3,
+                        "grade": "F",
+                        "grade_point": 0,
                         "attendance_status": "present"
                     }, {
-                        "subject_id": 28,
+                        "subject_id": 973,
                         "subject_name": "English 2nd",
                         "part_marks": {
-                            "CQ": 47,
-                            "MCQ": 32
+                            "WR": 88,
+                            "MCQ": 22
                         },
-                        "total_marks": 79,
-                        "final_mark": 79,
+                        "total_marks": 110,
+                        "final_mark": 110,
                         "grace_mark": 0,
-                        "grade": "A",
-                        "grade_point": 4.5,
+                        "converted_mark": 177.9,
+                        "grade": "F",
+                        "grade_point": 0,
                         "attendance_status": "present"
                     }],
                     "is_uncountable": false
                 }, {
-                    "subject_id": 29,
+                    "subject_id": 974,
                     "subject_name": "Math",
                     "part_marks": {
-                        "CQ": 12,
-                        "MCQ": 13
+                        "WR": 85,
+                        "MCQ": 25
                     },
-                    "total_marks": 25,
-                    "converted_mark": 25,
-                    "final_mark": 25,
+                    "total_marks": 110,
+                    "converted_mark": 84.5,
+                    "final_mark": 84.5,
                     "grace_mark": 0,
-                    "percentage": 25,
+                    "percentage": 65,
                     "grade_point": 0,
                     "grade": "F",
                     "is_uncountable": false,
@@ -98,93 +115,17 @@
                     "attendance_status": "present",
                     "is_optional": false
                 }, {
-                    "subject_id": 30,
-                    "subject_name": "Information & Technology",
+                    "subject_id": 983,
+                    "subject_name": "Agriculture Studies",
                     "part_marks": {
-                        "CQ": 30,
-                        "MCQ": 39
+                        "WR": 75,
+                        "MCQ": 21
                     },
-                    "total_marks": 69,
-                    "converted_mark": 69,
-                    "final_mark": 69,
+                    "total_marks": 96,
+                    "converted_mark": 73.5,
+                    "final_mark": 73.5,
                     "grace_mark": 0,
-                    "percentage": 69,
-                    "grade_point": 4,
-                    "grade": "A-",
-                    "is_uncountable": false,
-                    "is_combined": false,
-                    "attendance_status": "present",
-                    "is_optional": false
-                }, {
-                    "subject_id": 736,
-                    "subject_name": "Physics",
-                    "part_marks": {
-                        "CQ": 24,
-                        "MCQ": 20,
-                        "PR": 17
-                    },
-                    "total_marks": 61,
-                    "converted_mark": 61,
-                    "final_mark": 61,
-                    "grace_mark": 0,
-                    "percentage": 33.89,
-                    "grade_point": 4,
-                    "grade": "A-",
-                    "is_uncountable": false,
-                    "is_combined": false,
-                    "attendance_status": "present",
-                    "is_optional": false
-                }, {
-                    "subject_id": 737,
-                    "subject_name": "Chemistry",
-                    "part_marks": {
-                        "CQ": 25,
-                        "MCQ": 21,
-                        "PR": 18
-                    },
-                    "total_marks": 64,
-                    "converted_mark": 64,
-                    "final_mark": 64,
-                    "grace_mark": 0,
-                    "percentage": 35.56,
-                    "grade_point": 4,
-                    "grade": "A-",
-                    "is_uncountable": false,
-                    "is_combined": false,
-                    "attendance_status": "present",
-                    "is_optional": false
-                }, {
-                    "subject_id": 738,
-                    "subject_name": "Biology",
-                    "part_marks": {
-                        "CQ": 30,
-                        "MCQ": 30,
-                        "PR": 18
-                    },
-                    "total_marks": 78,
-                    "converted_mark": 78,
-                    "final_mark": 78,
-                    "grace_mark": 0,
-                    "percentage": 43.33,
-                    "grade_point": 4.5,
-                    "grade": "A",
-                    "is_uncountable": false,
-                    "is_combined": false,
-                    "attendance_status": "present",
-                    "is_optional": false
-                }, {
-                    "subject_id": 739,
-                    "subject_name": "Higher Math",
-                    "part_marks": {
-                        "CQ": 45,
-                        "MCQ": 30,
-                        "PR": 17
-                    },
-                    "total_marks": 92,
-                    "converted_mark": 92,
-                    "final_mark": 92,
-                    "grace_mark": 0,
-                    "percentage": 51.11,
+                    "percentage": 56.54,
                     "grade_point": 5,
                     "grade": "A+",
                     "is_uncountable": false,
@@ -192,12 +133,109 @@
                     "attendance_status": "present",
                     "is_optional": true
                 }],
-                "total_mark_without_optional": 297,
+                "total_mark_without_optional": 515,
                 "gpa_without_optional": 0,
                 "letter_grade_without_optional": "F",
-                "total_mark_with_optional": 357,
+                "total_mark_with_optional": 559,
                 "gpa_with_optional": 0,
                 "letter_grade_with_optional": "F",
                 "result_status": "Fail",
                 "optional_bonus_gp": 3,
-                "optional_bonus_mark": 60,
+                "optional_bonus_mark": 44,
+                "failed_subject_count": 1,
+                "failed_subjects": [{
+                    "subject_id": 974,
+                    "subject_name": "Math",
+                    "subject_code": "109",
+                    "marks": 84.5,
+                    "grade": "F"
+                }],
+                "merit_info": {
+                    "class_position": 5,
+                    "shift_position": 5,
+                    "section_position": 5,
+                    "group_position": 5,
+                    "gender_position": 5,
+                    "religion_position": 5
+                }
+            },],
+            "highest_marks": [{
+                "subject_id": 970,
+                "subject_name": "Bangla 1st",
+                "highest_mark": 128
+            }, {
+                "subject_id": 971,
+                "subject_name": "Bangla 2nd",
+                "highest_mark": 129
+            }, {
+                "subject_id": 972,
+                "subject_name": "English 1st",
+                "highest_mark": 124
+            }, {
+                "subject_id": 973,
+                "subject_name": "English 2nd",
+                "highest_mark": 110
+            }, {
+                "subject_id": 974,
+                "subject_name": "Math",
+                "highest_mark": 84.5
+            }, {
+                "subject_id": 983,
+                "subject_name": "Agriculture Studies",
+                "highest_mark": 83.5
+            }],
+            "full_marks": [
+                {
+                "subject_id": 970,
+                "subject_name": "Bangla 1st",
+                "full_mark": 100
+            }, {
+                "subject_id": 971,
+                "subject_name": "Bangla 2nd",
+                "full_mark": 100
+            }, {
+                "subject_id": 972,
+                "subject_name": "English 1st",
+                "full_mark": 100
+            }, {
+                "subject_id": 973,
+                "subject_name": "English 2nd",
+                "full_mark": 100
+            }, {
+                "subject_id": 974,
+                "subject_name": "Math",
+                "full_mark": 100
+            }, {
+                "subject_id": 983,
+                "subject_name": "Agriculture Studies",
+                "full_mark": 100
+            }],
+            "is_grace_configured": false,
+            "is_conversion": false,
+            "combined": true,
+            "exam_config": {
+                "id": 161,
+                "institute_details_id": 155,
+                "institute_class_map_id": 648,
+                "academic_year_id": 2224,
+                "department_id": 11,
+                "class_id": 32,
+                "academic_year": "2020",
+                "department_name": "high school",
+                "class_name": "six",
+                "exam_id": 391,
+                "exam_name": "Half Yearly",
+                "merit_process_type": "Total Mark (Sequential)",
+                "result_view": "Grading",
+                "first_merit_position": "Class Wise",
+                "second_merit_position": "Section Wise",
+                "attendance_count": "Automatic",
+                "mark_sheet_template": "Template-1 (Regular with Grace)",
+                "created_at": "2025-12-09T05:33:38.000000Z",
+                "updated_at": "2025-12-09T05:33:38.000000Z"
+            },
+            "total_highest_marks": 659,
+            "total_full_marks": 600
+        }
+    }
+}

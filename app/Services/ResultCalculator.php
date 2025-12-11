@@ -252,10 +252,7 @@ class ResultCalculator
         $totalObtained = 0;     // যত মার্ক পেয়েছে (final_mark যোগ)
         $totalMaxMark  = 0;     // সব পেপারের টোটাল মার্ক যোগ
 
-        $convertedTotal = 0;
-        $maxConvertedTotal = 0;
-
-        $parts = $group->map(function ($mark) use ($mark_configs, &$totalObtained, &$totalMaxMark, &$convertedTotal, &$maxConvertedTotal) {
+        $parts = $group->map(function ($mark) use ($mark_configs, &$totalObtained, &$totalMaxMark) {
             $subjectId = $mark['subject_id'];
             $config    = $mark_configs[$subjectId] ?? [];
             $partMarks = $mark['part_marks'] ?? [];
@@ -273,7 +270,6 @@ class ResultCalculator
                 $totalPart  = $config['total_marks'][$code] ?? 0;
 
                 $convertedTotal += ($obtained * ($conversion / 100));
-                $maxConvertedTotal += $totalPart;
             }
 
             return [
@@ -315,8 +311,6 @@ class ResultCalculator
             'combined_grade_point'  => $combinedGradePoint,      // 4.5
             'combined_grade'        => $combinedGrade,           // A
             'combined_status'       => $combinedStatus,          // Pass/Fail
-
-            'max_converted_mark'    => $maxConvertedTotal,
 
             'parts'                 => $parts,
             'is_uncountable'        => false,
