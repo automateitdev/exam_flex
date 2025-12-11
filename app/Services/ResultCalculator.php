@@ -193,6 +193,7 @@ class ResultCalculator
             'letter_grade_with_optional' => $letterGradeWith,
             'result_status' => $status,
             'optional_bonus_gp' => $bonusGPFromOptional,
+            'optional_bonus_mark' => ceil($bonusMarkFromOptional)
         ];
     }
 
