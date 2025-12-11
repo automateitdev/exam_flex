@@ -255,7 +255,7 @@ class ResultCalculator
         $convertedTotal = 0;
         $maxConvertedTotal = 0;
 
-        $parts = $group->map(function ($mark) use ($mark_configs, &$totalObtained, &$totalMaxMark) {
+        $parts = $group->map(function ($mark) use ($mark_configs, &$totalObtained, &$totalMaxMark, &$convertedTotal, &$maxConvertedTotal) {
             $subjectId = $mark['subject_id'];
             $config    = $mark_configs[$subjectId] ?? [];
             $partMarks = $mark['part_marks'] ?? [];
@@ -316,7 +316,6 @@ class ResultCalculator
             'combined_grade'        => $combinedGrade,           // A
             'combined_status'       => $combinedStatus,          // Pass/Fail
 
-            // NEW: Converted marks
             'max_converted_mark'    => $maxConvertedTotal,
 
             'parts'                 => $parts,
