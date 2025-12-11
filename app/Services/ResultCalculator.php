@@ -94,6 +94,7 @@ class ResultCalculator
         $totalGP = 0;
         $subjectCount = 0;
         $failed = false;
+        $fourthSubjectPassed = false;
 
         $totalMarkWithoutOptional = 0.0;  // মূল মার্ক (৪র্থ ছাড়া)
         $totalMarkWithOptional    = 0.0;  // ৪র্থ পুরো মার্ক যোগ
@@ -116,11 +117,11 @@ class ResultCalculator
                         $failed = true;
                     }
                 }
-
             } else {
                 $single = $this->processSingle($first, $gradeRules, $mark_configs);
 
                 Log::channel('exam_flex_log')->info('Single Subject Processed', $first);
+
                 $single['is_optional'] = ($first['subject_id'] == $optionalId);
                 $merged[] = $single;
 
@@ -136,25 +137,39 @@ class ResultCalculator
                 if (!$single['is_optional'] && !$single['is_uncountable']) {
                     $totalMarkWithoutOptional += $single['final_mark'];
                 }
+
+                if ($single['is_optional'] ?? false) {
+                    if ($single['grade'] !== 'F') {
+                        $fourthSubjectPassed = true;  // এটাই আপনার চাওয়া!
+                    }
+                }
             }
         }
 
         // === 4th Subject Bonus ===
         $optionalFullMark = 0.0;
         $bonusGPFromOptional = 0.0;
+        $bonusMarkFromOptional = 0.0;
 
-        if ($optionalId && isset($marks[$optionalId])) {
-            $opt = $marks[$optionalId];
-            $optionalFullMark = $opt['final_mark'] ?? 0;
-            $optGP = $opt['grade_point'] ?? 0;
+        if ($fourthSubjectPassed == true) {
 
-            if ($optGP >= 2.00) {
-                $bonusGPFromOptional = max(0, $optGP - 2.00);
+            if ($optionalId && isset($marks[$optionalId])) {
+                $opt = $marks[$optionalId];
+                $optional_mark_config = $mark_configs[$optionalId] ?? [];
+                $total_of_optional = collect($optional_mark_config['total_marks'] ?? [])->sum();
+                $percentage_of_optional = $total_of_optional > 0 ? ($total_of_optional * 0.40) : 0;
+
+                $optionalFullMark = $opt['final_mark'] ?? 0;
+                $optGP = $opt['grade_point'] ?? 0;
+
+                if ($optGP >= 2.00) {
+                    $bonusGPFromOptional = max(0, $optGP - 2.00);
+                    $bonusMarkFromOptional = $optionalFullMark - $percentage_of_optional;
+                }
             }
         }
 
-        $optionalBonusMark = $optionalFullMark * 0.40;
-        $totalMarkWithOptional = $totalMarkWithoutOptional + ($optionalFullMark * 0.40);
+        $totalMarkWithOptional = $totalMarkWithoutOptional + $bonusMarkFromOptional;
 
         $finalGP = $failed ? 0 : ($totalGP + $bonusGPFromOptional);
         $gpaWithoutOptional = $subjectCount > 0 ? round($totalGP / $subjectCount, 2) : 0;
@@ -170,7 +185,7 @@ class ResultCalculator
             'student_name' => $student['student_name'] ?? 'N/A',
             'roll' => $student['roll'] ?? 'N/A',
             'subjects' => $merged,
-            'total_mark_without_optional' => round($totalMarkWithoutOptional, 2),
+            'total_mark_without_optional' => ceil($totalMarkWithoutOptional),
             'gpa_without_optional' => $failed ? 0 : $gpaWithoutOptional,
             'letter_grade_without_optional' => $failed ? 'F' : $letterGradeWithout,
             'total_mark_with_optional' => ceil($totalMarkWithOptional),
@@ -228,70 +243,6 @@ class ResultCalculator
         ];
     }
 
-    // private function processCombinedGroup($group, $gradeRules, $mark_configs)
-    // {
-
-    //     $combinedId   = $group->first()['combined_id'];
-    //     $combinedName = $group->first()['combined_subject_name'];
-
-    //     $totalMarks = 0;
-    //     $totalConverted = 0;
-    //     $totalGrace = 0;
-
-    //     $parts = $group->map(function ($mark) use ($mark_configs, &$totalMarks, &$totalConverted, &$totalGrace) {
-    //         $subjectId = $mark['subject_id'];
-    //         $partMarks = $mark['part_marks'] ?? [];
-    //         $config = $mark_configs[$subjectId] ?? [];
-
-    //         $convertedMark = 0;
-    //         $totalPartMarks = collect($partMarks)->sum();
-
-    //         foreach ($partMarks as $code => $obtained) {
-    //             $conversion = $config['conversion'][$code] ?? 100;
-    //             $convertedMark += $obtained * ($conversion / 100);
-    //         }
-
-    //         $grace = $mark['grace_mark'] ?? 0;
-    //         $finalMark = $convertedMark + $grace;
-
-    //         $totalMarks += $totalPartMarks;
-    //         $totalConverted += $convertedMark;
-    //         $totalGrace += $grace;
-
-    //         return [
-    //             'subject_id'     => $subjectId,
-    //             'subject_name'   => $mark['subject_name'],
-    //             'part_marks'     => $partMarks,
-    //             'total_marks'    => $totalPartMarks,
-    //             'converted_mark' => round($convertedMark, 2),
-    //             'final_mark'     => round($finalMark, 2),
-    //             'grace_mark'     => $grace,
-    //             'grade_point'    => $mark['grade_point'] ?? 0,
-    //             'grade'          => $mark['grade'] ?? 'F',
-    //             'attendance_status' => $mark['attendance_status'] ?? null
-
-    //         ];
-    //     })->values()->toArray();
-
-    //     // Average grade point for combined
-    //     $combinedGradePoint = round(collect($parts)->avg('grade_point'), 2);
-    //     $combinedGrade = $this->gpaToLetterGrade($combinedGradePoint, $gradeRules);
-
-    //     return [
-    //         'combined_id'          => $combinedId,
-    //         'is_combined'          => true,
-    //         'combined_name'        => $combinedName,
-    //         'total_marks'          => $totalMarks,
-    //         'converted_mark'       => round($totalConverted, 2),
-    //         'final_mark'           => round($totalConverted + $totalGrace, 2),
-    //         'grace_mark'           => $totalGrace,
-    //         'combined_grade_point' => $combinedGradePoint,
-    //         'combined_grade'       => $combinedGrade,
-    //         'combined_status'      => $combinedGrade === 'F' ? 'Fail' : 'Pass',
-    //         'parts'                => $parts,
-    //         'is_uncountable'       => false,
-    //     ];
-    // }
     private function processCombinedGroup($group, $gradeRules, $mark_configs)
     {
         $combinedId   = $group->first()['combined_id'];
