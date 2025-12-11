@@ -62,7 +62,7 @@ class ResultCalculator
         if (!$id || !is_numeric($id)) return;
 
         $name = $subject['subject_name'];
-        $mark = $subject['final_mark'] ?? 0;
+        $mark = $subject['converted_mark'] ?? 0;
         $key = "single_{$id}";
 
         if (!$collection->has($key)) {
