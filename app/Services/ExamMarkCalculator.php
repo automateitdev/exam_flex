@@ -42,14 +42,33 @@ class ExamMarkCalculator
         }
 
         // 1. TOTAL OBTAINED MARK
-        $obtainedMark = $details->sum(fn($d) => $partMarks[$d['exam_code_title']] ?? 0);
+        // $obtainedMark = $details->sum(fn($d) => $partMarks[$d['exam_code_title']] ?? 0);
 
-        // 2. TOTAL MAX MARK (for percentage)
-        $totalMaxMark = $details->sum(function ($d) {
-            $total = $d['total_mark'] ?? 100;
+        // // 2. TOTAL MAX MARK (for percentage)
+        // $totalMaxMark = $details->sum(function ($d) {
+        //     $total = $d['total_mark'] ?? 100;
+        //     $conversion = ($d['conversion'] ?? 100) / 100;
+        //     return $total * $conversion;
+        // });
+
+        // FIXED: calculate converted marks properly
+        $obtainedMark = 0;        // converted obtained mark
+        $totalMaxMark = 0;        // converted max mark
+
+        foreach ($details as $d) {
+            $code = $d['exam_code_title'];
+            $got  = $partMarks[$code] ?? 0;
+
             $conversion = ($d['conversion'] ?? 100) / 100;
-            return $total * $conversion;
-        });
+            $total     = $d['total_mark'] ?? 0;
+
+            // converted obtained
+            $obtainedMark += $got * $conversion;
+
+            // converted max
+            $totalMaxMark += $total * $conversion;
+        }
+
 
         // 3. INDIVIDUAL PASS CHECK
         $individualPass = true;
@@ -116,7 +135,7 @@ class ExamMarkCalculator
         // 7. APPLY GRACE (IF POSSIBLE)
         if (!$passBeforeGrace && $graceMark > 0 && $obtainedMark < $failThreshold) {
 
-            $needed = ceil($failThreshold - $obtainedMark);
+            $needed = $failThreshold - $obtainedMark;
             $possibleGrace = min($needed, $graceMark);
             $tempMark = $obtainedMark + $possibleGrace;
 
