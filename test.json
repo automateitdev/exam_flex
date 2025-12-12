@@ -114,24 +114,6 @@
                     }],
                     "is_uncountable": false
                 }, {
-                    "subject_id": 974,
-                    "subject_name": "Math",
-                    "part_marks": {
-                        "WR": 85,
-                        "MCQ": 25
-                    },
-                    "total_marks": 110,
-                    "converted_mark": 84.5,
-                    "final_mark": 84.5,
-                    "grace_mark": 0,
-                    "percentage": 65,
-                    "grade_point": 0,
-                    "grade": "F",
-                    "is_uncountable": false,
-                    "is_combined": false,
-                    "attendance_status": "present",
-                    "is_optional": false
-                }, {
                     "subject_id": 983,
                     "subject_name": "Agriculture Studies",
                     "part_marks": {
@@ -149,17 +131,35 @@
                     "is_combined": false,
                     "attendance_status": "present",
                     "is_optional": true
+                }, {
+                    "subject_id": 974,
+                    "subject_name": "Math",
+                    "part_marks": {
+                        "WR": 85,
+                        "MCQ": 25
+                    },
+                    "total_marks": 110,
+                    "converted_mark": 84.5,
+                    "final_mark": 84.5,
+                    "grace_mark": 0,
+                    "percentage": 65,
+                    "grade_point": 5,
+                    "grade": "A+",
+                    "is_uncountable": false,
+                    "is_combined": false,
+                    "attendance_status": "present",
+                    "is_optional": false
                 }],
                 "total_mark_without_optional": 412,
-                "gpa_without_optional": 0,
-                "letter_grade_without_optional": "F",
+                "gpa_without_optional": 3.83,
+                "letter_grade_without_optional": "A-",
                 "total_mark_with_optional": 456,
-                "gpa_with_optional": 0,
-                "letter_grade_with_optional": "F",
-                "result_status": "Fail",
+                "gpa_with_optional": 4.83,
+                "letter_grade_with_optional": "A",
+                "result_status": "Pass",
                 "optional_bonus_gp": 3,
                 "optional_bonus_mark": 44,
-                "failed_subject_count": 1,
+                "failed_subject_count": 0,
                 "student_info": {
                     "student": {
                         "id": 65479,
@@ -400,8 +400,8 @@
                     "final_mark": 76.5,
                     "grace_mark": 0,
                     "percentage": 58.85,
-                    "grade_point": 5,
-                    "grade": "A+",
+                    "grade_point": 4,
+                    "grade": "A",
                     "is_uncountable": false,
                     "is_combined": false,
                     "attendance_status": "present",
@@ -426,10 +426,10 @@
                     "is_optional": true
                 }],
                 "total_mark_without_optional": 378,
-                "gpa_without_optional": 3.83,
+                "gpa_without_optional": 3.5,
                 "letter_grade_without_optional": "A-",
                 "total_mark_with_optional": 378,
-                "gpa_with_optional": 3.83,
+                "gpa_with_optional": 3.5,
                 "letter_grade_with_optional": "A-",
                 "result_status": "Pass",
                 "optional_bonus_gp": 0,
@@ -675,8 +675,8 @@
                     "final_mark": 54.5,
                     "grace_mark": 0,
                     "percentage": 41.92,
-                    "grade_point": 3.5,
-                    "grade": "A-",
+                    "grade_point": 3,
+                    "grade": "B",
                     "is_uncountable": false,
                     "is_combined": false,
                     "attendance_status": "present",
@@ -701,10 +701,10 @@
                     "is_optional": true
                 }],
                 "total_mark_without_optional": 370,
-                "gpa_without_optional": 3.33,
+                "gpa_without_optional": 3.17,
                 "letter_grade_without_optional": "B",
                 "total_mark_with_optional": 386,
-                "gpa_with_optional": 3.83,
+                "gpa_with_optional": 3.67,
                 "letter_grade_with_optional": "A-",
                 "result_status": "Pass",
                 "optional_bonus_gp": 1.5,
@@ -950,8 +950,8 @@
                     "final_mark": 31.6,
                     "grace_mark": 0,
                     "percentage": 24.31,
-                    "grade_point": 2,
-                    "grade": "C",
+                    "grade_point": 0,
+                    "grade": "F",
                     "is_uncountable": false,
                     "is_combined": false,
                     "attendance_status": "present",
@@ -976,15 +976,15 @@
                     "is_optional": true
                 }],
                 "total_mark_without_optional": 308,
-                "gpa_without_optional": 2.5,
-                "letter_grade_without_optional": "C",
+                "gpa_without_optional": 0,
+                "letter_grade_without_optional": "F",
                 "total_mark_with_optional": 308,
-                "gpa_with_optional": 2.5,
-                "letter_grade_with_optional": "C",
-                "result_status": "Pass",
+                "gpa_with_optional": 0,
+                "letter_grade_with_optional": "F",
+                "result_status": "Fail",
                 "optional_bonus_gp": 0,
                 "optional_bonus_mark": 0,
-                "failed_subject_count": 0,
+                "failed_subject_count": 1,
                 "student_info": {
                     "student": {
                         "id": 65482,
@@ -1225,8 +1225,8 @@
                     "final_mark": 57.9,
                     "grace_mark": 0,
                     "percentage": 44.54,
-                    "grade_point": 4,
-                    "grade": "A",
+                    "grade_point": 3,
+                    "grade": "B",
                     "is_uncountable": false,
                     "is_combined": false,
                     "attendance_status": "present",
@@ -1251,11 +1251,11 @@
                     "is_optional": true
                 }],
                 "total_mark_without_optional": 318,
-                "gpa_without_optional": 2.83,
+                "gpa_without_optional": 2.5,
                 "letter_grade_without_optional": "C",
                 "total_mark_with_optional": 319,
-                "gpa_with_optional": 3.17,
-                "letter_grade_with_optional": "B",
+                "gpa_with_optional": 2.83,
+                "letter_grade_with_optional": "C",
                 "result_status": "Pass",
                 "optional_bonus_gp": 1,
                 "optional_bonus_mark": 1,
@@ -2795,13 +2795,13 @@
                 "subject_name": "English 2nd",
                 "highest_mark": 83.6
             }, {
-                "subject_id": 974,
-                "subject_name": "Math",
-                "highest_mark": 84.5
-            }, {
                 "subject_id": 983,
                 "subject_name": "Agriculture Studies",
                 "highest_mark": 83.5
+            }, {
+                "subject_id": 974,
+                "subject_name": "Math",
+                "highest_mark": 84.5
             }],
             "subject_config": [{
                 "id": 2024,
