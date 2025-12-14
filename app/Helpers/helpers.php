@@ -22,3 +22,11 @@ if (!function_exists('round2')) {
         return (float) number_format((float) $value, 2, '.', '');
     }
 }
+
+if (!function_exists('format2')) {
+    function format2($value)
+    {
+        return number_format((float)$value, 2, '.', '');
+    }
+}
+

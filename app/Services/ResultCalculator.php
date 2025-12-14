@@ -203,13 +203,13 @@ class ResultCalculator
             'roll' => $student['roll'] ?? 'N/A',
             'subjects' => $merged,
             'total_mark_without_optional' => round2($totalMarkWithoutOptional),
-            'gpa_without_optional' => $failed ? 0 : $gpaWithoutOptional,
+            'gpa_without_optional' => $failed ? 0 : format2($gpaWithoutOptional),
             'letter_grade_without_optional' => $failed ? 'F' : $letterGradeWithout,
             'total_mark_with_optional' => round2($totalMarkWithOptional),
-            'gpa_with_optional' => $gpaWithOptional,
+            'gpa_with_optional' => format2($gpaWithOptional),
             'letter_grade_with_optional' => $letterGradeWith,
             'result_status' => $status,
-            'optional_bonus_gp' => $bonusGPFromOptional,
+            'optional_bonus_gp' => format2($bonusGPFromOptional),
             'optional_bonus_mark' => $bonusMarkFromOptional,
             'failed_subject_count' => $totalFailCount,
         ];
@@ -251,7 +251,7 @@ class ResultCalculator
             'grace_mark'     => $grace,
             'percentage'     => $percentage,
 
-            'grade_point'    => $subj['grade_point'],
+            'grade_point'    => format2($subj['grade_point']),
             'grade'          => $subj['grade'],
 
             'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
@@ -308,7 +308,7 @@ class ResultCalculator
                 'final_mark'     => $finalMark,             // converted + grace
                 'grace_mark'     => $grace,
                 'grade'          => $mark['grade'] ?? null,
-                'grade_point'    => $mark['grade_point'] ?? 0,
+                'grade_point'    => format2($mark['grade_point'] ?? 0),
                 'attendance_status' => $mark['attendance_status'] ?? null,
             ];
         })->values()->toArray();
@@ -332,7 +332,7 @@ class ResultCalculator
             'final_mark'            => $totalObtained,
             'total_max_mark'        => $totalMaxMark,     // converted-max sum
             'percentage'            => $percentage,
-            'combined_grade_point'  => $combinedGradePoint,
+            'combined_grade_point'  => format2($combinedGradePoint),
             'combined_grade'        => $combinedGrade,
             'combined_status'       => $combinedStatus,
             'parts'                 => $parts,
