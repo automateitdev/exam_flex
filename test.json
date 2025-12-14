@@ -27,7 +27,8 @@
                 "updated_at": "2025-12-10T10:56:56.000000Z",
                 "vendor_id": 4
             },
-            "result": [{
+            "result": [
+                {
                 "student_id": 65479,
                 "student_name": "Nabil Sultana Fahmida",
                 "roll": 1,
@@ -2778,7 +2779,8 @@
                     "religion_position": 10
                 }
             }],
-            "highest_marks": [{
+            "highest_marks": [
+                {
                 "subject_id": 970,
                 "subject_name": "Bangla 1st",
                 "highest_mark": 98.3
@@ -2803,7 +2805,8 @@
                 "subject_name": "Math",
                 "highest_mark": 84.5
             }],
-            "subject_config": [{
+            "subject_config": [
+                {
                 "id": 2024,
                 "institute_details_id": 155,
                 "department_id": 11,

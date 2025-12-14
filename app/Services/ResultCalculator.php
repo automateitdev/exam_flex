@@ -172,11 +172,18 @@ class ResultCalculator
             }
         }
 
+        $maxGradePoint = collect($gradeRules)->max('grade_point');
+
         $totalMarkWithOptional = $totalMarkWithoutOptional + $bonusMarkFromOptional;
 
         $finalGP = $failed ? 0 : ($totalGP + $bonusGPFromOptional);
-        $gpaWithoutOptional = $subjectCount > 0 ? round($totalGP / $subjectCount, 2) : 0;
-        $gpaWithOptional    = $subjectCount > 0 ? round($finalGP / $subjectCount, 2) : 0;
+        // $gpaWithoutOptional = $subjectCount > 0 ? round($totalGP / $subjectCount, 2) : 0;
+        $rawGpaWithoutOptional = $subjectCount > 0 ? round($totalGP / $subjectCount, 2) : 0;
+        $gpaWithoutOptional = min($rawGpaWithoutOptional, $maxGradePoint);
+        // $gpaWithOptional    = $subjectCount > 0 ? round($finalGP / $subjectCount, 2) : 0;
+        $rawGpaWithOptional = $subjectCount > 0 ? round($finalGP / $subjectCount, 2) : 0;
+        $gpaWithOptional = min($rawGpaWithOptional, $maxGradePoint);
+
 
         $status = $failed ? 'Fail' : 'Pass';
 
