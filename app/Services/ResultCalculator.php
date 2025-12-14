@@ -157,18 +157,22 @@ class ResultCalculator
         if ($fourthSubjectPassed == true && $optionalId && isset($marks[$optionalId])) {
 
             $opt = $marks[$optionalId];
-
             $optional_mark_config = $mark_configs[$optionalId] ?? [];
-            $total_of_optional = collect($optional_mark_config['total_marks'] ?? [])->sum();
+            $total_of_optional = collect($optional_mark_config['total_marks'] ?? [])
+                ->map(function ($mark, $code) use ($optional_mark_config) {
+                    $conversion = ($optional_mark_config['conversion'][$code] ?? 100) / 100;
+                    return $mark * $conversion;
+                })
+                ->sum();
 
-            $threshold = $total_of_optional * 0.40;
+            $percentage_of_optional = $total_of_optional > 0 ? ($total_of_optional * 0.40) : 0;
 
             $optionalFullMark = $opt['final_mark'] ?? 0;
             $optGP = $opt['grade_point'] ?? 0;
 
             if ($optGP >= 2.00) {
                 $bonusGPFromOptional = max(0, $optGP - 2.00);
-                $bonusMarkFromOptional = max(0, $optionalFullMark - $threshold);
+                $bonusMarkFromOptional = max(0, $optionalFullMark - $percentage_of_optional);
             }
         }
 
