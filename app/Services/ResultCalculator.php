@@ -175,7 +175,7 @@ class ResultCalculator
 
             if ($optGP >= 2.00) {
                 $bonusGPFromOptional = max(0, $optGP - 2.00);
-                $bonusMarkFromOptional = roundMark(max(0, $optionalFullMark - $percentage_of_optional), $method);
+                $bonusMarkFromOptional = round2(roundMark(max(0, $optionalFullMark - $percentage_of_optional), $method));
             }
         }
 
@@ -202,10 +202,10 @@ class ResultCalculator
             'student_name' => $student['student_name'] ?? 'N/A',
             'roll' => $student['roll'] ?? 'N/A',
             'subjects' => $merged,
-            'total_mark_without_optional' => $totalMarkWithoutOptional,
+            'total_mark_without_optional' => round2($totalMarkWithoutOptional),
             'gpa_without_optional' => $failed ? 0 : $gpaWithoutOptional,
             'letter_grade_without_optional' => $failed ? 'F' : $letterGradeWithout,
-            'total_mark_with_optional' => $totalMarkWithOptional,
+            'total_mark_with_optional' => round2($totalMarkWithOptional),
             'gpa_with_optional' => $gpaWithOptional,
             'letter_grade_with_optional' => $letterGradeWith,
             'result_status' => $status,
@@ -232,11 +232,11 @@ class ResultCalculator
             $conversion = $config['conversion'][$code] ?? 100;
             $converted = $obtained * ($conversion / 100);
 
-            $convertedMark += roundMark($converted, $method);
+            $convertedMark += round2(roundMark($converted, $method));
         }
 
         $grace = $subj['grace_mark'] ?? 0;
-        $finalMark = roundMark($convertedMark + $grace, $method); // ✅ final_mark = converted_mark + grace
+        $finalMark = round2(roundMark($convertedMark + $grace, $method)); // ✅ final_mark = converted_mark + grace
 
         $totalMaxConverted = collect($config['total_marks'] ?? [])->sum();
         $percentage = $totalMaxConverted > 0 ? ($finalMark / $totalMaxConverted) * 100 : 0;
@@ -286,14 +286,14 @@ class ResultCalculator
                 $converted = $obtained * $conversion;
                 $maxConverted = $totalPart * $conversion;
                 // student's converted obtained for this code
-                $convertedMark += roundMark($converted, $method);
+                $convertedMark += round2(roundMark($converted, $method));
 
                 // this paper's converted max for this code
-                $thisPaperConvertedMax += roundMark($maxConverted, $method);
+                $thisPaperConvertedMax += round2(roundMark($maxConverted, $method));
             }
 
             $grace = (float) ($mark['grace_mark'] ?? 0);
-            $finalMark = roundMark($convertedMark + $grace, $method); // final = converted + grace
+            $finalMark = round2(roundMark($convertedMark + $grace, $method)); // final = converted + grace
 
             // accumulate combined totals
             $totalObtained += $finalMark;

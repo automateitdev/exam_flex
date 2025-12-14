@@ -14,3 +14,11 @@ if (!function_exists('roundMark')) {
         };
     }
 }
+
+
+if (!function_exists('round2')) {
+    function round2($value)
+    {
+        return (float) number_format((float) $value, 2, '.', '');
+    }
+}
