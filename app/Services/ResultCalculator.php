@@ -154,21 +154,21 @@ class ResultCalculator
         $bonusGPFromOptional = 0.0;
         $bonusMarkFromOptional = 0.0;
 
-        if ($fourthSubjectPassed == true) {
+        if ($fourthSubjectPassed == true && $optionalId && isset($marks[$optionalId])) {
 
-            if ($optionalId && isset($marks[$optionalId])) {
-                $opt = $marks[$optionalId];
-                $optional_mark_config = $mark_configs[$optionalId] ?? [];
-                $total_of_optional = collect($optional_mark_config['total_marks'] ?? [])->sum();
-                $percentage_of_optional = $total_of_optional > 0 ? ($total_of_optional * 0.40) : 0;
+            $opt = $marks[$optionalId];
 
-                $optionalFullMark = $opt['final_mark'] ?? 0;
-                $optGP = $opt['grade_point'] ?? 0;
+            $optional_mark_config = $mark_configs[$optionalId] ?? [];
+            $total_of_optional = collect($optional_mark_config['total_marks'] ?? [])->sum();
 
-                if ($optGP >= 2.00) {
-                    $bonusGPFromOptional = max(0, $optGP - 2.00);
-                    $bonusMarkFromOptional = max(0, $optionalFullMark - $percentage_of_optional);
-                }
+            $threshold = $total_of_optional * 0.40;
+
+            $optionalFullMark = $opt['final_mark'] ?? 0;
+            $optGP = $opt['grade_point'] ?? 0;
+
+            if ($optGP >= 2.00) {
+                $bonusGPFromOptional = max(0, $optGP - 2.00);
+                $bonusMarkFromOptional = max(0, $optionalFullMark - $threshold);
             }
         }
 
