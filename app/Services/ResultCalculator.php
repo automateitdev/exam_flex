@@ -167,12 +167,15 @@ class ResultCalculator
 
             $percentage_of_optional = $total_of_optional > 0 ? ($total_of_optional * 0.40) : 0;
 
+            $method = collect($optional_mark_config['method_of_evaluation'] ?? [])
+                ->first() ?? 'At Actual';
+
             $optionalFullMark = $opt['final_mark'] ?? 0;
             $optGP = $opt['grade_point'] ?? 0;
 
             if ($optGP >= 2.00) {
                 $bonusGPFromOptional = max(0, $optGP - 2.00);
-                $bonusMarkFromOptional = max(0, $optionalFullMark - $percentage_of_optional);
+                $bonusMarkFromOptional = roundMark(max(0, $optionalFullMark - $percentage_of_optional), $method);
             }
         }
 
@@ -199,15 +202,15 @@ class ResultCalculator
             'student_name' => $student['student_name'] ?? 'N/A',
             'roll' => $student['roll'] ?? 'N/A',
             'subjects' => $merged,
-            'total_mark_without_optional' => ceil($totalMarkWithoutOptional),
+            'total_mark_without_optional' => $totalMarkWithoutOptional,
             'gpa_without_optional' => $failed ? 0 : $gpaWithoutOptional,
             'letter_grade_without_optional' => $failed ? 'F' : $letterGradeWithout,
-            'total_mark_with_optional' => ceil($totalMarkWithOptional),
+            'total_mark_with_optional' => $totalMarkWithOptional,
             'gpa_with_optional' => $gpaWithOptional,
             'letter_grade_with_optional' => $letterGradeWith,
             'result_status' => $status,
             'optional_bonus_gp' => $bonusGPFromOptional,
-            'optional_bonus_mark' => ceil($bonusMarkFromOptional),
+            'optional_bonus_mark' => $bonusMarkFromOptional,
             'failed_subject_count' => $totalFailCount,
         ];
     }
@@ -222,14 +225,18 @@ class ResultCalculator
         $totalMarks = collect($partMarks)->sum();
 
         $convertedMark = 0;
+        $method = '';
 
         foreach ($partMarks as $code => $obtained) {
+            $method = $config['method_of_evaluation'][$code] ?? 'At Actual';
             $conversion = $config['conversion'][$code] ?? 100;
-            $convertedMark += $obtained * ($conversion / 100);
+            $converted = $obtained * ($conversion / 100);
+
+            $convertedMark += roundMark($converted, $method);
         }
 
         $grace = $subj['grace_mark'] ?? 0;
-        $finalMark = $convertedMark + $grace; // ✅ final_mark = converted_mark + grace
+        $finalMark = roundMark($convertedMark + $grace, $method); // ✅ final_mark = converted_mark + grace
 
         $totalMaxConverted = collect($config['total_marks'] ?? [])->sum();
         $percentage = $totalMaxConverted > 0 ? ($finalMark / $totalMaxConverted) * 100 : 0;
@@ -239,10 +246,10 @@ class ResultCalculator
             'subject_name'   => $subj['subject_name'],
             'part_marks'     => $partMarks,
             'total_marks'    => $totalMarks,
-            'converted_mark' => round($convertedMark, 2),
-            'final_mark'     => round($finalMark, 2), // ✅ final_mark includes grace
+            'converted_mark' => $convertedMark,
+            'final_mark'     => $finalMark, // ✅ final_mark includes grace
             'grace_mark'     => $grace,
-            'percentage'     => round($percentage, 2),
+            'percentage'     => $percentage,
 
             'grade_point'    => $subj['grade_point'],
             'grade'          => $subj['grade'],
@@ -253,70 +260,6 @@ class ResultCalculator
         ];
     }
 
-    // private function processCombinedGroup($group, $gradeRules, $mark_configs)
-    // {
-    //     $combinedId   = $group->first()['combined_id'];
-    //     $combinedName = $group->first()['combined_subject_name'];
-
-    //     $totalObtained = 0;
-    //     $totalMaxMark  = 0;
-
-    //     $parts = $group->map(function ($mark) use ($mark_configs, &$totalObtained, &$totalMaxMark) {
-    //         $subjectId = $mark['subject_id'];
-    //         $config    = $mark_configs[$subjectId] ?? [];
-    //         $partMarks = $mark['part_marks'] ?? [];
-
-    //         $thisPaperMax = collect($config['total_marks'] ?? [])->sum();
-    //         $totalMaxMark += $thisPaperMax;
-
-    //         $convertedMark = 0;
-    //         foreach ($partMarks as $code => $obtained) {
-    //             $conversion = $config['conversion'][$code] ?? 100;
-    //             $convertedMark += $obtained * ($conversion / 100);
-    //         }
-
-    //         $grace = $mark['grace_mark'] ?? 0;
-    //         $finalMark = $convertedMark + $grace; // ✅ final_mark = converted_mark + grace
-    //         $totalObtained += $finalMark;
-
-    //         return [
-    //             'subject_id'     => $subjectId,
-    //             'subject_name'   => $mark['subject_name'],
-    //             'part_marks'     => $partMarks,
-    //             'total_marks'    => collect($partMarks)->sum(),
-    //             'converted_mark' => round($convertedMark, 2),
-    //             'final_mark'     => round($finalMark, 2), // ✅ includes grace
-    //             'grace_mark'     => $grace,
-    //             'grade'          => $mark['grade'],
-    //             'grade_point'    => $mark['grade_point'],
-    //             'attendance_status' => $mark['attendance_status'] ?? null,
-    //         ];
-    //     })->values()->toArray();
-
-    //     $percentage = $totalMaxMark > 0 ? ($totalObtained / $totalMaxMark) * 100 : 0;
-
-    //     $combinedGradePoint = $this->getGradePoint($percentage, $gradeRules);
-    //     $combinedGrade      = $this->getGrade($percentage, $gradeRules);
-
-    //     $sampleSubjectId = $group->first()['subject_id'];
-    //     $overallRequired = $mark_configs[$sampleSubjectId]['overall_required'] ?? 33;
-    //     $combinedStatus = $percentage >= $overallRequired ? 'Pass' : 'Fail';
-
-    //     return [
-    //         'combined_id'           => $combinedId,
-    //         'is_combined'           => true,
-    //         'combined_name'         => $combinedName,
-    //         'total_marks'           => $totalObtained,
-    //         'final_mark'            => $totalObtained, // ✅ includes grace for all parts
-    //         'total_max_mark'        => $totalMaxMark,
-    //         'percentage'            => round($percentage, 2),
-    //         'combined_grade_point'  => $combinedGradePoint,
-    //         'combined_grade'        => $combinedGrade,
-    //         'combined_status'       => $combinedStatus,
-    //         'parts'                 => $parts,
-    //         'is_uncountable'        => false,
-    //     ];
-    // }
     private function processCombinedGroup($group, $gradeRules, $mark_configs)
     {
         $combinedId   = $group->first()['combined_id'];
@@ -326,6 +269,7 @@ class ResultCalculator
         $totalMaxMark  = 0;    // sum of parts' converted max (total_mark * conversion%)
 
         $parts = $group->map(function ($mark) use ($mark_configs, &$totalObtained, &$totalMaxMark) {
+            $method = '';
             $subjectId = $mark['subject_id'];
             $config    = $mark_configs[$subjectId] ?? [];
             $partMarks = $mark['part_marks'] ?? [];
@@ -335,18 +279,21 @@ class ResultCalculator
             $thisPaperConvertedMax = 0.0;
 
             foreach ($partMarks as $code => $obtained) {
+                $method = $config['method_of_evaluation'][$code] ?? 'At Actual';
                 $conversion = (float) ($config['conversion'][$code] ?? 100) / 100.0;
                 $totalPart  = (float) ($config['total_marks'][$code] ?? 0);
 
+                $converted = $obtained * $conversion;
+                $maxConverted = $totalPart * $conversion;
                 // student's converted obtained for this code
-                $convertedMark += ($obtained * $conversion);
+                $convertedMark += roundMark($converted, $method);
 
                 // this paper's converted max for this code
-                $thisPaperConvertedMax += ($totalPart * $conversion);
+                $thisPaperConvertedMax += roundMark($maxConverted, $method);
             }
 
             $grace = (float) ($mark['grace_mark'] ?? 0);
-            $finalMark = $convertedMark + $grace; // final = converted + grace
+            $finalMark = roundMark($convertedMark + $grace, $method); // final = converted + grace
 
             // accumulate combined totals
             $totalObtained += $finalMark;
@@ -357,8 +304,8 @@ class ResultCalculator
                 'subject_name'   => $mark['subject_name'],
                 'part_marks'     => $partMarks,
                 'total_marks'    => collect($partMarks)->sum(),        // raw obtained sum (keep for display)
-                'converted_mark' => round($convertedMark, 2),         // ONLY its own converted marks
-                'final_mark'     => round($finalMark, 2),             // converted + grace
+                'converted_mark' => $convertedMark,         // ONLY its own converted marks
+                'final_mark'     => $finalMark,             // converted + grace
                 'grace_mark'     => $grace,
                 'grade'          => $mark['grade'] ?? null,
                 'grade_point'    => $mark['grade_point'] ?? 0,
@@ -381,10 +328,10 @@ class ResultCalculator
             'combined_id'           => $combinedId,
             'is_combined'           => true,
             'combined_name'         => $combinedName,
-            'total_marks'           => round($totalObtained, 2),    // converted sum (with grace)
-            'final_mark'            => round($totalObtained, 2),
-            'total_max_mark'        => round($totalMaxMark, 2),     // converted-max sum
-            'percentage'            => round($percentage, 2),
+            'total_marks'           => $totalObtained,    // converted sum (with grace)
+            'final_mark'            => $totalObtained,
+            'total_max_mark'        => $totalMaxMark,     // converted-max sum
+            'percentage'            => $percentage,
             'combined_grade_point'  => $combinedGradePoint,
             'combined_grade'        => $combinedGrade,
             'combined_status'       => $combinedStatus,
