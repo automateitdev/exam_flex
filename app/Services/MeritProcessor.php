@@ -92,48 +92,57 @@ class MeritProcessor
 
     private function sortStudents(Collection $students, string $meritType, Collection $academicDetails): Collection
     {
-        $isGpaBased = str_contains(strtolower($meritType), 'gpa') || str_contains($meritType, 'grade_point');
+        $meritTypeLower = strtolower($meritType);
+        $useGpa = str_contains($meritTypeLower, 'grade point') || str_contains($meritTypeLower, 'gpa');
 
-        return $students->sort(function ($a, $b) use ($isGpaBased, $academicDetails) {
+        return $students->sort(function ($a, $b) use ($useGpa, $academicDetails) {
             $aId = $a['student_id'];
             $bId = $b['student_id'];
 
-            // ১. প্রথমে Result Status দিয়ে সর্ট — Pass আগে, Fail পরে
-            $aStatus = $a['result_status'];
-            $bStatus = $b['result_status'];
-
-            if ($aStatus !== $bStatus) {
-                return ($aStatus === 'Pass') ? -1 : 1; // Pass আগে
+            // Pass first, Fail later
+            if ($a['result_status'] !== $b['result_status']) {
+                return ($a['result_status'] === 'Pass') ? -1 : 1;
             }
 
-            // ২. Pass হলে GPA/মার্ক দিয়ে সর্ট
-            if ($aStatus === 'Pass') {
-                $aVal = $isGpaBased
-                    ? ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0)
-                    : $this->getTotalMark($a);
-                $bVal = $isGpaBased
-                    ? ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0)
-                    : $this->getTotalMark($b);
+            if ($useGpa) {
+                // GPA ranking primary
+                $aVal = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
+                $bVal = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
 
                 if ($aVal !== $bVal) {
-                    return $bVal <=> $aVal; // বেশি থেকে কম
+                    return $bVal <=> $aVal; // higher GPA first
+                }
+
+                // Tie → Total Mark
+                $aTM = $this->getTotalMark($a);
+                $bTM = $this->getTotalMark($b);
+                if ($aTM !== $bTM) {
+                    return $bTM <=> $aTM;
+                }
+            } else {
+                // Total mark ranking primary
+                $aTM = $this->getTotalMark($a);
+                $bTM = $this->getTotalMark($b);
+                if ($aTM !== $bTM) {
+                    return $bTM <=> $aTM; // higher total mark first
+                }
+
+                // Tie → GPA
+                $aVal = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
+                $bVal = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
+                if ($aVal !== $bVal) {
+                    return $bVal <=> $aVal;
                 }
             }
 
-            // ৩. Fail হলে টোটাল মার্ক দিয়ে সর্ট (বেশি মার্ক আগে)
-            $aMark = $this->getTotalMark($a);
-            $bMark = $this->getTotalMark($b);
-            if ($aMark !== $bMark) {
-                return $bMark <=> $aMark;
-            }
-
-            // ৪. শেষে রোল নম্বর দিয়ে
-            $aRoll = $academicDetails[$aId]['class_roll'];
-            $bRoll = $academicDetails[$bId]['class_roll'];
+            // Last tie-breaker → roll
+            $aRoll = $academicDetails[$aId]['class_roll'] ?? 0;
+            $bRoll = $academicDetails[$bId]['class_roll'] ?? 0;
 
             return $aRoll <=> $bRoll;
         })->values();
     }
+
 
     private function getTotalMark($student): float
     {
@@ -142,91 +151,7 @@ class MeritProcessor
             ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
     }
 
-    // private function assignRanks(Collection $sorted, string $meritType, Collection $academicDetails, Collection $studentDetails): array
-    // {
-    //     $isSequential = str_contains(strtolower($meritType), 'sequential');
-    //     $rank = 1;
-    //     $previousValue = null;
 
-    //     return $sorted->map(function ($student, $index) use (&$rank, &$previousValue, $isSequential, $academicDetails, $studentDetails) {
-    //         $stdId = $student['student_id'];
-    //         $acad  = $academicDetails[$stdId] ?? [];
-    //         $std   = $studentDetails[$stdId] ?? [];
-
-    //         // Pass এবং Fail আলাদা র‍্যাঙ্কিং
-    //         $currentValue = ($student['result_status'] ?? 'Fail') === 'Pass'
-    //             ? ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0)
-    //             : ($this->getTotalMark($student) * -1); // Fail এর জন্য negative (যাতে আলাদা থাকে)
-
-    //         if ($index === 0 || $currentValue != $previousValue) {
-    //             $currentRank = $rank++;
-    //         } else {
-    //             $currentRank = $isSequential ? $rank++ : $previousRank ?? $rank - 1;
-    //         }
-
-    //         $previousValue = $currentValue;
-
-    //         return [
-    //             'student_id'            => $stdId,
-    //             'student_name'          => $student['student_name'],
-    //             'roll'                  => $student['roll'] ?? $acad['class_roll'] ?? null,
-    //             'total_mark'            => $this->getTotalMark($student),
-    //             'gpa'                   => round($student['gpa_with_optional'] ?? $student['gpa'] ?? 0, 2),
-    //             'gpa_without_optional'  => round($student['gpa_without_optional'] ?? 0, 2),
-    //             'letter_grade'          => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
-    //             'result_status'         => $student['result_status'],
-    //             'merit_position'        => $currentRank,
-    //             'shift'                 => $acad['shift'] ?? null,
-    //             'section'               => $acad['section'] ?? null,
-    //             'group'                 => $acad['group'] ?? null,
-    //             'gender'                => $std['student_gender'] ?? null,
-    //             'religion'              => $std['student_religion'] ?? null,
-    //         ];
-    //     })->values()->toArray();
-    // }
-    // private function assignRanks(Collection $sorted, string $meritType, Collection $academicDetails, Collection $studentDetails): array
-    // {
-    //     $isSequential = str_contains(strtolower($meritType), 'sequential');
-
-    //     // 1️⃣ Split Pass & Fail students
-    //     $passStudents = $sorted->where('result_status', 'Pass')->values();
-    //     $failStudents = $sorted->where('result_status', 'Fail')->values();
-
-    //     $ranked = [];
-
-    //     /* -----------------------------
-    //    ⭐ RANK PASS STUDENTS
-    // -------------------------------- */
-    //     $rank = 1;
-    //     $previousValue = null;
-
-    //     foreach ($passStudents as $index => $student) {
-
-    //         $currentValue = ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
-
-    //         if ($index === 0 || $currentValue != $previousValue) {
-    //             $currentRank = $rank++;
-    //         } else {
-    //             $currentRank = $isSequential ? $rank++ : $currentRank;
-    //         }
-
-    //         $previousValue = $currentValue;
-
-    //         $ranked[] = $this->formatRankOutput($student, $currentRank, $academicDetails, $studentDetails);
-    //     }
-
-    //     /* -----------------------------
-    //    ⭐ RANK FAIL STUDENTS
-    //      (START AFTER PASS STUDENTS)
-    // -------------------------------- */
-    //     $failRank = $rank; // continue numbering
-
-    //     foreach ($failStudents as $student) {
-    //         $ranked[] = $this->formatRankOutput($student, $failRank++, $academicDetails, $studentDetails);
-    //     }
-
-    //     return $ranked;
-    // }
     private function assignRanks(Collection $sorted, string $meritType, Collection $academicDetails, Collection $studentDetails): array
     {
         $isSequential = str_contains(strtolower($meritType), 'sequential');
@@ -315,29 +240,4 @@ class MeritProcessor
 
         return $ranked;
     }
-
-
-    // private function formatRankOutput($student, $rank, Collection $academicDetails, Collection $studentDetails)
-    // {
-    //     $stdId = $student['student_id'];
-    //     $acad  = $academicDetails[$stdId] ?? [];
-    //     $std   = $studentDetails[$stdId] ?? [];
-
-    //     return [
-    //         'student_id'            => $stdId,
-    //         'student_name'          => $student['student_name'],
-    //         'roll'                  => $student['roll'] ?? $acad['class_roll'] ?? null,
-    //         'total_mark'            => $this->getTotalMark($student),
-    //         'gpa'                   => round($student['gpa_with_optional'] ?? $student['gpa'] ?? 0, 2),
-    //         'gpa_without_optional'  => round($student['gpa_without_optional'] ?? 0, 2),
-    //         'letter_grade'          => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
-    //         'result_status'         => $student['result_status'],
-    //         'merit_position'        => $rank,
-    //         'shift'                 => $acad['shift'] ?? null,
-    //         'section'               => $acad['section'] ?? null,
-    //         'group'                 => $acad['group'] ?? null,
-    //         'gender'                => $std['student_gender'] ?? null,
-    //         'religion'              => $std['student_religion'] ?? null,
-    //     ];
-    // }
 }
