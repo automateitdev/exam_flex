@@ -248,43 +248,42 @@ class MeritProcessor
     ): array {
 
         $isSequential = str_contains(strtolower($meritType), 'sequential');
-        $useGpa       = str_contains(strtolower($meritType), 'grade point')
-            || str_contains(strtolower($meritType), 'gpa');
+        $useGpa       = str_contains(strtolower($meritType), 'grade point') || str_contains(strtolower($meritType), 'gpa');
 
         $ranked = [];
 
+        if ($isSequential) {
+            // 🔹 Sequential → no duplicate ranks allowed
+            // 🔹 Sort by primary value (mark/gpa) DESC, then class_roll ASC, then student_id ASC
+            $sorted = $sorted->sort(function ($a, $b) use ($useGpa, $academicDetails) {
+                $aVal = $useGpa
+                    ? (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0)
+                    : $this->getTotalMark($a);
+                $bVal = $useGpa
+                    ? (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0)
+                    : $this->getTotalMark($b);
+
+                // Primary: descending
+                if ($aVal !== $bVal) return $bVal <=> $aVal;
+
+                // Secondary: roll/class_roll ascending
+                $aId = $a['student_id'];
+                $bId = $b['student_id'];
+                $aRoll = $academicDetails[$aId]['class_roll'] ?? $a['roll'] ?? 0;
+                $bRoll = $academicDetails[$bId]['class_roll'] ?? $b['roll'] ?? 0;
+                if ($aRoll !== $bRoll) return $aRoll <=> $bRoll;
+
+                // Last tie-breaker → student_id ascending
+                return $aId <=> $bId;
+            })->values();
+        }
+
+        // Assign rank sequentially
         $rank = 1;
-        $previousPrimary = null;
-        $previousRank = null;
-
-        foreach ($sorted as $index => $student) {
-
+        foreach ($sorted as $student) {
             $stdId = $student['student_id'];
             $acad  = $academicDetails[$stdId] ?? [];
             $std   = $studentDetails[$stdId] ?? [];
-
-            // 🔑 Primary value ONLY used for non-sequential
-            $primaryValue = $useGpa
-                ? (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0)
-                : $this->getTotalMark($student);
-
-            if ($isSequential) {
-                // ✅ SEQUENTIAL → NEVER DUPLICATE
-                $currentRank = $index + 1;
-            } else {
-                // ✅ NON-SEQUENTIAL → DUPLICATE ALLOWED
-                if ($index === 0) {
-                    $currentRank = $rank;
-                } else {
-                    $currentRank = ($primaryValue == $previousPrimary)
-                        ? $previousRank
-                        : $rank;
-                }
-                $rank++;
-            }
-
-            $previousPrimary = $primaryValue;
-            $previousRank    = $currentRank;
 
             $ranked[] = [
                 'student_id'           => $stdId,
@@ -293,16 +292,17 @@ class MeritProcessor
                 'total_mark'           => $this->getTotalMark($student),
                 'gpa'                  => round($student['gpa_with_optional'] ?? $student['gpa'] ?? 0, 2),
                 'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
-                'letter_grade'         => $student['letter_grade_with_optional']
-                    ?? $student['letter_grade'],
+                'letter_grade'         => $student['letter_grade_with_optional'] ?? $student['letter_grade'],
                 'result_status'        => $student['result_status'],
-                'merit_position'       => $currentRank,
+                'merit_position'       => $rank,
                 'shift'                => $acad['shift'] ?? null,
                 'section'              => $acad['section'] ?? null,
                 'group'                => $acad['group'] ?? null,
                 'gender'               => $std['student_gender'] ?? null,
                 'religion'             => $std['student_religion'] ?? null,
             ];
+
+            $rank++;
         }
 
         return $ranked;
