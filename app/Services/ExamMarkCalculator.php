@@ -154,7 +154,7 @@ class ExamMarkCalculator
             );
         } else {
             $gradeInfo = $gradePoints->first(fn ($g) =>
-                strtolower($g['result'] ?? '') === 'Fail'
+                $g['result'] === 'Fail'
             );
         }
 
@@ -172,9 +172,9 @@ class ExamMarkCalculator
             'part_marks'        => $partMarks,
             'exam_name'         => $examName,
             'subject_name'      => $subjectName,
-            'grade'             => $gradeInfo['grade'] ?? null,
-            'grade_point'       => $gradeInfo['grade_point'] ?? null,
-            'attendance_status' => $student['attendance_status'] ?? null
+            'grade'             => $gradeInfo['grade'],
+            'grade_point'       => $gradeInfo['grade_point'],
+            'attendance_status' => $student['attendance_status']
         ];
     }
 
