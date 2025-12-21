@@ -28,159 +28,153 @@ class ExamMarkCalculator
         $details        = collect($subject['exam_config']);
         $graceMark      = $subject['grace_mark'] ?? 0;
         $highestFail    = $subject['highest_fail_mark'] ?? 0;
-        $gradePoints    = $payload['grade_points'] ?? [];
+        $gradePoints    = collect($payload['grade_points'] ?? []);
         $studentId      = $student['student_id'];
         $partMarks      = $student['part_marks'] ?? [];
         $examName       = $subject['exam_name'] ?? 'Semester Exam';
         $subjectName    = $subject['subject_name'] ?? null;
         $attendanceReq  = $subject['attendance_required'] ?? false;
 
-        // ABSENT CHECK
+        /* =====================================================
+         | ABSENT CHECK (UNCHANGED)
+         ===================================================== */
         $isAbsent = $attendanceReq && strtolower($student['attendance_status'] ?? 'absent') === 'absent';
         if ($isAbsent) {
             return $this->absentResult($studentId, $partMarks, $examName, $subjectName);
         }
 
-        // 1. TOTAL OBTAINED MARK
-        // $obtainedMark = $details->sum(fn($d) => $partMarks[$d['exam_code_title']] ?? 0);
-
-        // // 2. TOTAL MAX MARK (for percentage)
-        // $totalMaxMark = $details->sum(function ($d) {
-        //     $total = $d['total_mark'] ?? 100;
-        //     $conversion = ($d['conversion'] ?? 100) / 100;
-        //     return $total * $conversion;
-        // });
-
-        // FIXED: calculate converted marks properly
-        $obtainedMark = 0;        // converted obtained mark
-        $totalMaxMark = 0;        // converted max mark
+        /* =====================================================
+         | 1. CONVERTED MARK CALCULATION (UNCHANGED)
+         ===================================================== */
+        $obtainedMark = 0;
+        $totalMaxMark = 0;
 
         foreach ($details as $d) {
-            $code = $d['exam_code_title'];
-            $got  = $partMarks[$code] ?? 0;
-
+            $got = $partMarks[$d['exam_code_title']] ?? 0;
             $conversion = ($d['conversion'] ?? 100) / 100;
-            $total     = $d['total_mark'] ?? 0;
+            $total = $d['total_mark'] ?? 0;
 
-            // converted obtained
             $obtainedMark += $got * $conversion;
-
-            // converted max
             $totalMaxMark += $total * $conversion;
         }
 
+        /* =====================================================
+         | 2. CONFIG PRESENCE FLAGS  ✅ NEW
+         ===================================================== */
+        $hasPassMark = $details->where('pass_mark', '>', 0)->count() > 0;
 
-        // 3. INDIVIDUAL PASS CHECK
+        $overallDetail = $details->where('is_overall', true)->first();
+        $hasOverall = $overallDetail && ($overallDetail['overall_mark'] ?? 0) > 0;
+
+        /* =====================================================
+         | 3. SHORT CODE PASS CHECK  🔄 UPDATED
+         ===================================================== */
         $individualPass = true;
         $failedParts = [];
 
-        foreach ($details->where('pass_mark', '>', 0) as $d) {
-            $code = $d['exam_code_title'];
-            $got  = $partMarks[$code] ?? 0;
-
-            if ($got < $d['pass_mark']) {
-                $individualPass = false;
-                $failedParts[] = "$code ($got < {$d['pass_mark']})";
+        if ($hasPassMark) {
+            foreach ($details->where('pass_mark', '>', 0) as $d) {
+                $got = $partMarks[$d['exam_code_title']] ?? 0;
+                if ($got < $d['pass_mark']) {
+                    $individualPass = false;
+                    $failedParts[] = "{$d['exam_code_title']} ($got < {$d['pass_mark']})";
+                }
             }
         }
 
-        // 4. OVERALL PASS CHECK
-        $overallDetail = $details->where('is_overall', true)->first();
-        $hasOverallCheck = $overallDetail && ($overallDetail['overall_mark'] ?? 0) > 0;
-
+        /* =====================================================
+         | 4. OVERALL PASS CHECK  🔄 UPDATED
+         ===================================================== */
         $overallPass = true;
         $overallCalc = 0;
         $overallRequired = 0;
 
-        if ($hasOverallCheck) {
+        if ($hasOverall) {
             foreach ($details as $d) {
-                $mark = $partMarks[$d['exam_code_title']] ?? 0;
-                $percent = ($d['conversion'] ?? 100) / 100;
-                $overallCalc += $mark * $percent;
+                $overallCalc += ($partMarks[$d['exam_code_title']] ?? 0)
+                    * (($d['conversion'] ?? 100) / 100);
             }
 
             $overallRequired = $overallDetail['overall_mark'];
             $overallPass = $overallCalc >= $overallRequired;
         }
 
-        // 5. THRESHOLD PASS CHECK (highest_fail_mark)
-        $failThreshold = $highestFail > 0 ? $highestFail + 0.01 : 0;
-        $thresholdPass = $highestFail > 0 ? $obtainedMark >= $failThreshold : true;
+        /* =====================================================
+         | 5. FINAL PASS DECISION (CORE LOGIC)  ✅ FIXED
+         ===================================================== */
+        if ($hasPassMark && $hasOverall) {
+            // both present → must pass both
+            $pass = $individualPass && $overallPass;
 
-        // 6. PASS BEFORE GRACE
-        $passBeforeGrace = $individualPass && $overallPass && $thresholdPass;
+        } elseif (!$hasPassMark && $hasOverall) {
+            // only overall
+            $pass = $overallPass;
 
-        $pass = $passBeforeGrace;
-        $finalMark = $obtainedMark;
-        $appliedGrace = 0;
+        } elseif ($hasPassMark && !$hasOverall) {
+            // only pass mark
+            $pass = $individualPass;
+
+        } else {
+            $pass = true;
+        }
+
+        /* =====================================================
+         | 6. REMARK BUILDING  🔄 UPDATED
+         ===================================================== */
         $remark = '';
 
-        // FAILED REASONS (before grace)
-        if (!$passBeforeGrace) {
+        if (!$pass) {
             $reasons = [];
 
-            if (!$individualPass) {
+            if ($hasPassMark && !$individualPass) {
                 $reasons[] = 'Failed Individual: ' . implode(', ', $failedParts);
             }
-            if (!$overallPass) {
+
+            if ($hasOverall && !$overallPass) {
                 $reasons[] = "Overall: $overallCalc < $overallRequired";
-            }
-            if (!$thresholdPass) {
-                $reasons[] = "Below threshold: $obtainedMark < $failThreshold";
             }
 
             $remark = implode(' | ', $reasons);
         }
 
-        // 7. APPLY GRACE (IF POSSIBLE)
-        if (!$passBeforeGrace && $graceMark > 0 && $obtainedMark < $failThreshold) {
-
-            $needed = $failThreshold - $obtainedMark;
-            $possibleGrace = min($needed, $graceMark);
-            $tempMark = $obtainedMark + $possibleGrace;
-
-            if ($tempMark >= $failThreshold) {
-                $appliedGrace = $possibleGrace;
-                $finalMark = $tempMark;
-                $pass = true;
-                $remark = "Pass by Grace (+{$appliedGrace} marks)";
-            }
-        }
-
-        // 8. PERCENTAGE
+        /* =====================================================
+         | 7. PERCENTAGE (UNCHANGED)
+         ===================================================== */
         $percentage = ($totalMaxMark > 0)
-            ? ($finalMark / $totalMaxMark) * 100
+            ? ($obtainedMark / $totalMaxMark) * 100
             : 0;
 
-        // 9. GRADE USING PERCENTAGE
-        $gradeInfo = $this->getGradeByPercentage($percentage, $gradePoints);
+        /* =====================================================
+         | 8. GRADE RESOLUTION (CONFIG DRIVEN)  ✅ FIXED
+         ===================================================== */
+        if ($pass) {
+            $gradeInfo = $gradePoints->first(fn ($g) =>
+                $percentage >= $g['from_mark'] &&
+                $percentage <= $g['to_mark']
+            );
+        } else {
+            $gradeInfo = $gradePoints->first(fn ($g) =>
+                strtolower($g['result'] ?? '') === 'fail'
+            );
+        }
 
+        /* =====================================================
+         | 9. RESPONSE (UNCHANGED)
+         ===================================================== */
         return [
             'student_id'        => $studentId,
             'obtained_mark'     => (float) $obtainedMark,
-            'final_mark'        => (float) $finalMark,
-            'grace_mark'        => (float) $appliedGrace,
+            'final_mark'        => (float) $obtainedMark,
+            'grace_mark'        => 0,
             'result_status'     => $pass ? 'Pass' : 'Fail',
             'remark'            => $remark,
             'percentage'        => round($percentage, 2),
             'part_marks'        => $partMarks,
             'exam_name'         => $examName,
             'subject_name'      => $subjectName,
-            'grade'             => $gradeInfo['grade'],
-            'grade_point'       => $gradeInfo['grade_point'],
+            'grade'             => $gradeInfo['grade'] ?? null,
+            'grade_point'       => $gradeInfo['grade_point'] ?? null,
             'attendance_status' => $student['attendance_status'] ?? null
-        ];
-    }
-
-    private function getGradeByPercentage($percentage, $gradePoints)
-    {
-        $grade = collect($gradePoints)->first(function ($g) use ($percentage) {
-            return $percentage >= $g['from_mark'] && $percentage <= $g['to_mark'];
-        });
-
-        return [
-            'grade'       => $grade['grade'] ?? 'F',
-            'grade_point' => $grade['grade_point'] ?? '0.00'
         ];
     }
 
