@@ -1,1784 +1,467 @@
-local.INFO: Merit Process Request {
-    "request": {
-        "institute_id": "10140",
-        "exam_name": "FINAL SEMESTER EXAM",
-        "exam_config": {
-            "id": 304,
-            "institute_details_id": 157,
-            "institute_class_map_id": 571,
-            "academic_year_id": 2333,
-            "department_id": 10,
-            "class_id": 31,
-            "academic_year": "2025",
-            "department_name": "school",
-            "class_name": "five",
-            "exam_id": 274,
-            "exam_name": "FINAL SEMESTER EXAM",
-            "merit_process_type": "Grade Point (Sequential)",
-            "result_view": "Grading",
-            "first_merit_position": "Section Wise",
-            "second_merit_position": "Class Wise",
-            "attendance_count": "Automatic",
-            "mark_sheet_template": "Template-1 (Regular with Grace)",
-            "created_at": "2025-12-16T16:10:39.000000Z",
-            "updated_at": "2025-12-16T16:10:39.000000Z"
-        },
-        "results": [{
-            "student_id": 61756,
-            "student_name": "MD. NAYEMUL HOQUE",
-            "roll": 1,
-            "subjects": [{
-                "subject_id": 1335,
-                "subject_name": "Bangla",
-                "part_marks": {
-                    "WR": 99
-                },
-                "total_marks": 99,
-                "converted_mark": 99,
-                "final_mark": 99,
-                "grace_mark": 0,
-                "percentage": 99,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1336,
-                "subject_name": "English",
-                "part_marks": {
-                    "WR": 90
-                },
-                "total_marks": 90,
-                "converted_mark": 90,
-                "final_mark": 90,
-                "grace_mark": 0,
-                "percentage": 90,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1339,
-                "subject_name": "General Knowledge",
-                "part_marks": {
-                    "WR": 50
-                },
-                "total_marks": 50,
-                "converted_mark": 50,
-                "final_mark": 50,
-                "grace_mark": 0,
-                "percentage": 100,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1341,
-                "subject_name": "Science",
-                "part_marks": {
-                    "WR": 98
-                },
-                "total_marks": 98,
-                "converted_mark": 98,
-                "final_mark": 98,
-                "grace_mark": 0,
-                "percentage": 98,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1342,
-                "subject_name": "BD & Global Studies",
-                "part_marks": {
-                    "WR": 95
-                },
-                "total_marks": 95,
-                "converted_mark": 95,
-                "final_mark": 95,
-                "grace_mark": 0,
-                "percentage": 95,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1343,
-                "subject_name": "Religion Studies",
-                "part_marks": {
-                    "WR": 98
-                },
-                "total_marks": 98,
-                "converted_mark": 98,
-                "final_mark": 98,
-                "grace_mark": 0,
-                "percentage": 98,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1349,
-                "subject_name": "Mathematics",
-                "part_marks": {
-                    "WR": 100
-                },
-                "total_marks": 100,
-                "converted_mark": 100,
-                "final_mark": 100,
-                "grace_mark": 0,
-                "percentage": 100,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }],
-            "total_mark_without_optional": 630,
-            "gpa_without_optional": "5.00",
-            "letter_grade_without_optional": "A+",
-            "total_mark_with_optional": 630,
-            "gpa_with_optional": "5.00",
-            "letter_grade_with_optional": "A+",
-            "result_status": "Pass",
-            "optional_bonus_gp": "0.00",
-            "optional_bonus_mark": 0,
-            "failed_subject_count": 0
-        }, {
-            "student_id": 61758,
-            "student_name": "UMME HANI MAHI",
-            "roll": 2,
-            "subjects": [{
-                "subject_id": 1335,
-                "subject_name": "Bangla",
-                "part_marks": {
-                    "WR": 99
-                },
-                "total_marks": 99,
-                "converted_mark": 99,
-                "final_mark": 99,
-                "grace_mark": 0,
-                "percentage": 99,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1336,
-                "subject_name": "English",
-                "part_marks": {
-                    "WR": 90
-                },
-                "total_marks": 90,
-                "converted_mark": 90,
-                "final_mark": 90,
-                "grace_mark": 0,
-                "percentage": 90,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1339,
-                "subject_name": "General Knowledge",
-                "part_marks": {
-                    "WR": 50
-                },
-                "total_marks": 50,
-                "converted_mark": 50,
-                "final_mark": 50,
-                "grace_mark": 0,
-                "percentage": 100,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1341,
-                "subject_name": "Science",
-                "part_marks": {
-                    "WR": 97
-                },
-                "total_marks": 97,
-                "converted_mark": 97,
-                "final_mark": 97,
-                "grace_mark": 0,
-                "percentage": 97,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1342,
-                "subject_name": "BD & Global Studies",
-                "part_marks": {
-                    "WR": 92
-                },
-                "total_marks": 92,
-                "converted_mark": 92,
-                "final_mark": 92,
-                "grace_mark": 0,
-                "percentage": 92,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1343,
-                "subject_name": "Religion Studies",
-                "part_marks": {
-                    "WR": 96
-                },
-                "total_marks": 96,
-                "converted_mark": 96,
-                "final_mark": 96,
-                "grace_mark": 0,
-                "percentage": 96,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1349,
-                "subject_name": "Mathematics",
-                "part_marks": {
-                    "WR": 92
-                },
-                "total_marks": 92,
-                "converted_mark": 92,
-                "final_mark": 92,
-                "grace_mark": 0,
-                "percentage": 92,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }],
-            "total_mark_without_optional": 616,
-            "gpa_without_optional": "5.00",
-            "letter_grade_without_optional": "A+",
-            "total_mark_with_optional": 616,
-            "gpa_with_optional": "5.00",
-            "letter_grade_with_optional": "A+",
-            "result_status": "Pass",
-            "optional_bonus_gp": "0.00",
-            "optional_bonus_mark": 0,
-            "failed_subject_count": 0
-        }, {
-            "student_id": 61757,
-            "student_name": "MARIAM JAHAN MOW",
-            "roll": 3,
-            "subjects": [{
-                "subject_id": 1335,
-                "subject_name": "Bangla",
-                "part_marks": {
-                    "WR": 98
-                },
-                "total_marks": 98,
-                "converted_mark": 98,
-                "final_mark": 98,
-                "grace_mark": 0,
-                "percentage": 98,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1336,
-                "subject_name": "English",
-                "part_marks": {
-                    "WR": 96
-                },
-                "total_marks": 96,
-                "converted_mark": 96,
-                "final_mark": 96,
-                "grace_mark": 0,
-                "percentage": 96,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1339,
-                "subject_name": "General Knowledge",
-                "part_marks": {
-                    "WR": 50
-                },
-                "total_marks": 50,
-                "converted_mark": 50,
-                "final_mark": 50,
-                "grace_mark": 0,
-                "percentage": 100,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1341,
-                "subject_name": "Science",
-                "part_marks": {
-                    "WR": 96
-                },
-                "total_marks": 96,
-                "converted_mark": 96,
-                "final_mark": 96,
-                "grace_mark": 0,
-                "percentage": 96,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1342,
-                "subject_name": "BD & Global Studies",
-                "part_marks": {
-                    "WR": 95
-                },
-                "total_marks": 95,
-                "converted_mark": 95,
-                "final_mark": 95,
-                "grace_mark": 0,
-                "percentage": 95,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1343,
-                "subject_name": "Religion Studies",
-                "part_marks": {
-                    "WR": 96
-                },
-                "total_marks": 96,
-                "converted_mark": 96,
-                "final_mark": 96,
-                "grace_mark": 0,
-                "percentage": 96,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1349,
-                "subject_name": "Mathematics",
-                "part_marks": {
-                    "WR": 90
-                },
-                "total_marks": 90,
-                "converted_mark": 90,
-                "final_mark": 90,
-                "grace_mark": 0,
-                "percentage": 90,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }],
-            "total_mark_without_optional": 621,
-            "gpa_without_optional": "5.00",
-            "letter_grade_without_optional": "A+",
-            "total_mark_with_optional": 621,
-            "gpa_with_optional": "5.00",
-            "letter_grade_with_optional": "A+",
-            "result_status": "Pass",
-            "optional_bonus_gp": "0.00",
-            "optional_bonus_mark": 0,
-            "failed_subject_count": 0
-        }, {
-            "student_id": 61759,
-            "student_name": "JANNATUL MAWA SOHANA",
-            "roll": 4,
-            "subjects": [{
-                "subject_id": 1335,
-                "subject_name": "Bangla",
-                "part_marks": {
-                    "WR": 70
-                },
-                "total_marks": 70,
-                "converted_mark": 70,
-                "final_mark": 70,
-                "grace_mark": 0,
-                "percentage": 70,
-                "grade_point": "4.00",
-                "grade": "A",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1336,
-                "subject_name": "English",
-                "part_marks": {
-                    "WR": 87
-                },
-                "total_marks": 87,
-                "converted_mark": 87,
-                "final_mark": 87,
-                "grace_mark": 0,
-                "percentage": 87,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1339,
-                "subject_name": "General Knowledge",
-                "part_marks": {
-                    "WR": 50
-                },
-                "total_marks": 50,
-                "converted_mark": 50,
-                "final_mark": 50,
-                "grace_mark": 0,
-                "percentage": 100,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1341,
-                "subject_name": "Science",
-                "part_marks": {
-                    "WR": 81
-                },
-                "total_marks": 81,
-                "converted_mark": 81,
-                "final_mark": 81,
-                "grace_mark": 0,
-                "percentage": 81,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1342,
-                "subject_name": "BD & Global Studies",
-                "part_marks": {
-                    "WR": 95
-                },
-                "total_marks": 95,
-                "converted_mark": 95,
-                "final_mark": 95,
-                "grace_mark": 0,
-                "percentage": 95,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1343,
-                "subject_name": "Religion Studies",
-                "part_marks": {
-                    "WR": 82
-                },
-                "total_marks": 82,
-                "converted_mark": 82,
-                "final_mark": 82,
-                "grace_mark": 0,
-                "percentage": 82,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1349,
-                "subject_name": "Mathematics",
-                "part_marks": {
-                    "WR": 85
-                },
-                "total_marks": 85,
-                "converted_mark": 85,
-                "final_mark": 85,
-                "grace_mark": 0,
-                "percentage": 85,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }],
-            "total_mark_without_optional": 550,
-            "gpa_without_optional": "4.86",
-            "letter_grade_without_optional": "A",
-            "total_mark_with_optional": 550,
-            "gpa_with_optional": "4.86",
-            "letter_grade_with_optional": "A",
-            "result_status": "Pass",
-            "optional_bonus_gp": "0.00",
-            "optional_bonus_mark": 0,
-            "failed_subject_count": 0
-        }, {
-            "student_id": 61760,
-            "student_name": "YASIN ARAFAT NAZIM",
-            "roll": 5,
-            "subjects": [{
-                "subject_id": 1335,
-                "subject_name": "Bangla",
-                "part_marks": {
-                    "WR": 74
-                },
-                "total_marks": 74,
-                "converted_mark": 74,
-                "final_mark": 74,
-                "grace_mark": 0,
-                "percentage": 74,
-                "grade_point": "4.00",
-                "grade": "A",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1336,
-                "subject_name": "English",
-                "part_marks": {
-                    "WR": 87
-                },
-                "total_marks": 87,
-                "converted_mark": 87,
-                "final_mark": 87,
-                "grace_mark": 0,
-                "percentage": 87,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1339,
-                "subject_name": "General Knowledge",
-                "part_marks": {
-                    "WR": 50
-                },
-                "total_marks": 50,
-                "converted_mark": 50,
-                "final_mark": 50,
-                "grace_mark": 0,
-                "percentage": 100,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1341,
-                "subject_name": "Science",
-                "part_marks": {
-                    "WR": 95
-                },
-                "total_marks": 95,
-                "converted_mark": 95,
-                "final_mark": 95,
-                "grace_mark": 0,
-                "percentage": 95,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1342,
-                "subject_name": "BD & Global Studies",
-                "part_marks": {
-                    "WR": 90
-                },
-                "total_marks": 90,
-                "converted_mark": 90,
-                "final_mark": 90,
-                "grace_mark": 0,
-                "percentage": 90,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1343,
-                "subject_name": "Religion Studies",
-                "part_marks": {
-                    "WR": 91
-                },
-                "total_marks": 91,
-                "converted_mark": 91,
-                "final_mark": 91,
-                "grace_mark": 0,
-                "percentage": 91,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1349,
-                "subject_name": "Mathematics",
-                "part_marks": {
-                    "WR": 84
-                },
-                "total_marks": 84,
-                "converted_mark": 84,
-                "final_mark": 84,
-                "grace_mark": 0,
-                "percentage": 84,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }],
-            "total_mark_without_optional": 571,
-            "gpa_without_optional": "4.86",
-            "letter_grade_without_optional": "A",
-            "total_mark_with_optional": 571,
-            "gpa_with_optional": "4.86",
-            "letter_grade_with_optional": "A",
-            "result_status": "Pass",
-            "optional_bonus_gp": "0.00",
-            "optional_bonus_mark": 0,
-            "failed_subject_count": 0
-        }, {
-            "student_id": 61761,
-            "student_name": "ARAFAT HOSSEN",
-            "roll": 6,
-            "subjects": [{
-                "subject_id": 1335,
-                "subject_name": "Bangla",
-                "part_marks": {
-                    "WR": 97
-                },
-                "total_marks": 97,
-                "converted_mark": 97,
-                "final_mark": 97,
-                "grace_mark": 0,
-                "percentage": 97,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1336,
-                "subject_name": "English",
-                "part_marks": {
-                    "WR": 84
-                },
-                "total_marks": 84,
-                "converted_mark": 84,
-                "final_mark": 84,
-                "grace_mark": 0,
-                "percentage": 84,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1339,
-                "subject_name": "General Knowledge",
-                "part_marks": {
-                    "WR": 40
-                },
-                "total_marks": 40,
-                "converted_mark": 40,
-                "final_mark": 40,
-                "grace_mark": 0,
-                "percentage": 80,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1341,
-                "subject_name": "Science",
-                "part_marks": {
-                    "WR": 93
-                },
-                "total_marks": 93,
-                "converted_mark": 93,
-                "final_mark": 93,
-                "grace_mark": 0,
-                "percentage": 93,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1342,
-                "subject_name": "BD & Global Studies",
-                "part_marks": {
-                    "WR": 93
-                },
-                "total_marks": 93,
-                "converted_mark": 93,
-                "final_mark": 93,
-                "grace_mark": 0,
-                "percentage": 93,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1343,
-                "subject_name": "Religion Studies",
-                "part_marks": {
-                    "WR": 70
-                },
-                "total_marks": 70,
-                "converted_mark": 70,
-                "final_mark": 70,
-                "grace_mark": 0,
-                "percentage": 70,
-                "grade_point": "4.00",
-                "grade": "A",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1349,
-                "subject_name": "Mathematics",
-                "part_marks": {
-                    "WR": 93
-                },
-                "total_marks": 93,
-                "converted_mark": 93,
-                "final_mark": 93,
-                "grace_mark": 0,
-                "percentage": 93,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }],
-            "total_mark_without_optional": 570,
-            "gpa_without_optional": "4.86",
-            "letter_grade_without_optional": "A",
-            "total_mark_with_optional": 570,
-            "gpa_with_optional": "4.86",
-            "letter_grade_with_optional": "A",
-            "result_status": "Pass",
-            "optional_bonus_gp": "0.00",
-            "optional_bonus_mark": 0,
-            "failed_subject_count": 0
-        }, {
-            "student_id": 61762,
-            "student_name": "AKBOR HOSSEN PULOK",
-            "roll": 7,
-            "subjects": [{
-                "subject_id": 1335,
-                "subject_name": "Bangla",
-                "part_marks": {
-                    "WR": 74
-                },
-                "total_marks": 74,
-                "converted_mark": 74,
-                "final_mark": 74,
-                "grace_mark": 0,
-                "percentage": 74,
-                "grade_point": "4.00",
-                "grade": "A",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1336,
-                "subject_name": "English",
-                "part_marks": {
-                    "WR": 83
-                },
-                "total_marks": 83,
-                "converted_mark": 83,
-                "final_mark": 83,
-                "grace_mark": 0,
-                "percentage": 83,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1339,
-                "subject_name": "General Knowledge",
-                "part_marks": {
-                    "WR": 40
-                },
-                "total_marks": 40,
-                "converted_mark": 40,
-                "final_mark": 40,
-                "grace_mark": 0,
-                "percentage": 80,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1341,
-                "subject_name": "Science",
-                "part_marks": {
-                    "WR": 90
-                },
-                "total_marks": 90,
-                "converted_mark": 90,
-                "final_mark": 90,
-                "grace_mark": 0,
-                "percentage": 90,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1342,
-                "subject_name": "BD & Global Studies",
-                "part_marks": {
-                    "WR": 60
-                },
-                "total_marks": 60,
-                "converted_mark": 60,
-                "final_mark": 60,
-                "grace_mark": 0,
-                "percentage": 60,
-                "grade_point": "3.50",
-                "grade": "A-",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1343,
-                "subject_name": "Religion Studies",
-                "part_marks": {
-                    "WR": 74
-                },
-                "total_marks": 74,
-                "converted_mark": 74,
-                "final_mark": 74,
-                "grace_mark": 0,
-                "percentage": 74,
-                "grade_point": "4.00",
-                "grade": "A",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1349,
-                "subject_name": "Mathematics",
-                "part_marks": {
-                    "WR": 73
-                },
-                "total_marks": 73,
-                "converted_mark": 73,
-                "final_mark": 73,
-                "grace_mark": 0,
-                "percentage": 73,
-                "grade_point": "4.00",
-                "grade": "A",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }],
-            "total_mark_without_optional": 494,
-            "gpa_without_optional": "4.36",
-            "letter_grade_without_optional": "A",
-            "total_mark_with_optional": 494,
-            "gpa_with_optional": "4.36",
-            "letter_grade_with_optional": "A",
-            "result_status": "Pass",
-            "optional_bonus_gp": "0.00",
-            "optional_bonus_mark": 0,
-            "failed_subject_count": 0
-        }, {
-            "student_id": 61763,
-            "student_name": "KAWSARI JANNAT TANHIN",
-            "roll": 8,
-            "subjects": [{
-                "subject_id": 1335,
-                "subject_name": "Bangla",
-                "part_marks": {
-                    "WR": 99
-                },
-                "total_marks": 99,
-                "converted_mark": 99,
-                "final_mark": 99,
-                "grace_mark": 0,
-                "percentage": 99,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1336,
-                "subject_name": "English",
-                "part_marks": {
-                    "WR": 94
-                },
-                "total_marks": 94,
-                "converted_mark": 94,
-                "final_mark": 94,
-                "grace_mark": 0,
-                "percentage": 94,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1339,
-                "subject_name": "General Knowledge",
-                "part_marks": {
-                    "WR": 50
-                },
-                "total_marks": 50,
-                "converted_mark": 50,
-                "final_mark": 50,
-                "grace_mark": 0,
-                "percentage": 100,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1341,
-                "subject_name": "Science",
-                "part_marks": {
-                    "WR": 96
-                },
-                "total_marks": 96,
-                "converted_mark": 96,
-                "final_mark": 96,
-                "grace_mark": 0,
-                "percentage": 96,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1342,
-                "subject_name": "BD & Global Studies",
-                "part_marks": {
-                    "WR": 90
-                },
-                "total_marks": 90,
-                "converted_mark": 90,
-                "final_mark": 90,
-                "grace_mark": 0,
-                "percentage": 90,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1343,
-                "subject_name": "Religion Studies",
-                "part_marks": {
-                    "WR": 72
-                },
-                "total_marks": 72,
-                "converted_mark": 72,
-                "final_mark": 72,
-                "grace_mark": 0,
-                "percentage": 72,
-                "grade_point": "4.00",
-                "grade": "A",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1349,
-                "subject_name": "Mathematics",
-                "part_marks": {
-                    "WR": 60
-                },
-                "total_marks": 60,
-                "converted_mark": 60,
-                "final_mark": 60,
-                "grace_mark": 0,
-                "percentage": 60,
-                "grade_point": "3.50",
-                "grade": "A-",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }],
-            "total_mark_without_optional": 561,
-            "gpa_without_optional": "4.64",
-            "letter_grade_without_optional": "A",
-            "total_mark_with_optional": 561,
-            "gpa_with_optional": "4.64",
-            "letter_grade_with_optional": "A",
-            "result_status": "Pass",
-            "optional_bonus_gp": "0.00",
-            "optional_bonus_mark": 0,
-            "failed_subject_count": 0
-        }, {
-            "student_id": 61764,
-            "student_name": "AL SAMIR",
-            "roll": 9,
-            "subjects": [{
-                "subject_id": 1335,
-                "subject_name": "Bangla",
-                "part_marks": {
-                    "WR": 80
-                },
-                "total_marks": 80,
-                "converted_mark": 80,
-                "final_mark": 80,
-                "grace_mark": 0,
-                "percentage": 80,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1336,
-                "subject_name": "English",
-                "part_marks": {
-                    "WR": 60
-                },
-                "total_marks": 60,
-                "converted_mark": 60,
-                "final_mark": 60,
-                "grace_mark": 0,
-                "percentage": 60,
-                "grade_point": "3.50",
-                "grade": "A-",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1339,
-                "subject_name": "General Knowledge",
-                "part_marks": {
-                    "WR": 50
-                },
-                "total_marks": 50,
-                "converted_mark": 50,
-                "final_mark": 50,
-                "grace_mark": 0,
-                "percentage": 100,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1341,
-                "subject_name": "Science",
-                "part_marks": {
-                    "WR": 80
-                },
-                "total_marks": 80,
-                "converted_mark": 80,
-                "final_mark": 80,
-                "grace_mark": 0,
-                "percentage": 80,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1342,
-                "subject_name": "BD & Global Studies",
-                "part_marks": {
-                    "WR": 55
-                },
-                "total_marks": 55,
-                "converted_mark": 55,
-                "final_mark": 55,
-                "grace_mark": 0,
-                "percentage": 55.00000000000001,
-                "grade_point": "3.00",
-                "grade": "B",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1343,
-                "subject_name": "Religion Studies",
-                "part_marks": {
-                    "WR": 70
-                },
-                "total_marks": 70,
-                "converted_mark": 70,
-                "final_mark": 70,
-                "grace_mark": 0,
-                "percentage": 70,
-                "grade_point": "4.00",
-                "grade": "A",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1349,
-                "subject_name": "Mathematics",
-                "part_marks": {
-                    "WR": 53
-                },
-                "total_marks": 53,
-                "converted_mark": 53,
-                "final_mark": 53,
-                "grace_mark": 0,
-                "percentage": 53,
-                "grade_point": "3.00",
-                "grade": "B",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }],
-            "total_mark_without_optional": 448,
-            "gpa_without_optional": "4.07",
-            "letter_grade_without_optional": "A",
-            "total_mark_with_optional": 448,
-            "gpa_with_optional": "4.07",
-            "letter_grade_with_optional": "A",
-            "result_status": "Pass",
-            "optional_bonus_gp": "0.00",
-            "optional_bonus_mark": 0,
-            "failed_subject_count": 0
-        }, {
-            "student_id": 61765,
-            "student_name": "NUSRAT JAHAN TANVIN",
-            "roll": 10,
-            "subjects": [{
-                "subject_id": 1335,
-                "subject_name": "Bangla",
-                "part_marks": {
-                    "WR": 91
-                },
-                "total_marks": 91,
-                "converted_mark": 91,
-                "final_mark": 91,
-                "grace_mark": 0,
-                "percentage": 91,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1336,
-                "subject_name": "English",
-                "part_marks": {
-                    "WR": 89
-                },
-                "total_marks": 89,
-                "converted_mark": 89,
-                "final_mark": 89,
-                "grace_mark": 0,
-                "percentage": 89,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1339,
-                "subject_name": "General Knowledge",
-                "part_marks": {
-                    "WR": 40
-                },
-                "total_marks": 40,
-                "converted_mark": 40,
-                "final_mark": 40,
-                "grace_mark": 0,
-                "percentage": 80,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1341,
-                "subject_name": "Science",
-                "part_marks": {
-                    "WR": 90
-                },
-                "total_marks": 90,
-                "converted_mark": 90,
-                "final_mark": 90,
-                "grace_mark": 0,
-                "percentage": 90,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1342,
-                "subject_name": "BD & Global Studies",
-                "part_marks": {
-                    "WR": 80
-                },
-                "total_marks": 80,
-                "converted_mark": 80,
-                "final_mark": 80,
-                "grace_mark": 0,
-                "percentage": 80,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1343,
-                "subject_name": "Religion Studies",
-                "part_marks": {
-                    "WR": 70
-                },
-                "total_marks": 70,
-                "converted_mark": 70,
-                "final_mark": 70,
-                "grace_mark": 0,
-                "percentage": 70,
-                "grade_point": "4.00",
-                "grade": "A",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1349,
-                "subject_name": "Mathematics",
-                "part_marks": {
-                    "WR": 81
-                },
-                "total_marks": 81,
-                "converted_mark": 81,
-                "final_mark": 81,
-                "grace_mark": 0,
-                "percentage": 81,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }],
-            "total_mark_without_optional": 541,
-            "gpa_without_optional": "4.86",
-            "letter_grade_without_optional": "A",
-            "total_mark_with_optional": 541,
-            "gpa_with_optional": "4.86",
-            "letter_grade_with_optional": "A",
-            "result_status": "Pass",
-            "optional_bonus_gp": "0.00",
-            "optional_bonus_mark": 0,
-            "failed_subject_count": 0
-        }, {
-            "student_id": 61766,
-            "student_name": "AFIFA AKTER",
-            "roll": 11,
-            "subjects": [{
-                "subject_id": 1335,
-                "subject_name": "Bangla",
-                "part_marks": {
-                    "WR": 50
-                },
-                "total_marks": 50,
-                "converted_mark": 50,
-                "final_mark": 50,
-                "grace_mark": 0,
-                "percentage": 50,
-                "grade_point": "3.00",
-                "grade": "B",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1336,
-                "subject_name": "English",
-                "part_marks": {
-                    "WR": 54
-                },
-                "total_marks": 54,
-                "converted_mark": 54,
-                "final_mark": 54,
-                "grace_mark": 0,
-                "percentage": 54,
-                "grade_point": "3.00",
-                "grade": "B",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1339,
-                "subject_name": "General Knowledge",
-                "part_marks": {
-                    "WR": 40
-                },
-                "total_marks": 40,
-                "converted_mark": 40,
-                "final_mark": 40,
-                "grace_mark": 0,
-                "percentage": 80,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1341,
-                "subject_name": "Science",
-                "part_marks": {
-                    "WR": 71
-                },
-                "total_marks": 71,
-                "converted_mark": 71,
-                "final_mark": 71,
-                "grace_mark": 0,
-                "percentage": 71,
-                "grade_point": "4.00",
-                "grade": "A",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1342,
-                "subject_name": "BD & Global Studies",
-                "part_marks": {
-                    "WR": 50
-                },
-                "total_marks": 50,
-                "converted_mark": 50,
-                "final_mark": 50,
-                "grace_mark": 0,
-                "percentage": 50,
-                "grade_point": "3.00",
-                "grade": "B",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1343,
-                "subject_name": "Religion Studies",
-                "part_marks": {
-                    "WR": 64
-                },
-                "total_marks": 64,
-                "converted_mark": 64,
-                "final_mark": 64,
-                "grace_mark": 0,
-                "percentage": 64,
-                "grade_point": "3.50",
-                "grade": "A-",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1349,
-                "subject_name": "Mathematics",
-                "part_marks": {
-                    "WR": 54
-                },
-                "total_marks": 54,
-                "converted_mark": 54,
-                "final_mark": 54,
-                "grace_mark": 0,
-                "percentage": 54,
-                "grade_point": "3.00",
-                "grade": "B",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }],
-            "total_mark_without_optional": 383,
-            "gpa_without_optional": "3.50",
-            "letter_grade_without_optional": "A-",
-            "total_mark_with_optional": 383,
-            "gpa_with_optional": "3.50",
-            "letter_grade_with_optional": "A-",
-            "result_status": "Pass",
-            "optional_bonus_gp": "0.00",
-            "optional_bonus_mark": 0,
-            "failed_subject_count": 0
-        }, {
-            "student_id": 61767,
-            "student_name": "MD. SHAHIN",
-            "roll": 12,
-            "subjects": [{
-                "subject_id": 1335,
-                "subject_name": "Bangla",
-                "part_marks": {
-                    "WR": 40
-                },
-                "total_marks": 40,
-                "converted_mark": 40,
-                "final_mark": 40,
-                "grace_mark": 0,
-                "percentage": 40,
-                "grade_point": "2.00",
-                "grade": "C",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1336,
-                "subject_name": "English",
-                "part_marks": {
-                    "WR": 76
-                },
-                "total_marks": 76,
-                "converted_mark": 76,
-                "final_mark": 76,
-                "grace_mark": 0,
-                "percentage": 76,
-                "grade_point": "4.00",
-                "grade": "A",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1339,
-                "subject_name": "General Knowledge",
-                "part_marks": {
-                    "WR": 40
-                },
-                "total_marks": 40,
-                "converted_mark": 40,
-                "final_mark": 40,
-                "grace_mark": 0,
-                "percentage": 80,
-                "grade_point": "5.00",
-                "grade": "A+",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1341,
-                "subject_name": "Science",
-                "part_marks": {
-                    "WR": 76
-                },
-                "total_marks": 76,
-                "converted_mark": 76,
-                "final_mark": 76,
-                "grace_mark": 0,
-                "percentage": 76,
-                "grade_point": "4.00",
-                "grade": "A",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1342,
-                "subject_name": "BD & Global Studies",
-                "part_marks": {
-                    "WR": 40
-                },
-                "total_marks": 40,
-                "converted_mark": 40,
-                "final_mark": 40,
-                "grace_mark": 0,
-                "percentage": 40,
-                "grade_point": "2.00",
-                "grade": "C",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1343,
-                "subject_name": "Religion Studies",
-                "part_marks": {
-                    "WR": 52
-                },
-                "total_marks": 52,
-                "converted_mark": 52,
-                "final_mark": 52,
-                "grace_mark": 0,
-                "percentage": 52,
-                "grade_point": "3.00",
-                "grade": "B",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }, {
-                "subject_id": 1349,
-                "subject_name": "Mathematics",
-                "part_marks": {
-                    "WR": 43
-                },
-                "total_marks": 43,
-                "converted_mark": 43,
-                "final_mark": 43,
-                "grace_mark": 0,
-                "percentage": 43,
-                "grade_point": "2.00",
-                "grade": "C",
-                "is_uncountable": false,
-                "is_combined": false,
-                "attendance_status": "present",
-                "is_optional": false
-            }],
-            "total_mark_without_optional": 367,
-            "gpa_without_optional": "3.14",
-            "letter_grade_without_optional": "B",
-            "total_mark_with_optional": 367,
-            "gpa_with_optional": "3.14",
-            "letter_grade_with_optional": "B",
-            "result_status": "Pass",
-            "optional_bonus_gp": "0.00",
-            "optional_bonus_mark": 0,
-            "failed_subject_count": 0
-        }],
-        "academic_details": {
-            "61756": {
-                "student_id": 61756,
-                "class_roll": 1,
-                "shift": "day",
-                "section": "a",
-                "group": "Common"
-            },
-            "61757": {
-                "student_id": 61757,
-                "class_roll": 3,
-                "shift": "day",
-                "section": "a",
-                "group": "Common"
-            },
-            "61758": {
-                "student_id": 61758,
-                "class_roll": 2,
-                "shift": "day",
-                "section": "a",
-                "group": "Common"
-            },
-            "61759": {
-                "student_id": 61759,
-                "class_roll": 4,
-                "shift": "day",
-                "section": "a",
-                "group": "Common"
-            },
-            "61760": {
-                "student_id": 61760,
-                "class_roll": 5,
-                "shift": "day",
-                "section": "a",
-                "group": "Common"
-            },
-            "61761": {
-                "student_id": 61761,
-                "class_roll": 6,
-                "shift": "day",
-                "section": "a",
-                "group": "Common"
-            },
-            "61762": {
-                "student_id": 61762,
-                "class_roll": 7,
-                "shift": "day",
-                "section": "a",
-                "group": "Common"
-            },
-            "61763": {
-                "student_id": 61763,
-                "class_roll": 8,
-                "shift": "day",
-                "section": "a",
-                "group": "Common"
-            },
-            "61764": {
-                "student_id": 61764,
-                "class_roll": 9,
-                "shift": "day",
-                "section": "a",
-                "group": "Common"
-            },
-            "61765": {
-                "student_id": 61765,
-                "class_roll": 10,
-                "shift": "day",
-                "section": "a",
-                "group": "Common"
-            },
-            "61766": {
-                "student_id": 61766,
-                "class_roll": 11,
-                "shift": "day",
-                "section": "a",
-                "group": "Common"
-            },
-            "61767": {
-                "student_id": 61767,
-                "class_roll": 12,
-                "shift": "day",
-                "section": "a",
-                "group": "Common"
-            }
-        },
-        "student_details": {
-            "61756": {
-                "student_id": 61756,
-                "student_gender": "Male",
-                "student_religion": "Islam"
-            },
-            "61757": {
-                "student_id": 61757,
-                "student_gender": "Female",
-                "student_religion": "Islam"
-            },
-            "61758": {
-                "student_id": 61758,
-                "student_gender": "Female",
-                "student_religion": "Islam"
-            },
-            "61759": {
-                "student_id": 61759,
-                "student_gender": "Female",
-                "student_religion": "Islam"
-            },
-            "61760": {
-                "student_id": 61760,
-                "student_gender": "Male",
-                "student_religion": "Islam"
-            },
-            "61761": {
-                "student_id": 61761,
-                "student_gender": "Male",
-                "student_religion": "Islam"
-            },
-            "61762": {
-                "student_id": 61762,
-                "student_gender": "Male",
-                "student_religion": "Islam"
-            },
-            "61763": {
-                "student_id": 61763,
-                "student_gender": "Female",
-                "student_religion": "Islam"
-            },
-            "61764": {
-                "student_id": 61764,
-                "student_gender": "Male",
-                "student_religion": "Islam"
-            },
-            "61765": {
-                "student_id": 61765,
-                "student_gender": "Female",
-                "student_religion": "Islam"
-            },
-            "61766": {
-                "student_id": 61766,
-                "student_gender": "Female",
-                "student_religion": "Islam"
-            },
-            "61767": {
-                "student_id": 61767,
-                "student_gender": "Male",
-                "student_religion": "Islam"
-            }
-        }
-    }
-}
+ local.INFO: Mark Calculation Payload {
+     "payload": {
+         "institute_id": "10082",
+         "exam_type": "semester",
+         "exam_name": "Annual Examination",
+         "subject_name": null,
+         "subjects": [],
+         "grade_points": [
+            {
+             "from_mark": 0,
+             "to_mark": 32.99,
+             "grade": "F",
+             "grade_point": 0
+         }, {
+             "from_mark": 33,
+             "to_mark": 39.99,
+             "grade": "D",
+             "grade_point": 1
+         }, {
+             "from_mark": 40,
+             "to_mark": 49.99,
+             "grade": "C",
+             "grade_point": 2
+         }, {
+             "from_mark": 50,
+             "to_mark": 59.99,
+             "grade": "B",
+             "grade_point": 3
+         }, {
+             "from_mark": 60,
+             "to_mark": 69.99,
+             "grade": "A-",
+             "grade_point": 3.5
+         }, {
+             "from_mark": 70,
+             "to_mark": 79.99,
+             "grade": "A",
+             "grade_point": 4
+         }, {
+             "from_mark": 80,
+             "to_mark": 100,
+             "grade": "A+",
+             "grade_point": 5
+         }],
+         "students": [{
+             "student_id": 66070,
+             "part_marks": {
+                 "CQ": 33
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66071,
+             "part_marks": {
+                 "CQ": 32
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66075,
+             "part_marks": {
+                 "CQ": 32
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66074,
+             "part_marks": {
+                 "CQ": 35
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66072,
+             "part_marks": {
+                 "CQ": 33
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66073,
+             "part_marks": {
+                 "CQ": 32
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66076,
+             "part_marks": {
+                 "CQ": 34
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66078,
+             "part_marks": {
+                 "CQ": 28
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66077,
+             "part_marks": {
+                 "CQ": 29
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66082,
+             "part_marks": {
+                 "CQ": 32
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66080,
+             "part_marks": {
+                 "CQ": 32
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66081,
+             "part_marks": {
+                 "CQ": 24
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66079,
+             "part_marks": {
+                 "CQ": 33
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66083,
+             "part_marks": {
+                 "CQ": 26
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66084,
+             "part_marks": {
+                 "CQ": 32
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66086,
+             "part_marks": {
+                 "CQ": 27
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66087,
+             "part_marks": {
+                 "CQ": 0
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66088,
+             "part_marks": {
+                 "CQ": 33
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66090,
+             "part_marks": {
+                 "CQ": 33
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66089,
+             "part_marks": {
+                 "CQ": 24
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66091,
+             "part_marks": {
+                 "CQ": 29
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66092,
+             "part_marks": {
+                 "CQ": 24
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66093,
+             "part_marks": {
+                 "CQ": 33
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66094,
+             "part_marks": {
+                 "CQ": 22
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66095,
+             "part_marks": {
+                 "CQ": 20
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66097,
+             "part_marks": {
+                 "CQ": 26
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66098,
+             "part_marks": {
+                 "CQ": 36
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66099,
+             "part_marks": {
+                 "CQ": 27
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66100,
+             "part_marks": {
+                 "CQ": 23
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66101,
+             "part_marks": {
+                 "CQ": 23
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66103,
+             "part_marks": {
+                 "CQ": 27
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66102,
+             "part_marks": {
+                 "CQ": 25
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66104,
+             "part_marks": {
+                 "CQ": 29
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66105,
+             "part_marks": {
+                 "CQ": 29
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66106,
+             "part_marks": {
+                 "CQ": 25
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66107,
+             "part_marks": {
+                 "CQ": 25
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66108,
+             "part_marks": {
+                 "CQ": 35
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66109,
+             "part_marks": {
+                 "CQ": 19
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66110,
+             "part_marks": {
+                 "CQ": 28
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66112,
+             "part_marks": {
+                 "CQ": 27
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66113,
+             "part_marks": {
+                 "CQ": 28
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66115,
+             "part_marks": {
+                 "CQ": 26
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66116,
+             "part_marks": {
+                 "CQ": 27
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66118,
+             "part_marks": {
+                 "CQ": 25
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66117,
+             "part_marks": {
+                 "CQ": 24
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66119,
+             "part_marks": {
+                 "CQ": 21
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66122,
+             "part_marks": {
+                 "CQ": 0
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66121,
+             "part_marks": {
+                 "CQ": 24
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66123,
+             "part_marks": {
+                 "CQ": 25
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66096,
+             "part_marks": {
+                 "CQ": 24
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66124,
+             "part_marks": {
+                 "CQ": 27
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66126,
+             "part_marks": {
+                 "CQ": 24
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66125,
+             "part_marks": {
+                 "CQ": 25
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66128,
+             "part_marks": {
+                 "CQ": 23
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66120,
+             "part_marks": {
+                 "CQ": 27
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66127,
+             "part_marks": {
+                 "CQ": 24
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66129,
+             "part_marks": {
+                 "CQ": 28
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66131,
+             "part_marks": {
+                 "CQ": 0
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66130,
+             "part_marks": {
+                 "CQ": 24
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66132,
+             "part_marks": {
+                 "CQ": 23
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66135,
+             "part_marks": {
+                 "CQ": 0
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66134,
+             "part_marks": {
+                 "CQ": 0
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66136,
+             "part_marks": {
+                 "CQ": 27
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66133,
+             "part_marks": {
+                 "CQ": 25
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66137,
+             "part_marks": {
+                 "CQ": 0
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66138,
+             "part_marks": {
+                 "CQ": 28
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 70290,
+             "part_marks": {
+                 "CQ": 26
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 70291,
+             "part_marks": {
+                 "CQ": 26
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 66139,
+             "part_marks": {
+                 "CQ": 0
+             },
+             "attendance_status": "present"
+         }, {
+             "student_id": 70293,
+             "part_marks": {
+                 "CQ": 25
+             },
+             "attendance_status": "present"
+         }]
+     }
+ }

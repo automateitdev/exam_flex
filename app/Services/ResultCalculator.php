@@ -320,9 +320,9 @@ class ResultCalculator
         $combinedGradePoint = $this->getGradePoint($percentage, $gradeRules);
         $combinedGrade      = $this->getGrade($percentage, $gradeRules);
 
-        $sampleSubjectId = $group->first()['subject_id'];
-        $overallRequired = $mark_configs[$sampleSubjectId]['overall_required'] ?? 33;
-        $combinedStatus = $percentage >= $overallRequired ? 'Pass' : 'Fail';
+        // 🔒 FINAL AUTHORITY: grade decides pass/fail
+        $combinedStatus = ($combinedGrade === 'F') ? 'Fail' : 'Pass';
+
 
         return [
             'combined_id'           => $combinedId,
