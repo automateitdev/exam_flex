@@ -154,7 +154,7 @@ class ExamMarkCalculator
             );
         } else {
             $gradeInfo = $gradePoints->first(fn ($g) =>
-                strtolower($g['result'] ?? '') === 'fail'
+                strtolower($g['result'] ?? '') === 'Fail'
             );
         }
 
