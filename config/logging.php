@@ -123,6 +123,22 @@ return [
             'path' => storage_path('logs/exam_flex.log'),
             'level' => env('LOG_LEVEL', 'debug'),
         ],
+        'mark_entry_log' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/mark_entry.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+        'result_process_log' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/result_process.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+
+        'merit_log' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/merit.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
     ],
 
 ];

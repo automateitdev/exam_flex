@@ -29,7 +29,7 @@ class MarkEntryController extends Controller
 
     public function storeConfig(Request $request)
     {
-        Log::channel('exam_flex_log')->info('Mark Entry Config Request', [
+        Log::channel('mark_entry')->info('Mark Entry Config Request', [
             'request' => $request->all()
         ]);
 
@@ -91,7 +91,7 @@ class MarkEntryController extends Controller
 
         $tempId = 'temp_' . Str::random(12);
 
-        Log::channel('exam_flex_log')->info('Generated Temp ID for Config', [
+        Log::channel('mark_entry')->info('Generated Temp ID for Config', [
             'temp_id' => $tempId,
             'institute_id' => $data['institute_id']
         ]);
@@ -103,7 +103,7 @@ class MarkEntryController extends Controller
         ]);
         Log::info(DB::getQueryLog());
 
-        Log::channel('exam_flex_log')->info('Mark Entry Config Stored', [
+        Log::channel('mark_entry')->info('Mark Entry Config Stored', [
             'temp_id' => $tempId,
             'expires_at' => now()->addHours(2)->toDateTimeString()
         ]);
@@ -116,7 +116,7 @@ class MarkEntryController extends Controller
 
     public function processStudents(Request $request)
     {
-        Log::channel('exam_flex_log')->info('Mark Calculation Request', [
+        Log::channel('mark_entry')->info('Mark Calculation Request', [
             'request' => $request->all()
         ]);
 
@@ -160,7 +160,7 @@ class MarkEntryController extends Controller
             ->where('expires_at', '>', now())
             ->first();
 
-        Log::channel('exam_flex_log')->info('Fetched Temp Config for Processing', [
+        Log::channel('mark_entry')->info('Fetched Temp Config for Processing', [
             'temp_id' => $request->temp_id,
             'temp_exists' => $temp !== null
         ]);
@@ -171,17 +171,17 @@ class MarkEntryController extends Controller
         $config = json_decode($temp->config, true);
         $fullPayload = array_merge($config, ['students' => $request->students]);
 
-        Log::channel('exam_flex_log')->info('Mark Calculation Payload', [
+        Log::channel('mark_entry')->info('Mark Calculation Payload', [
             'payload' => $fullPayload
         ]);
         // Calculate marks (synchronous)
         $results = $this->examMarkCalculator->calculate($fullPayload);
 
-        Log::channel('exam_flex_log')->info('Mark Calculation Result', [
+        Log::channel('mark_entry')->info('Mark Calculation Result', [
             'results' => $results
         ]);
         // Clean up
-        Log::channel('exam_flex_log')->info('Deleted Temp Config after Processing', [
+        Log::channel('mark_entry')->info('Deleted Temp Config after Processing', [
             'temp_id' => $request->temp_id
         ]);
         $temp->delete();
