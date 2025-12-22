@@ -249,7 +249,7 @@ class MarkEntryController extends Controller
     // Merit process
     public function meritProcess(Request $request)
     {
-        Log::channel('exam_flex_log')->info('Merit Process Request', [
+        Log::channel('merit_log')->info('Merit Process Request', [
             'request' => $request->all()
         ]);
 
@@ -277,7 +277,7 @@ class MarkEntryController extends Controller
         ]);
 
         if ($validator->fails()) {
-            Log::channel('exam_flex_log')->warning('Merit Process Validation Failed', [
+            Log::channel('merit_log')->warning('Merit Process Validation Failed', [
                 'errors' => $validator->errors()->toArray()
             ]);
             return response()->json([
@@ -288,7 +288,7 @@ class MarkEntryController extends Controller
 
         $results = app(MeritProcessor::class)->process($request->all());
 
-        Log::channel('exam_flex_log')->info('Merit Process Result', [
+        Log::channel('merit_log')->info('Merit Process Result', [
             'results' => $results
         ]);
         return response()->json([
