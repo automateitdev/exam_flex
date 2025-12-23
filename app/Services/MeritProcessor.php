@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\FacadesLog;
+use Illuminate\Support\Facades\Log;
 
 class MeritProcessor
 {
@@ -81,29 +83,80 @@ class MeritProcessor
         $meritType       = $examConfig['merit_process_type'] ?? 'total_mark_sequential';
         $groupBy         = $this->getGroupByFields($examConfig);
 
+        // DEBUG: Log incoming data
+        Log::info('=== MERIT PROCESS START ===');
+        Log::info('Total students received: ' . $results->count());
+        Log::info('Merit type: ' . $meritType);
+        Log::info('Group by fields: ' . json_encode($groupBy));
+
+        // DEBUG: Check unique sections in incoming data
+        $sections = $results->map(function ($student) use ($academicDetails) {
+            $stdId = $student['student_id'];
+            return $academicDetails[$stdId]['section'] ?? 'unknown';
+        })->unique()->values()->toArray();
+        Log::info('Sections in data: ' . json_encode($sections));
+
+        // DEBUG: Log first 5 students before sorting
+        Log::info('First 5 students BEFORE sorting:', $results->take(5)->map(function ($s) use ($academicDetails) {
+            return [
+                'id' => $s['student_id'],
+                'section' => $academicDetails[$s['student_id']]['section'] ?? null,
+                'roll' => $academicDetails[$s['student_id']]['class_roll'] ?? null,
+                'gpa' => $s['gpa_with_optional'] ?? $s['gpa'] ?? 0,
+            ];
+        })->toArray());
+
         // CRITICAL: Sort ALL students together first (entire class)
         $allSorted = $this->sortStudents($results, $meritType, $academicDetails);
+
+        // DEBUG: Log first 10 students after sorting
+        Log::info('First 10 students AFTER sorting:', $allSorted->take(10)->map(function ($s) use ($academicDetails) {
+            return [
+                'id' => $s['student_id'],
+                'section' => $academicDetails[$s['student_id']]['section'] ?? null,
+                'roll' => $academicDetails[$s['student_id']]['class_roll'] ?? null,
+                'gpa' => $s['gpa_with_optional'] ?? $s['gpa'] ?? 0,
+                'total_mark' => $this->getTotalMark($s),
+            ];
+        })->toArray());
 
         // CRITICAL: Assign ranks to ALL students together (class-wise ranking)
         $allRanked = $this->assignRanks($allSorted, $meritType, $academicDetails, $studentDetails);
 
+        // DEBUG: Log first 10 students after ranking
+        Log::info('First 10 students AFTER ranking:', collect($allRanked)->take(10)->map(function ($s) {
+            return [
+                'id' => $s['student_id'],
+                'section' => $s['section'],
+                'roll' => $s['roll'],
+                'gpa' => $s['gpa'],
+                'total_mark' => $s['total_mark'],
+                'rank' => $s['merit_position'],
+            ];
+        })->toArray());
+
         // Now we have class-wise ranking (1,2,3... for entire class)
-        // Don't regroup and merge - just use the ranked array as is
         $finalMerit = $allRanked;
+
+        // DEBUG: Check for duplicate rank 1
+        $rank1Students = collect($finalMerit)->where('merit_position', 1)->values();
+        if ($rank1Students->count() > 1) {
+            Log::error('PROBLEM: Multiple students with rank 1!', $rank1Students->toArray());
+        } else {
+            Log::info('OK: Only one student with rank 1', $rank1Students->toArray());
+        }
 
         // Create different views from the same ranked data
         $all = collect($finalMerit);
+
+        Log::info('=== MERIT PROCESS END ===');
 
         return [
             'total_students' => $results->count(),
             'merit_type'     => $meritType,
             'grouped_by'     => $groupBy,
             'data'           => [
-                // Class-wise: all students with their class ranks (1,2,3,4...)
                 'all_students'   => $finalMerit,
-
-                // Grouped views: same data, just organized differently
-                // Students keep their CLASS rank, not section/shift rank
                 'section_wise'   => $all->groupBy('section')->map->values()->toArray(),
                 'shift_wise'     => $all->groupBy('shift')->map->values()->toArray(),
                 'group_wise'     => $all->groupBy('group')->map->values()->toArray(),
@@ -112,7 +165,6 @@ class MeritProcessor
             ]
         ];
     }
-
 
     private function normalizeResults($raw): Collection
     {
@@ -313,45 +365,39 @@ class MeritProcessor
             $aId = $a['student_id'];
             $bId = $b['student_id'];
 
+            // Pass first, Fail later
             if ($a['result_status'] !== $b['result_status']) {
                 return ($a['result_status'] === 'Pass') ? -1 : 1;
             }
 
+            // Compare GPA
             $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
             $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
 
             if ($aGpa !== $bGpa) {
-                return $bGpa <=> $aGpa;
+                return $bGpa <=> $aGpa; // Higher GPA first
             }
 
-            // FORCE roll sorting in Grade Point mode
+            // GPA is same - check total marks for Grade Point mode
+            if ($isGradePoint) {
+                $aTM = $this->getTotalMark($a);
+                $bTM = $this->getTotalMark($b);
+
+                if ($aTM !== $bTM) {
+                    return $bTM <=> $aTM; // Higher total mark first
+                }
+            }
+
+            // Final tie-breaker: roll number (lower roll first)
             $aRoll = $academicDetails->get($aId)['class_roll'] ?? PHP_INT_MAX;
             $bRoll = $academicDetails->get($bId)['class_roll'] ?? PHP_INT_MAX;
-
-            // Add debug: remove later
-            // if ($aGpa == 5.00 && $bGpa == 5.00) {
-            //     \Log::info("Comparing rolls: A={$aId} roll={$aRoll}, B={$bId} roll={$bRoll}, returning " . ($aRoll <=> $bRoll));
-            // }
-
-            if ($isGradePoint) {
-                return $aRoll <=> $bRoll;  // lower roll first
-            }
-
-            // Only reach here if NOT grade point mode
-            $aTM = $this->getTotalMark($a);
-            $bTM = $this->getTotalMark($b);
-            if ($aTM !== $bTM) {
-                return $bTM <=> $aTM;
-            }
 
             return $aRoll <=> $bRoll;
         });
 
-        // Debug: check final order of top students
-        // \Log::info('Top 5 after sort:', $sorted->take(5)->pluck('student_id', 'class_roll')->toArray());
-
         return $sorted->values();
     }
+
     private function assignRanks(
         Collection $sorted,
         string $meritType,
@@ -362,7 +408,6 @@ class MeritProcessor
         $useGpa = str_contains(strtolower($meritType), 'grade point') || str_contains(strtolower($meritType), 'gpa');
 
         $ranked = [];
-        $rank = 1;
 
         foreach ($sorted as $index => $student) {
             $stdId = $student['student_id'];
@@ -377,21 +422,21 @@ class MeritProcessor
             $secondary = $useGpa ? $totalMark : $gpa;
 
             if ($isSequential) {
-                // Sequential mode: every student gets unique rank 1,2,3...
-                // Rank = position in sorted array
+                // Sequential mode: every student gets unique rank based on their position
                 $currentRank = $index + 1;
             } else {
                 // Non-sequential: students with same primary metric share rank
                 if ($index === 0) {
-                    $currentRank = $rank;
+                    $currentRank = 1;
                 } else {
                     $prevStudent = $ranked[$index - 1];
                     $prevPrimary = $prevStudent['merit_primary'];
 
                     if ($primary < $prevPrimary) {
-                        $rank = $index + 1; // Jump to current position
+                        $currentRank = $index + 1;
+                    } else {
+                        $currentRank = $prevStudent['merit_position'];
                     }
-                    $currentRank = $rank;
                 }
             }
 
