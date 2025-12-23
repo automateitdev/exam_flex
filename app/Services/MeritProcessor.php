@@ -265,44 +265,48 @@ class MeritProcessor
         $meritTypeLower = strtolower($meritType);
         $isGradePoint = str_contains($meritTypeLower, 'grade point') || str_contains($meritTypeLower, 'gpa');
 
-        return $students->sort(function ($a, $b) use ($isGradePoint, $academicDetails) {
+        $sorted = $students->sort(function ($a, $b) use ($isGradePoint, $academicDetails) {
             $aId = $a['student_id'];
             $bId = $b['student_id'];
 
-            // 1. Pass first, Fail later
             if ($a['result_status'] !== $b['result_status']) {
                 return ($a['result_status'] === 'Pass') ? -1 : 1;
             }
 
-            // 2. GPA (with optional) descending
             $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
             $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
 
             if ($aGpa !== $bGpa) {
-                return $bGpa <=> $aGpa; // higher GPA first
+                return $bGpa <=> $aGpa;
             }
 
-            // 3. If GPA same → lower class roll first (ONLY if Grade Point mode)
-            // In Total Mark mode, we might still want other tie-breakers, but not here
+            // FORCE roll sorting in Grade Point mode
+            $aRoll = $academicDetails->get($aId)['class_roll'] ?? PHP_INT_MAX;
+            $bRoll = $academicDetails->get($bId)['class_roll'] ?? PHP_INT_MAX;
+
+            // Add debug: remove later
+            // if ($aGpa == 5.00 && $bGpa == 5.00) {
+            //     \Log::info("Comparing rolls: A={$aId} roll={$aRoll}, B={$bId} roll={$bRoll}, returning " . ($aRoll <=> $bRoll));
+            // }
+
             if ($isGradePoint) {
-                $aRoll = $academicDetails[$aId]['class_roll'] ?? PHP_INT_MAX;
-                $bRoll = $academicDetails[$bId]['class_roll'] ?? PHP_INT_MAX;
-                return $aRoll <=> $bRoll; // lower roll = better position
+                return $aRoll <=> $bRoll;  // lower roll first
             }
 
-            // Fallback for non-Grade-Point modes (if needed in future)
-            // e.g., total mark tie-breaker
+            // Only reach here if NOT grade point mode
             $aTM = $this->getTotalMark($a);
             $bTM = $this->getTotalMark($b);
             if ($aTM !== $bTM) {
                 return $bTM <=> $aTM;
             }
 
-            // Final fallback: roll
-            $aRoll = $academicDetails[$aId]['class_roll'] ?? PHP_INT_MAX;
-            $bRoll = $academicDetails[$bId]['class_roll'] ?? PHP_INT_MAX;
             return $aRoll <=> $bRoll;
-        })->values();
+        });
+
+        // Debug: check final order of top students
+        // \Log::info('Top 5 after sort:', $sorted->take(5)->pluck('student_id', 'class_roll')->toArray());
+
+        return $sorted->values();
     }
     private function assignRanks(
         Collection $sorted,
@@ -315,42 +319,48 @@ class MeritProcessor
         $isGradePoint = str_contains($meritTypeLower, 'grade point') || str_contains($meritTypeLower, 'gpa');
 
         $ranked = [];
-        $rank = 1;
+        $currentRank = 1;
+        $nextRank = 1;
 
-        foreach ($sorted as $student) {
+        foreach ($sorted as $index => $student) {
             $stdId = $student['student_id'];
             $acad  = $academicDetails[$stdId] ?? [];
             $std   = $studentDetails[$stdId] ?? [];
             $totalMark = $this->getTotalMark($student);
-            $gpa       = (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
-            $roll      = $acad['class_roll'] ?? PHP_INT_MAX;
+            $gpa       = round((float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0), 2);
+            $roll      = $acad['class_roll'] ?? 0;
 
-            // For sequential: always next rank
-            $currentRank = $isSequential ? $rank++ : $rank; // will increment later if non-seq
+            if ($isSequential) {
+                // Always consecutive ranks in sequential mode
+                $assignedRank = $nextRank++;
+            } else {
+                // Non-sequential: same rank if primary value same as previous
+                if ($index === 0) {
+                    $assignedRank = 1;
+                } else {
+                    $prev = $ranked[$index - 1];
+                    $prevPrimary = $isGradePoint ? $prev['gpa'] : $prev['total_mark'];
+                    $currPrimary = $isGradePoint ? $gpa : $totalMark;
 
-            // Only increment rank counter for non-sequential when primary differs
-            if (!$isSequential && count($ranked) > 0) {
-                $prev = $ranked[count($ranked) - 1];
-                $prevPrimary = $isGradePoint ? $prev['gpa'] : $prev['total_mark'];
-                $currentPrimary = $isGradePoint ? $gpa : $totalMark;
-
-                if ($currentPrimary != $prevPrimary) {
-                    $rank = $prev['merit_position'] + 1;
+                    $assignedRank = ($currPrimary == $prevPrimary)
+                        ? $prev['merit_position']
+                        : $prev['merit_position'] + 1;
                 }
-                $currentRank = $rank;
+                $nextRank = $assignedRank + 1;
             }
+
+            $currentRank = $assignedRank;
 
             $ranked[] = [
                 'student_id'            => $stdId,
                 'student_name'          => $student['student_name'],
                 'roll'                  => $roll,
                 'total_mark'            => $totalMark,
-                'gpa'                   => round($gpa, 2),
+                'gpa'                   => $gpa,
                 'gpa_without_optional'  => round($student['gpa_without_optional'] ?? 0, 2),
                 'letter_grade'          => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
                 'result_status'         => $student['result_status'],
                 'merit_position'        => $currentRank,
-                // Remove merit_primary/secondary if not needed, or keep for debugging
                 'shift'                 => $acad['shift'] ?? null,
                 'section'               => $acad['section'] ?? null,
                 'group'                 => $acad['group'] ?? null,
@@ -358,9 +368,6 @@ class MeritProcessor
                 'religion'              => $std['student_religion'] ?? null,
             ];
         }
-
-        // For non-sequential, rank is already handled above
-        // For sequential, we already did $rank++
 
         return $ranked;
     }
