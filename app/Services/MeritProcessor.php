@@ -81,16 +81,17 @@ class MeritProcessor
         $meritType       = $examConfig['merit_process_type'] ?? 'total_mark_sequential';
         $groupBy         = $this->getGroupByFields($examConfig);
 
-        // Step 1: Sort all students together (Pass first, then by merit criteria)
+        // CRITICAL: Sort ALL students together first (entire class)
         $allSorted = $this->sortStudents($results, $meritType, $academicDetails);
 
-        // Step 2: Assign CLASS-WISE ranks (1,2,3... for entire class)
+        // CRITICAL: Assign ranks to ALL students together (class-wise ranking)
         $allRanked = $this->assignRanks($allSorted, $meritType, $academicDetails, $studentDetails);
 
-        // Step 3: Keep the ranked array in original order (don't merge groups!)
+        // Now we have class-wise ranking (1,2,3... for entire class)
+        // Don't regroup and merge - just use the ranked array as is
         $finalMerit = $allRanked;
 
-        // Step 4: Create grouped views from the ranked data
+        // Create different views from the same ranked data
         $all = collect($finalMerit);
 
         return [
@@ -98,7 +99,11 @@ class MeritProcessor
             'merit_type'     => $meritType,
             'grouped_by'     => $groupBy,
             'data'           => [
-                'all_students'   => $finalMerit,  // This is class-wise with proper 1,2,3... ranking
+                // Class-wise: all students with their class ranks (1,2,3,4...)
+                'all_students'   => $finalMerit,
+
+                // Grouped views: same data, just organized differently
+                // Students keep their CLASS rank, not section/shift rank
                 'section_wise'   => $all->groupBy('section')->map->values()->toArray(),
                 'shift_wise'     => $all->groupBy('shift')->map->values()->toArray(),
                 'group_wise'     => $all->groupBy('group')->map->values()->toArray(),
@@ -373,10 +378,10 @@ class MeritProcessor
 
             if ($isSequential) {
                 // Sequential mode: every student gets unique rank 1,2,3...
-                // Even if GPA and total marks are identical
+                // Rank = position in sorted array
                 $currentRank = $index + 1;
             } else {
-                // Non-sequential: duplicate ranks allowed (only check primary metric)
+                // Non-sequential: students with same primary metric share rank
                 if ($index === 0) {
                     $currentRank = $rank;
                 } else {
@@ -384,7 +389,7 @@ class MeritProcessor
                     $prevPrimary = $prevStudent['merit_primary'];
 
                     if ($primary < $prevPrimary) {
-                        $rank++;
+                        $rank = $index + 1; // Jump to current position
                     }
                     $currentRank = $rank;
                 }
