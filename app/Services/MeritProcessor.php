@@ -314,58 +314,60 @@ class MeritProcessor
         Collection $academicDetails,
         Collection $studentDetails
     ): array {
-        $meritTypeLower = strtolower($meritType);
-        $isSequential = str_contains($meritTypeLower, 'sequential');
-        $isGradePoint = str_contains($meritTypeLower, 'grade point') || str_contains($meritTypeLower, 'gpa');
+        $isSequential = str_contains(strtolower($meritType), 'sequential');
+        $useGpa = str_contains(strtolower($meritType), 'grade point') || str_contains(strtolower($meritType), 'gpa');
 
         $ranked = [];
-        $currentRank = 1;
-        $nextRank = 1;
+        $rank = 1;
 
         foreach ($sorted as $index => $student) {
             $stdId = $student['student_id'];
             $acad  = $academicDetails[$stdId] ?? [];
             $std   = $studentDetails[$stdId] ?? [];
+
             $totalMark = $this->getTotalMark($student);
-            $gpa       = round((float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0), 2);
+            $gpa       = (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
             $roll      = $acad['class_roll'] ?? 0;
 
-            if ($isSequential) {
-                // Always consecutive ranks in sequential mode
-                $assignedRank = $nextRank++;
-            } else {
-                // Non-sequential: same rank if primary value same as previous
-                if ($index === 0) {
-                    $assignedRank = 1;
-                } else {
-                    $prev = $ranked[$index - 1];
-                    $prevPrimary = $isGradePoint ? $prev['gpa'] : $prev['total_mark'];
-                    $currPrimary = $isGradePoint ? $gpa : $totalMark;
+            $primary   = $useGpa ? $gpa : $totalMark;
+            $secondary = $useGpa ? $totalMark : $gpa;
 
-                    $assignedRank = ($currPrimary == $prevPrimary)
-                        ? $prev['merit_position']
-                        : $prev['merit_position'] + 1;
+            if ($isSequential) {
+                // Sequential mode: every student gets unique rank 1,2,3...
+                // Even if GPA and total marks are identical
+                $currentRank = $index + 1;
+            } else {
+                // Non-sequential: duplicate ranks allowed (only check primary metric)
+                if ($index === 0) {
+                    $currentRank = $rank;
+                } else {
+                    $prevStudent = $ranked[$index - 1];
+                    $prevPrimary = $prevStudent['merit_primary'];
+
+                    if ($primary < $prevPrimary) {
+                        $rank++;
+                    }
+                    $currentRank = $rank;
                 }
-                $nextRank = $assignedRank + 1;
             }
 
-            $currentRank = $assignedRank;
-
             $ranked[] = [
-                'student_id'            => $stdId,
-                'student_name'          => $student['student_name'],
-                'roll'                  => $roll,
-                'total_mark'            => $totalMark,
-                'gpa'                   => $gpa,
-                'gpa_without_optional'  => round($student['gpa_without_optional'] ?? 0, 2),
-                'letter_grade'          => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
-                'result_status'         => $student['result_status'],
-                'merit_position'        => $currentRank,
-                'shift'                 => $acad['shift'] ?? null,
-                'section'               => $acad['section'] ?? null,
-                'group'                 => $acad['group'] ?? null,
-                'gender'                => $std['student_gender'] ?? null,
-                'religion'              => $std['student_religion'] ?? null,
+                'student_id'           => $stdId,
+                'student_name'         => $student['student_name'],
+                'roll'                 => $roll,
+                'total_mark'           => $totalMark,
+                'gpa'                  => round($gpa, 2),
+                'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
+                'letter_grade'         => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
+                'result_status'        => $student['result_status'],
+                'merit_position'       => $currentRank,
+                'merit_primary'        => $primary,
+                'merit_secondary'      => $secondary,
+                'shift'                => $acad['shift'] ?? null,
+                'section'              => $acad['section'] ?? null,
+                'group'                => $acad['group'] ?? null,
+                'gender'               => $std['student_gender'] ?? null,
+                'religion'             => $std['student_religion'] ?? null,
             ];
         }
 
