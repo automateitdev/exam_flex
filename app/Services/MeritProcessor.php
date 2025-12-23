@@ -281,10 +281,10 @@ class MeritProcessor
             $gpa       = (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
             $roll      = $acad['class_roll'] ?? 0;
 
-            if ($isSequential) {
-                $primary   = $useGpa ? $gpa : $totalMark;
-                $secondary = $useGpa ? $totalMark : $gpa;
+            $primary   = $useGpa ? $gpa : $totalMark;
+            $secondary = $useGpa ? $totalMark : $gpa;
 
+            if ($isSequential) {
                 if ($index === 0) {
                     $currentRank = $rank;
                 } else {
@@ -294,20 +294,13 @@ class MeritProcessor
                     $prevSecondary = $prevStudent['merit_secondary'];
                     $prevRoll      = $prevStudent['roll'];
 
-                    // Compare strictly with tie-breakers
-                    if ($primary < $prevPrimary) {
+                    // Increment rank if any tie-breaker is lower
+                    if (
+                        $primary < $prevPrimary
+                        || ($primary == $prevPrimary && $secondary < $prevSecondary)
+                        || ($primary == $prevPrimary && $secondary == $prevSecondary && $roll > $prevRoll)
+                    ) {
                         $rank++;
-                    } elseif ($primary == $prevPrimary) {
-                        if ($secondary < $prevSecondary) {
-                            $rank++;
-                        } elseif ($secondary == $prevSecondary) {
-                            if ($roll > $prevRoll) {
-                                $rank++;
-                            } else {
-                                // even if roll is smaller, we must increment for next student
-                                $rank++;
-                            }
-                        }
                     }
 
                     $currentRank = $rank;
@@ -335,12 +328,12 @@ class MeritProcessor
                 'roll'                 => $roll,
                 'total_mark'           => $totalMark,
                 'gpa'                  => round($gpa, 2),
-                'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2), // ← add this
+                'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
                 'letter_grade'         => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
                 'result_status'        => $student['result_status'],
                 'merit_position'       => $currentRank,
                 'merit_primary'        => $primary,
-                'merit_secondary'      => $secondary ?? 0,
+                'merit_secondary'      => $secondary,
                 'shift'                => $acad['shift'] ?? null,
                 'section'              => $acad['section'] ?? null,
                 'group'                => $acad['group'] ?? null,
