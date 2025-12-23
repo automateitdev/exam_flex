@@ -151,85 +151,104 @@ class MeritProcessor
             ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
     }
 
+    // private function assignRanks(
+    //     Collection $sorted,
+    //     string $meritType,
+    //     Collection $academicDetails,
+    //     Collection $studentDetails
+    // ): array {
 
-    // private function assignRanks(Collection $sorted, string $meritType, Collection $academicDetails, Collection $studentDetails): array
-    // {
     //     $isSequential = str_contains(strtolower($meritType), 'sequential');
-    //     $useGpa       = str_contains(strtolower($meritType), 'gpa') || str_contains(strtolower($meritType), 'grade_point');
+    //     $useGpa = str_contains(strtolower($meritType), 'grade point') || str_contains(strtolower($meritType), 'gpa');
 
     //     $ranked = [];
-    //     $rank   = 1;
-    //     $previousValue = null;
-    //     $previousRank  = null;
+    //     $rank = 1;
 
     //     foreach ($sorted as $index => $student) {
     //         $stdId = $student['student_id'];
     //         $acad  = $academicDetails[$stdId] ?? [];
     //         $std   = $studentDetails[$stdId] ?? [];
 
-    //         // Determine primary value for ranking
-    //         $primaryValue = $useGpa
-    //             ? (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0)
-    //             : $this->getTotalMark($student);
+    //         $totalMark = $this->getTotalMark($student);
+    //         $gpa       = (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
+    //         $roll      = $acad['class_roll'] ?? 0;
 
-    //         // Determine tie-breaker (secondary value)
-    //         $secondaryValue = $useGpa
-    //             ? $this->getTotalMark($student) // GPA rank tie → higher total mark wins
-    //             : (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0); // Total rank tie → higher GPA wins
+    //         if ($isSequential) {
+    //             // Sequential: tie-breaker logic
+    //             if ($useGpa) {
+    //                 // Grade Point Sequential → primary = GPA, secondary = Total Mark
+    //                 $primary   = $gpa;
+    //                 $secondary = $totalMark;
+    //             } else {
+    //                 // Total Mark Sequential → primary = Total Mark, secondary = GPA
+    //                 $primary   = $totalMark;
+    //                 $secondary = $gpa;
+    //             }
 
-    //         // Roll number tie-breaker
-    //         $roll = $acad['class_roll'] ?? 0;
+    //             if ($index === 0) {
+    //                 $currentRank = $rank;
+    //             } else {
+    //                 $prevStudent = $ranked[$index - 1];
+    //                 $prevPrimary   = $prevStudent['merit_primary'];
+    //                 $prevSecondary = $prevStudent['merit_secondary'];
+    //                 $prevRoll      = $prevStudent['roll'];
 
-    //         if ($index === 0) {
-    //             $currentRank = $rank;
-    //         } else {
-    //             if ($isSequential) {
-    //                 // Sequential: no duplicate ranks
-    //                 if ($primaryValue != $previousValue) {
+    //                 // Check primary tie
+    //                 if ($primary < $prevPrimary) {
+    //                     $rank++;
     //                     $currentRank = $rank;
-    //                 } else {
-    //                     // tie-breaker: secondaryValue, then roll
-    //                     $prevStudent = $sorted[$index - 1];
-    //                     $prevPrimary = $useGpa
-    //                         ? ($prevStudent['gpa_with_optional'] ?? $prevStudent['gpa'] ?? 0)
-    //                         : $this->getTotalMark($prevStudent);
-
-    //                     $prevSecondary = $useGpa
-    //                         ? $this->getTotalMark($prevStudent)
-    //                         : ($prevStudent['gpa_with_optional'] ?? $prevStudent['gpa'] ?? 0);
-
-    //                     $prevRoll = $academicDetails[$prevStudent['student_id']]['class_roll'] ?? 0;
-
-    //                     if ($secondaryValue != $prevSecondary) {
+    //                 } elseif ($primary == $prevPrimary) {
+    //                     // Check secondary tie
+    //                     if ($secondary < $prevSecondary) {
+    //                         $rank++;
     //                         $currentRank = $rank;
-    //                     } elseif ($roll != $prevRoll) {
-    //                         $currentRank = $rank;
+    //                     } elseif ($secondary == $prevSecondary) {
+    //                         // Finally, roll number
+    //                         if ($roll > $prevRoll) {
+    //                             $rank++;
+    //                             $currentRank = $rank;
+    //                         } else {
+    //                             // smaller roll comes first → same rank as previous? NO, must increment
+    //                             $rank++;
+    //                             $currentRank = $rank;
+    //                         }
     //                     } else {
-    //                         // exact tie → same rank
     //                         $currentRank = $rank;
     //                     }
+    //                 } else {
+    //                     $currentRank = $rank;
     //                 }
-    //                 $rank++;
+    //             }
+    //         } else {
+    //             // Non-sequential: duplicate allowed
+    //             if ($index === 0) {
+    //                 $currentRank = $rank;
     //             } else {
-    //                 // Non-Sequential: duplicate ranks allowed
-    //                 $currentRank = ($primaryValue == $previousValue) ? $previousRank : $rank;
-    //                 $rank++;
+    //                 $prevStudent = $ranked[$index - 1];
+    //                 $prevPrimary = $useGpa
+    //                     ? ($prevStudent['gpa'] ?? 0)
+    //                     : ($prevStudent['total_mark'] ?? 0);
+    //                 $primary = $useGpa ? $gpa : $totalMark;
+
+    //                 $currentRank = ($primary == $prevPrimary)
+    //                     ? $prevStudent['merit_position']
+    //                     : ++$rank;
     //             }
     //         }
-
-    //         $previousValue = $primaryValue;
-    //         $previousRank  = $currentRank;
 
     //         $ranked[] = [
     //             'student_id'           => $stdId,
     //             'student_name'         => $student['student_name'],
-    //             'roll'                 => $student['roll'] ?? $acad['class_roll'] ?? null,
-    //             'total_mark'           => $this->getTotalMark($student),
-    //             'gpa'                  => round($student['gpa_with_optional'] ?? $student['gpa'] ?? 0, 2),
+    //             'roll'                 => $roll,
+    //             'total_mark'           => $totalMark,
+    //             'gpa'                  => round($gpa, 2),
     //             'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
     //             'letter_grade'         => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
     //             'result_status'        => $student['result_status'],
     //             'merit_position'       => $currentRank,
+    //             // helper fields for sequential tie-breaking
+    //             'merit_primary'        => $primary,
+    //             'merit_secondary'      => $secondary ?? 0,
     //             'shift'                => $acad['shift'] ?? null,
     //             'section'              => $acad['section'] ?? null,
     //             'group'                => $acad['group'] ?? null,
@@ -263,53 +282,32 @@ class MeritProcessor
             $roll      = $acad['class_roll'] ?? 0;
 
             if ($isSequential) {
-                // Sequential: tie-breaker logic
-                if ($useGpa) {
-                    // Grade Point Sequential → primary = GPA, secondary = Total Mark
-                    $primary   = $gpa;
-                    $secondary = $totalMark;
-                } else {
-                    // Total Mark Sequential → primary = Total Mark, secondary = GPA
-                    $primary   = $totalMark;
-                    $secondary = $gpa;
-                }
+                // Sequential: primary and secondary for tie-breaker
+                $primary   = $useGpa ? $gpa : $totalMark;
+                $secondary = $useGpa ? $totalMark : $gpa;
 
                 if ($index === 0) {
                     $currentRank = $rank;
                 } else {
                     $prevStudent = $ranked[$index - 1];
+
                     $prevPrimary   = $prevStudent['merit_primary'];
                     $prevSecondary = $prevStudent['merit_secondary'];
                     $prevRoll      = $prevStudent['roll'];
 
-                    // Check primary tie
-                    if ($primary < $prevPrimary) {
+                    // Compare strictly with tie-breakers
+                    if (
+                        $primary < $prevPrimary ||
+                        ($primary == $prevPrimary && $secondary < $prevSecondary) ||
+                        ($primary == $prevPrimary && $secondary == $prevSecondary && $roll > $prevRoll)
+                    ) {
                         $rank++;
-                        $currentRank = $rank;
-                    } elseif ($primary == $prevPrimary) {
-                        // Check secondary tie
-                        if ($secondary < $prevSecondary) {
-                            $rank++;
-                            $currentRank = $rank;
-                        } elseif ($secondary == $prevSecondary) {
-                            // Finally, roll number
-                            if ($roll > $prevRoll) {
-                                $rank++;
-                                $currentRank = $rank;
-                            } else {
-                                // smaller roll comes first → same rank as previous? NO, must increment
-                                $rank++;
-                                $currentRank = $rank;
-                            }
-                        } else {
-                            $currentRank = $rank;
-                        }
-                    } else {
-                        $currentRank = $rank;
                     }
+
+                    $currentRank = $rank;
                 }
             } else {
-                // Non-sequential: duplicate allowed
+                // Non-sequential: duplicate ranks allowed
                 if ($index === 0) {
                     $currentRank = $rank;
                 } else {
