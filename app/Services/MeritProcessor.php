@@ -330,21 +330,22 @@ class MeritProcessor
             }
 
             $ranked[] = [
-                'student_id'      => $stdId,
-                'student_name'    => $student['student_name'],
-                'roll'            => $roll,
-                'total_mark'      => $totalMark,
-                'gpa'             => round($gpa, 2),
-                'letter_grade'    => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
-                'result_status'   => $student['result_status'],
-                'merit_position'  => $currentRank,
-                'merit_primary'   => $primary,
-                'merit_secondary' => $secondary ?? 0,
-                'shift'           => $acad['shift'] ?? null,
-                'section'         => $acad['section'] ?? null,
-                'group'           => $acad['group'] ?? null,
-                'gender'          => $std['student_gender'] ?? null,
-                'religion'        => $std['student_religion'] ?? null,
+                'student_id'           => $stdId,
+                'student_name'         => $student['student_name'],
+                'roll'                 => $roll,
+                'total_mark'           => $totalMark,
+                'gpa'                  => round($gpa, 2),
+                'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2), // ← add this
+                'letter_grade'         => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
+                'result_status'        => $student['result_status'],
+                'merit_position'       => $currentRank,
+                'merit_primary'        => $primary,
+                'merit_secondary'      => $secondary ?? 0,
+                'shift'                => $acad['shift'] ?? null,
+                'section'              => $acad['section'] ?? null,
+                'group'                => $acad['group'] ?? null,
+                'gender'               => $std['student_gender'] ?? null,
+                'religion'             => $std['student_religion'] ?? null,
             ];
         }
 
