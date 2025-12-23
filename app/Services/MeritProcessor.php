@@ -282,7 +282,6 @@ class MeritProcessor
             $roll      = $acad['class_roll'] ?? 0;
 
             if ($isSequential) {
-                // Sequential: primary and secondary for tie-breaker
                 $primary   = $useGpa ? $gpa : $totalMark;
                 $secondary = $useGpa ? $totalMark : $gpa;
 
@@ -296,12 +295,19 @@ class MeritProcessor
                     $prevRoll      = $prevStudent['roll'];
 
                     // Compare strictly with tie-breakers
-                    if (
-                        $primary < $prevPrimary ||
-                        ($primary == $prevPrimary && $secondary < $prevSecondary) ||
-                        ($primary == $prevPrimary && $secondary == $prevSecondary && $roll > $prevRoll)
-                    ) {
+                    if ($primary < $prevPrimary) {
                         $rank++;
+                    } elseif ($primary == $prevPrimary) {
+                        if ($secondary < $prevSecondary) {
+                            $rank++;
+                        } elseif ($secondary == $prevSecondary) {
+                            if ($roll > $prevRoll) {
+                                $rank++;
+                            } else {
+                                // even if roll is smaller, we must increment for next student
+                                $rank++;
+                            }
+                        }
                     }
 
                     $currentRank = $rank;
@@ -324,23 +330,21 @@ class MeritProcessor
             }
 
             $ranked[] = [
-                'student_id'           => $stdId,
-                'student_name'         => $student['student_name'],
-                'roll'                 => $roll,
-                'total_mark'           => $totalMark,
-                'gpa'                  => round($gpa, 2),
-                'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
-                'letter_grade'         => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
-                'result_status'        => $student['result_status'],
-                'merit_position'       => $currentRank,
-                // helper fields for sequential tie-breaking
-                'merit_primary'        => $primary,
-                'merit_secondary'      => $secondary ?? 0,
-                'shift'                => $acad['shift'] ?? null,
-                'section'              => $acad['section'] ?? null,
-                'group'                => $acad['group'] ?? null,
-                'gender'               => $std['student_gender'] ?? null,
-                'religion'             => $std['student_religion'] ?? null,
+                'student_id'      => $stdId,
+                'student_name'    => $student['student_name'],
+                'roll'            => $roll,
+                'total_mark'      => $totalMark,
+                'gpa'             => round($gpa, 2),
+                'letter_grade'    => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
+                'result_status'   => $student['result_status'],
+                'merit_position'  => $currentRank,
+                'merit_primary'   => $primary,
+                'merit_secondary' => $secondary ?? 0,
+                'shift'           => $acad['shift'] ?? null,
+                'section'         => $acad['section'] ?? null,
+                'group'           => $acad['group'] ?? null,
+                'gender'          => $std['student_gender'] ?? null,
+                'religion'        => $std['student_religion'] ?? null,
             ];
         }
 
