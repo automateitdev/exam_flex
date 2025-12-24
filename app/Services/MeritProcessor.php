@@ -171,26 +171,10 @@ class MeritProcessor
         // return collect($student['subjects'] ?? [])
         //     ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
 
-        // return collect($student['subjects'] ?? [])
-        //     ->filter(fn($s) => $s['is_uncountable'] === false)
-        //     ->sum(fn($s) => $s['final_mark'] ?? 0);
-        $subjects = collect($student['subjects'] ?? []);
+        return collect($student['subjects'] ?? [])
+            ->filter(fn($s) => $s['is_uncountable'] === false)
+            ->sum(fn($s) => $s['final_mark'] ?? 0);
 
-        if ($subjects->isEmpty()) {
-            return 0;
-        }
-
-        // 2️⃣ If combined_final_mark exists, use it
-        if ($subjects->contains(fn($s) => isset($s['combined_final_mark']))) {
-            return $subjects
-                ->filter(fn($s) => empty($s['is_uncountable']))
-                ->sum(fn($s) => (float) ($s['combined_final_mark'] ?? 0));
-        }
-
-        // 3️⃣ Normal subject-wise sum
-        return $subjects
-            ->filter(fn($s) => empty($s['is_uncountable']))
-            ->sum(fn($s) => (float) ($s['final_mark'] ?? 0));
     }
 
     private function sortStudents(Collection $students, string $meritType, Collection $academicDetails): Collection
@@ -374,6 +358,8 @@ class MeritProcessor
 
                     $stdId = $student['student_id'];
 
+                    Log::info("Processing student {$stdId} , GPA=" . ($student['gpa'] ?? 'N/A') . ", TM=" . $this->getTotalMark($student) . ", Roll=" . ($academicDetails[$stdId]['class_roll'] ?? 'N/A'));
+
                     $ranked[] = [
                         'student_id'           => $stdId,
                         'student_name'         => $student['student_name'],
@@ -391,7 +377,7 @@ class MeritProcessor
                         'religion'             => $studentDetails[$stdId]['student_religion'] ?? null,
                     ];
 
-                    Log::info("Assigning rank " . ($index + 1) . " to {$stdId} (GPA={$ranked[$index]['gpa']}, TM={$ranked[$index]['total_mark']})");
+                    // Log::info("Assigning rank " . ($index + 1) . " to {$stdId} (GPA={$ranked[$index]['gpa']}, TM={$ranked[$index]['total_mark']})");
                 }
 
                 return $ranked;
