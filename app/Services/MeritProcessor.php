@@ -282,18 +282,78 @@ class MeritProcessor
 
     //     return $ranked;
     // }
+
+
+    // private function rankByField(
+    //     Collection $results,
+    //     string $field,
+    //     string $meritType,
+    //     Collection $academicDetails,
+    //     Collection $studentDetails
+    // ): array {
+    //     return $results
+    //         ->groupBy(fn($s) => $s[$field] ?? 'unknown')
+    //         ->flatMap(function ($groupStudents) use ($meritType, $academicDetails, $studentDetails) {
+    //             $sorted = $this->sortStudents(
+    //                 collect($groupStudents),
+    //                 $meritType,
+    //                 $academicDetails
+    //             );
+
+    //             return $this->assignRanks(
+    //                 $sorted,
+    //                 $meritType,
+    //                 $academicDetails,
+    //                 $studentDetails
+    //             );
+    //         })
+    //         ->values()
+    //         ->toArray();
+    // }
+    private function rankByField(
+        Collection $results,
+        string $field,
+        string $meritType,
+        Collection $academicDetails,
+        Collection $studentDetails
+    ): array {
+        return $results
+            ->groupBy(fn($s) => $s[$field] ?? 'unknown') // group by section/shift/etc
+            ->flatMap(function ($groupStudents, $groupValue) use ($meritType, $academicDetails, $studentDetails, $field) {
+                // Sort students inside this group
+                $sorted = $this->sortStudents(
+                    collect($groupStudents),
+                    $meritType,
+                    $academicDetails
+                );
+
+                // Assign ranks within this group
+                return $this->assignRanks(
+                    $sorted,
+                    $meritType,
+                    $academicDetails,
+                    $studentDetails,
+                    $field // pass the group field
+                );
+            })
+            ->values()
+            ->toArray();
+    }
+
     private function assignRanks(
         Collection $sorted,
         string $meritType,
         Collection $academicDetails,
         Collection $studentDetails,
-        string $groupField = null // optional group like 'section'
+        string $groupField = null // new: which field merit_position to update
     ): array {
         $isSequential = str_contains(strtolower($meritType), 'sequential');
         $useGpa = str_contains(strtolower($meritType), 'grade point') || str_contains(strtolower($meritType), 'gpa');
 
         $ranked = [];
-        $currentRank = 0;
+        $currentRank = 1;
+        $prevPrimary = null;
+        $prevSecondary = null;
 
         foreach ($sorted as $index => $student) {
             $stdId = $student['student_id'];
@@ -307,32 +367,27 @@ class MeritProcessor
             $primary   = $useGpa ? $gpa : $totalMark;
             $secondary = $useGpa ? $totalMark : $gpa;
 
-            if ($index === 0) {
-                $currentRank = 1;
-            } else {
-                $prevStudent = $ranked[$index - 1];
-
-                // For sequential, always increment
-                if ($isSequential) {
-                    $currentRank = $index + 1;
+            if ($isSequential) {
+                if ($index === 0) {
+                    $currentRank = 1;
                 } else {
-                    // Non-sequential: compare primary
-                    if ($primary < $prevStudent['merit_primary']) {
+                    // Tie-breaker: primary (GPA), secondary (Total mark), roll
+                    if ($primary < $prevPrimary) {
                         $currentRank = $index + 1;
-                    } elseif ($primary === $prevStudent['merit_primary']) {
-                        // Primary same → check secondary
-                        if ($secondary < $prevStudent['merit_secondary']) {
+                    } elseif ($primary == $prevPrimary) {
+                        if ($secondary < $prevSecondary) {
                             $currentRank = $index + 1;
-                        } elseif ($secondary === $prevStudent['merit_secondary']) {
-                            // Secondary same → tie-breaker: roll number
-                            $currentRank = ($roll > $prevStudent['roll']) ? $index + 1 : $prevStudent['merit_position'];
-                        } else {
-                            $currentRank = $prevStudent['merit_position'];
+                        } elseif ($secondary == $prevSecondary) {
+                            // final tie-breaker: roll number (lower first)
+                            $prevRoll = $ranked[$index - 1]['roll'] ?? PHP_INT_MAX;
+                            if ($roll > $prevRoll) {
+                                $currentRank = $index + 1;
+                            }
                         }
-                    } else {
-                        $currentRank = $prevStudent['merit_position'];
                     }
                 }
+            } else {
+                $currentRank = $index + 1; // non-sequential
             }
 
             $ranked[] = [
@@ -344,7 +399,7 @@ class MeritProcessor
                 'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
                 'letter_grade'         => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
                 'result_status'        => $student['result_status'],
-                'merit_position'       => $currentRank,
+                'merit_position'       => $currentRank, // class-wise (or can override if needed)
                 'merit_primary'        => $primary,
                 'merit_secondary'      => $secondary,
                 'shift'                => $acad['shift'] ?? null,
@@ -352,37 +407,14 @@ class MeritProcessor
                 'group'                => $acad['group'] ?? null,
                 'gender'               => $std['student_gender'] ?? null,
                 'religion'             => $std['student_religion'] ?? null,
+                // dynamic field for group-wise, section-wise, etc
+                $groupField . '_merit_position' => $currentRank,
             ];
+
+            $prevPrimary   = $primary;
+            $prevSecondary = $secondary;
         }
 
         return $ranked;
-    }
-
-
-    private function rankByField(
-        Collection $results,
-        string $field,
-        string $meritType,
-        Collection $academicDetails,
-        Collection $studentDetails
-    ): array {
-        return $results
-            ->groupBy(fn($s) => $s[$field] ?? 'unknown')
-            ->flatMap(function ($groupStudents) use ($meritType, $academicDetails, $studentDetails) {
-                $sorted = $this->sortStudents(
-                    collect($groupStudents),
-                    $meritType,
-                    $academicDetails
-                );
-
-                return $this->assignRanks(
-                    $sorted,
-                    $meritType,
-                    $academicDetails,
-                    $studentDetails
-                );
-            })
-            ->values()
-            ->toArray();
     }
 }
