@@ -167,9 +167,13 @@ class MeritProcessor
 
     private function getTotalMark($student): float
     {
-        $bonus = $student['optional_bonus'] ?? 0;
+        // $bonus = $student['optional_bonus'] ?? 0;
+        // return collect($student['subjects'] ?? [])
+        //     ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+
         return collect($student['subjects'] ?? [])
-            ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+            ->filter(fn($s) => $s['is_uncountable'] === false)
+            ->sum(fn($s) => $s['final_mark'] ?? 0);
     }
 
     private function sortStudents(Collection $students, string $meritType, Collection $academicDetails): Collection
@@ -260,7 +264,7 @@ class MeritProcessor
                 'student_id'           => $stdId,
                 'student_name'         => $student['student_name'],
                 'roll'                 => $roll,
-                'total_mark'           => $student['total_mark_without_optional'],
+                'total_mark'           => $totalMark,
                 'gpa'                  => round($gpa, 2),
                 'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
                 'letter_grade'         => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
