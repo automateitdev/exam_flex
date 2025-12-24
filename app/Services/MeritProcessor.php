@@ -318,15 +318,15 @@ class MeritProcessor
                     $bId = $b['student_id'];
 
                     // GPA DESC
-                    $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
-                    $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
+                    $aGpa = (float) ($a['gpa'] ?? 0);
+                    $bGpa = (float) ($b['gpa'] ?? 0);
                     if ($aGpa !== $bGpa) {
                         return $bGpa <=> $aGpa;
                     }
 
                     // TOTAL MARK DESC
-                    $aTM = $this->getTotalMark($a);
-                    $bTM = $this->getTotalMark($b);
+                    $aTM = $a['total_mark'];
+                    $bTM = $b['total_mark'];
                     if ($aTM !== $bTM) {
                         return $bTM <=> $aTM;
                     }
