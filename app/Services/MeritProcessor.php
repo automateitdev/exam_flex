@@ -3,16 +3,13 @@
 namespace App\Services;
 
 use Illuminate\Support\Collection;
-use Illuminate\Support\FacadesLog;
 use Illuminate\Support\Facades\Log;
 
 class MeritProcessor
 {
-
     public function process(array $payload): array
     {
         $results = $this->normalizeResults($payload['results'] ?? []);
-
         if ($results->isEmpty()) {
             return ['status' => 'error', 'message' => 'No results found'];
         }
@@ -86,94 +83,24 @@ class MeritProcessor
             Log::info('OK: Only one student with rank 1', $rank1Students->toArray());
         }
 
+        // Create different views from the same ranked data
         $all = collect($finalMerit);
+
+        Log::info('=== MERIT PROCESS END ===');
 
         return [
             'total_students' => $results->count(),
             'merit_type'     => $meritType,
             'grouped_by'     => $groupBy,
-            'data' => [
-                // CLASS WISE (already correct)
-                'all_students' => $finalMerit,
-
-                // SECTION WISE
-                'section_wise' => $this->rankByField(
-                    $all,
-                    'section',
-                    $meritType,
-                    $academicDetails,
-                    $studentDetails
-                ),
-
-                // SHIFT WISE
-                'shift_wise' => $this->rankByField(
-                    $all,
-                    'shift',
-                    $meritType,
-                    $academicDetails,
-                    $studentDetails
-                ),
-
-                // GROUP WISE
-                'group_wise' => $this->rankByField(
-                    $all,
-                    'group',
-                    $meritType,
-                    $academicDetails,
-                    $studentDetails
-                ),
-
-                // GENDER WISE
-                'gender_wise' => $this->rankByField(
-                    $all,
-                    'gender',
-                    $meritType,
-                    $academicDetails,
-                    $studentDetails
-                ),
-
-                // RELIGION WISE
-                'religion_wise' => $this->rankByField(
-                    $all,
-                    'religion',
-                    $meritType,
-                    $academicDetails,
-                    $studentDetails
-                ),
+            'data'           => [
+                'all_students'   => $finalMerit,
+                'section_wise'   => $all->groupBy('section')->map->values()->toArray(),
+                'shift_wise'     => $all->groupBy('shift')->map->values()->toArray(),
+                'group_wise'     => $all->groupBy('group')->map->values()->toArray(),
+                'gender_wise'    => $all->groupBy('gender')->map->values()->toArray(),
+                'religion_wise'  => $all->groupBy('religion')->map->values()->toArray(),
             ]
         ];
-    }
-
-    private function normalizeResults($raw): Collection
-    {
-        if (isset($raw['results']) && is_array($raw['results'])) {
-            return collect($raw['results']);
-        }
-        return collect(is_array($raw) ? $raw : []);
-    }
-
-    private function getGroupByFields(array $config): array
-    {
-        $fields = [];
-        if ($config['group_by_shift'] ?? false)    $fields[] = 'shift';
-        if ($config['group_by_section'] ?? false)  $fields[] = 'section';
-        if ($config['group_by_group'] ?? false)    $fields[] = 'group';
-        if ($config['group_by_gender'] ?? false)   $fields[] = 'gender';
-        if ($config['group_by_religion'] ?? false) $fields[] = 'religion';
-
-        return empty($fields) ? [] : $fields; // ← [] মানে পুরো ক্লাস একসাথে
-    }
-
-
-    private function getTotalMark($student): float
-    {
-        // $bonus = $student['optional_bonus'] ?? 0;
-        // return collect($student['subjects'] ?? [])
-        //     ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
-
-        return collect($student['subjects'] ?? [])
-            ->filter(fn($s) => $s['is_uncountable'] === false)
-            ->sum(fn($s) => $s['final_mark'] ?? 0);
     }
 
     private function sortStudents(Collection $students, string $meritType, Collection $academicDetails): Collection
@@ -218,142 +145,16 @@ class MeritProcessor
         return $sorted->values();
     }
 
-    // private function assignRanks(
-    //     Collection $sorted,
-    //     string $meritType,
-    //     Collection $academicDetails,
-    //     Collection $studentDetails
-    // ): array {
-    //     $isSequential = str_contains(strtolower($meritType), 'sequential');
-    //     $useGpa = str_contains(strtolower($meritType), 'grade point') || str_contains(strtolower($meritType), 'gpa');
-
-    //     $ranked = [];
-
-    //     foreach ($sorted as $index => $student) {
-    //         $stdId = $student['student_id'];
-    //         $acad  = $academicDetails[$stdId] ?? [];
-    //         $std   = $studentDetails[$stdId] ?? [];
-
-    //         $totalMark = $this->getTotalMark($student);
-    //         $gpa       = (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
-    //         $roll      = $acad['class_roll'] ?? 0;
-
-    //         $primary   = $useGpa ? $gpa : $totalMark;
-    //         $secondary = $useGpa ? $totalMark : $gpa;
-
-    //         if ($isSequential) {
-    //             // Sequential mode: every student gets unique rank based on their position
-    //             $currentRank = $index + 1;
-    //         } else {
-    //             // Non-sequential: students with same primary metric share rank
-    //             if ($index === 0) {
-    //                 $currentRank = 1;
-    //             } else {
-    //                 $prevStudent = $ranked[$index - 1];
-    //                 $prevPrimary = $prevStudent['merit_primary'];
-
-    //                 if ($primary < $prevPrimary) {
-    //                     $currentRank = $index + 1;
-    //                 } else {
-    //                     $currentRank = $prevStudent['merit_position'];
-    //                 }
-    //             }
-    //         }
-
-    //         $ranked[] = [
-    //             'student_id'           => $stdId,
-    //             'student_name'         => $student['student_name'],
-    //             'roll'                 => $roll,
-    //             'total_mark'           => $totalMark,
-    //             'gpa'                  => round($gpa, 2),
-    //             'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
-    //             'letter_grade'         => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
-    //             'result_status'        => $student['result_status'],
-    //             'merit_position'       => $currentRank,
-    //             'merit_primary'        => $primary,
-    //             'merit_secondary'      => $secondary,
-    //             'shift'                => $acad['shift'] ?? null,
-    //             'section'              => $acad['section'] ?? null,
-    //             'group'                => $acad['group'] ?? null,
-    //             'gender'               => $std['student_gender'] ?? null,
-    //             'religion'             => $std['student_religion'] ?? null,
-    //         ];
-    //     }
-
-    //     return $ranked;
-    // }
-
-
-    // private function rankByField(
-    //     Collection $results,
-    //     string $field,
-    //     string $meritType,
-    //     Collection $academicDetails,
-    //     Collection $studentDetails
-    // ): array {
-    //     return $results
-    //         ->groupBy(fn($s) => $s[$field] ?? 'unknown')
-    //         ->flatMap(function ($groupStudents) use ($meritType, $academicDetails, $studentDetails) {
-    //             $sorted = $this->sortStudents(
-    //                 collect($groupStudents),
-    //                 $meritType,
-    //                 $academicDetails
-    //             );
-
-    //             return $this->assignRanks(
-    //                 $sorted,
-    //                 $meritType,
-    //                 $academicDetails,
-    //                 $studentDetails
-    //             );
-    //         })
-    //         ->values()
-    //         ->toArray();
-    // }
-    private function rankByField(
-        Collection $results,
-        string $field,
-        string $meritType,
-        Collection $academicDetails,
-        Collection $studentDetails
-    ): array {
-        return $results
-            ->groupBy(fn($s) => $s[$field] ?? 'unknown') // group by section/shift/etc
-            ->flatMap(function ($groupStudents, $groupValue) use ($meritType, $academicDetails, $studentDetails, $field) {
-                // Sort students inside this group
-                $sorted = $this->sortStudents(
-                    collect($groupStudents),
-                    $meritType,
-                    $academicDetails
-                );
-
-                // Assign ranks within this group
-                return $this->assignRanks(
-                    $sorted,
-                    $meritType,
-                    $academicDetails,
-                    $studentDetails,
-                    $field // pass the group field
-                );
-            })
-            ->values()
-            ->toArray();
-    }
-
     private function assignRanks(
         Collection $sorted,
         string $meritType,
         Collection $academicDetails,
-        Collection $studentDetails,
-        string $groupField = null // new: which field merit_position to update
+        Collection $studentDetails
     ): array {
         $isSequential = str_contains(strtolower($meritType), 'sequential');
         $useGpa = str_contains(strtolower($meritType), 'grade point') || str_contains(strtolower($meritType), 'gpa');
 
         $ranked = [];
-        $currentRank = 1;
-        $prevPrimary = null;
-        $prevSecondary = null;
 
         foreach ($sorted as $index => $student) {
             $stdId = $student['student_id'];
@@ -368,26 +169,22 @@ class MeritProcessor
             $secondary = $useGpa ? $totalMark : $gpa;
 
             if ($isSequential) {
+                // Sequential mode: every student gets unique rank based on their position
+                $currentRank = $index + 1;
+            } else {
+                // Non-sequential: students with same primary metric share rank
                 if ($index === 0) {
                     $currentRank = 1;
                 } else {
-                    // Tie-breaker: primary (GPA), secondary (Total mark), roll
+                    $prevStudent = $ranked[$index - 1];
+                    $prevPrimary = $prevStudent['merit_primary'];
+
                     if ($primary < $prevPrimary) {
                         $currentRank = $index + 1;
-                    } elseif ($primary == $prevPrimary) {
-                        if ($secondary < $prevSecondary) {
-                            $currentRank = $index + 1;
-                        } elseif ($secondary == $prevSecondary) {
-                            // final tie-breaker: roll number (lower first)
-                            $prevRoll = $ranked[$index - 1]['roll'] ?? PHP_INT_MAX;
-                            if ($roll > $prevRoll) {
-                                $currentRank = $index + 1;
-                            }
-                        }
+                    } else {
+                        $currentRank = $prevStudent['merit_position'];
                     }
                 }
-            } else {
-                $currentRank = $index + 1; // non-sequential
             }
 
             $ranked[] = [
@@ -399,7 +196,7 @@ class MeritProcessor
                 'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
                 'letter_grade'         => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
                 'result_status'        => $student['result_status'],
-                'merit_position'       => $currentRank, // class-wise (or can override if needed)
+                'merit_position'       => $currentRank,
                 'merit_primary'        => $primary,
                 'merit_secondary'      => $secondary,
                 'shift'                => $acad['shift'] ?? null,
@@ -407,14 +204,41 @@ class MeritProcessor
                 'group'                => $acad['group'] ?? null,
                 'gender'               => $std['student_gender'] ?? null,
                 'religion'             => $std['student_religion'] ?? null,
-                // dynamic field for group-wise, section-wise, etc
-                $groupField . '_merit_position' => $currentRank,
             ];
-
-            $prevPrimary   = $primary;
-            $prevSecondary = $secondary;
         }
 
         return $ranked;
+    }
+
+    private function normalizeResults($raw): Collection
+    {
+        if (isset($raw['results']) && is_array($raw['results'])) {
+            return collect($raw['results']);
+        }
+        return collect(is_array($raw) ? $raw : []);
+    }
+
+    private function getGroupByFields(array $config): array
+    {
+        $fields = [];
+        if ($config['group_by_shift'] ?? false)    $fields[] = 'shift';
+        if ($config['group_by_section'] ?? false)  $fields[] = 'section';
+        if ($config['group_by_group'] ?? false)    $fields[] = 'group';
+        if ($config['group_by_gender'] ?? false)   $fields[] = 'gender';
+        if ($config['group_by_religion'] ?? false) $fields[] = 'religion';
+
+        return empty($fields) ? [] : $fields; // ← [] মানে পুরো ক্লাস একসাথে
+    }
+
+
+    private function getTotalMark($student): float
+    {
+        // $bonus = $student['optional_bonus'] ?? 0;
+        // return collect($student['subjects'] ?? [])
+        //     ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+
+        return collect($student['subjects'] ?? [])
+            ->filter(fn($s) => $s['is_uncountable'] === false)
+            ->sum(fn($s) => $s['final_mark'] ?? 0);
     }
 }
