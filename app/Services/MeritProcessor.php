@@ -311,64 +311,65 @@ class MeritProcessor
     //         ->toArray();
     // }
     private function rankByField(
-    Collection $results,
-    string $field,
-    string $meritType,
-    Collection $academicDetails,
-    Collection $studentDetails
-): array {
-    return $results
-        ->groupBy(fn($s) => $s[$field] ?? 'unknown')
-        ->flatMap(function ($groupStudents, $groupKey) use ($academicDetails, $studentDetails) {
-            // সর্টিং — array access দিয়ে
-            $sorted = $groupStudents->sort(function ($a, $b) use ($academicDetails) {
-                $aId = $a['student_id'];
-                $bId = $b['student_id'];
+        Collection $results,
+        string $field,
+        string $meritType,
+        Collection $academicDetails,
+        Collection $studentDetails
+    ): array {
+        return $results
+            ->groupBy(fn($s) => $s[$field] ?? 'unknown')
+            ->flatMap(function ($groupStudents, $groupKey) use ($academicDetails, $studentDetails) {
+                $sorted = $groupStudents->sort(function ($a, $b) use ($academicDetails) {
+                    $aId = $a['student_id'];
+                    $bId = $b['student_id'];
 
-                $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
-                $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
+                    // GPA (with optional first)
+                    $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
+                    $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
 
-                if ($aGpa !== $bGpa) {
-                    return $bGpa <=> $aGpa;
+                    if ($aGpa !== $bGpa) {
+                        return $bGpa <=> $aGpa;
+                    }
+
+                    // Total Mark
+                    $aTM = $this->getTotalMark($a);
+                    $bTM = $this->getTotalMark($b);
+
+                    if ($aTM !== $bTM) {
+                        return $bTM <=> $aTM;
+                    }
+
+                    // Roll number
+                    $aRoll = $academicDetails[$aId]['class_roll'] ?? PHP_INT_MAX;
+                    $bRoll = $academicDetails[$bId]['class_roll'] ?? PHP_INT_MAX;
+
+                    return $aRoll <=> $bRoll;
+                })->values();
+
+                $ranked = [];
+                foreach ($sorted as $index => $student) {
+                    $stdId = $student['student_id'];
+                    $ranked[] = [
+                        'student_id'            => $stdId,
+                        'student_name'          => $student['student_name'],
+                        'roll'                  => $academicDetails[$stdId]['class_roll'] ?? 0,
+                        'total_mark'            => $this->getTotalMark($student),
+                        'gpa'                   => (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0),
+                        'gpa_without_optional'  => (float) ($student['gpa_without_optional'] ?? 0),
+                        'letter_grade'          => $student['letter_grade_with_optional'] ?? $student['letter_grade'],
+                        'result_status'         => $student['result_status'],
+                        'merit_position'        => $index + 1,
+                        'section'               => $academicDetails[$stdId]['section'] ?? null,
+                        'shift'                 => $academicDetails[$stdId]['shift'] ?? null,
+                        'group'                 => $academicDetails[$stdId]['group'] ?? null,
+                        'gender'                => $studentDetails[$stdId]['student_gender'] ?? null,
+                        'religion'              => $studentDetails[$stdId]['student_religion'] ?? null,
+                    ];
                 }
-
-                $aTM = $this->getTotalMark($a);
-                $bTM = $this->getTotalMark($b);
-
-                if ($aTM !== $bTM) {
-                    return $bTM <=> $aTM;
-                }
-
-                $aRoll = $academicDetails[$aId]['class_roll'] ?? PHP_INT_MAX;
-                $bRoll = $academicDetails[$bId]['class_roll'] ?? PHP_INT_MAX;
-
-                return $aRoll <=> $bRoll;
-            })->values();
-
-            // র‍্যাঙ্ক দেওয়া
-            $ranked = [];
-            foreach ($sorted as $index => $student) {
-                $stdId = $student['student_id'];
-                $ranked[] = [
-                    'student_id'            => $stdId,
-                    'student_name'          => $student['student_name'],
-                    'roll'                  => $academicDetails[$stdId]['class_roll'] ?? 0,
-                    'total_mark'            => $this->getTotalMark($student),
-                    'gpa'                   => (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0),
-                    'gpa_without_optional'  => (float) ($student['gpa_without_optional'] ?? 0),
-                    'letter_grade'          => $student['letter_grade_with_optional'] ?? $student['letter_grade'],
-                    'result_status'         => $student['result_status'],
-                    'merit_position'        => $index + 1,
-                    'section'               => $academicDetails[$stdId]['section'] ?? null,
-                    'shift'                 => $academicDetails[$stdId]['shift'] ?? null,
-                    'group'                 => $academicDetails[$stdId]['group'] ?? null,
-                    'gender'                => $studentDetails[$stdId]['student_gender'] ?? null,
-                    'religion'              => $studentDetails[$stdId]['student_religion'] ?? null,
-                ];
-            }
-            return $ranked;
-        })
-        ->values()
-        ->toArray();
-}
+                return $ranked;
+            })
+            ->values()
+            ->toArray();
+    }
 }
