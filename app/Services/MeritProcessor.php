@@ -88,6 +88,7 @@ class MeritProcessor
 
         $all = collect($finalMerit);
 
+        $allRaw = $allSorted;
         return [
             'total_students' => $results->count(),
             'merit_type'     => $meritType,
@@ -98,7 +99,7 @@ class MeritProcessor
 
                 // SECTION WISE
                 'section_wise' => $this->rankByField(
-                    $all,
+                    $allRaw,
                     'section',
                     $meritType,
                     $academicDetails,
@@ -107,7 +108,7 @@ class MeritProcessor
 
                 // SHIFT WISE
                 'shift_wise' => $this->rankByField(
-                    $all,
+                    $allRaw,
                     'shift',
                     $meritType,
                     $academicDetails,
@@ -116,7 +117,7 @@ class MeritProcessor
 
                 // GROUP WISE
                 'group_wise' => $this->rankByField(
-                    $all,
+                    $allRaw,
                     'group',
                     $meritType,
                     $academicDetails,
@@ -125,7 +126,7 @@ class MeritProcessor
 
                 // GENDER WISE
                 'gender_wise' => $this->rankByField(
-                    $all,
+                    $allRaw,
                     'gender',
                     $meritType,
                     $academicDetails,
@@ -134,7 +135,7 @@ class MeritProcessor
 
                 // RELIGION WISE
                 'religion_wise' => $this->rankByField(
-                    $all,
+                    $allRaw,
                     'religion',
                     $meritType,
                     $academicDetails,
@@ -173,7 +174,8 @@ class MeritProcessor
 
         return collect($student['subjects'] ?? [])
             ->filter(fn($s) => $s['is_uncountable'] === false)
-            ->sum(fn($s) => $s['final_mark'] ?? 0);
+            ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+            // ->sum(fn($s) => $s['final_mark'] ?? 0);
 
     }
 
