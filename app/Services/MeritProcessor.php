@@ -186,7 +186,7 @@ class MeritProcessor
     private function getTotalMark($student): float
     {
         $bonus = $student['optional_bonus'] ?? 0;
-        return $bonus + collect($student['subjects'] ?? [])
+        return collect($student['subjects'] ?? [])
             ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
     }
 
