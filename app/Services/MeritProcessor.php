@@ -341,49 +341,44 @@ class MeritProcessor
                     $bRoll = $academicDetails->get($bId)['class_roll'] ?? PHP_INT_MAX;
 
                     if ($isGradePointSequential) {
-                        // Primary: GPA
                         if ($aGpa !== $bGpa) return $bGpa <=> $aGpa;
-                        // Secondary: Total Mark
                         if ($aTM !== $bTM) return $bTM <=> $aTM;
-                        // Tertiary: Roll
                         return $aRoll <=> $bRoll;
                     }
 
-                    // fallback for other merit types
                     return 0;
                 })->values();
 
-                // Log sorted order for debug
-                foreach ($sorted as $s) {
-                    $stdId = $s['student_id'];
-                    $tm = $this->getTotalMark($s);
-                    $gpa = $s['gpa_with_optional'] ?? $s['gpa'] ?? 0;
-                    $roll = $academicDetails->get($stdId)['class_roll'] ?? null;
-                    Log::info("Sorted Student {$stdId}: GPA={$gpa}, TM={$tm}, Roll={$roll}");
-                }
-
-                // Assign ranks sequentially within the group
                 $ranked = [];
+                $prevPrimary = null;
+                $prevSecondary = null;
+                $currentRank = 0;
+
                 foreach ($sorted as $index => $student) {
                     $stdId = $student['student_id'];
-                    $tm = $this->getTotalMark($student);
                     $gpa = (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
-                    $roll = $academicDetails->get($stdId)['class_roll'] ?? 0;
+                    $tm = $this->getTotalMark($student);
 
-                    $currentRank = $index + 1; // sequential rank within group
+                    // Check if same as previous student
+                    if ($prevPrimary === $gpa && $prevSecondary === $tm) {
+                        // Same rank as previous
+                    } else {
+                        $currentRank = $index + 1; // next rank
+                    }
 
-                    Log::info("Assigning rank {$currentRank} to Student {$stdId} in group '{$groupKey}' (GPA={$gpa}, TM={$tm}, Roll={$roll})");
+                    $prevPrimary = $gpa;
+                    $prevSecondary = $tm;
 
                     $ranked[] = [
                         'student_id'           => $stdId,
                         'student_name'         => $student['student_name'],
-                        'roll'                 => $roll,
+                        'roll'                 => $academicDetails->get($stdId)['class_roll'] ?? 0,
                         'total_mark'           => $tm,
                         'gpa'                  => round($gpa, 2),
                         'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
                         'letter_grade'         => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
                         'result_status'        => $student['result_status'],
-                        'merit_position'       => $currentRank, // rank within the section/group
+                        'merit_position'       => $currentRank, // now tied ranks are handled
                         'merit_primary'        => $gpa,
                         'merit_secondary'      => $tm,
                         'shift'                => $academicDetails->get($stdId)['shift'] ?? null,
