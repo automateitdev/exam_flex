@@ -171,9 +171,26 @@ class MeritProcessor
         // return collect($student['subjects'] ?? [])
         //     ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
 
-        return collect($student['subjects'] ?? [])
-            ->filter(fn($s) => $s['is_uncountable'] === false)
-            ->sum(fn($s) => $s['final_mark'] ?? 0);
+        // return collect($student['subjects'] ?? [])
+        //     ->filter(fn($s) => $s['is_uncountable'] === false)
+        //     ->sum(fn($s) => $s['final_mark'] ?? 0);
+        $subjects = collect($student['subjects'] ?? []);
+
+        if ($subjects->isEmpty()) {
+            return 0;
+        }
+
+        // 2️⃣ If combined_final_mark exists, use it
+        if ($subjects->contains(fn($s) => isset($s['combined_final_mark']))) {
+            return $subjects
+                ->filter(fn($s) => empty($s['is_uncountable']))
+                ->sum(fn($s) => (float) ($s['combined_final_mark'] ?? 0));
+        }
+
+        // 3️⃣ Normal subject-wise sum
+        return $subjects
+            ->filter(fn($s) => empty($s['is_uncountable']))
+            ->sum(fn($s) => (float) ($s['final_mark'] ?? 0));
     }
 
     private function sortStudents(Collection $students, string $meritType, Collection $academicDetails): Collection
