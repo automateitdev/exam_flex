@@ -317,15 +317,17 @@ class MeritProcessor
         Collection $academicDetails,
         Collection $studentDetails
     ): array {
+        $isGradePointSequential = str_contains(strtolower($meritType), 'grade point')
+            && str_contains(strtolower($meritType), 'sequential');
+
         return $results
             ->groupBy(fn($s) => $s[$field] ?? 'unknown')
-            ->flatMap(function ($groupStudents) use ($meritType, $academicDetails, $studentDetails) {
+            ->flatMap(function ($groupStudents, $groupKey) use ($isGradePointSequential, $academicDetails, $studentDetails, $meritType) {
 
-                $isGpSequential = str_contains(strtolower($meritType), 'grade point') &&
-                    str_contains(strtolower($meritType), 'sequential');
+                Log::info("===== Group '{$groupKey}' ({$groupStudents->count()} students) =====");
 
-                // SORT students with proper tie-breakers for GPA sequential
-                $sorted = collect($groupStudents)->sort(function ($a, $b) use ($academicDetails, $isGpSequential) {
+                // Sort students in this group
+                $sorted = $groupStudents->sort(function ($a, $b) use ($isGradePointSequential, $academicDetails) {
                     $aId = $a['student_id'];
                     $bId = $b['student_id'];
 
@@ -338,44 +340,57 @@ class MeritProcessor
                     $aRoll = $academicDetails->get($aId)['class_roll'] ?? PHP_INT_MAX;
                     $bRoll = $academicDetails->get($bId)['class_roll'] ?? PHP_INT_MAX;
 
-                    if ($isGpSequential) {
+                    if ($isGradePointSequential) {
+                        // Primary: GPA
                         if ($aGpa !== $bGpa) return $bGpa <=> $aGpa;
+                        // Secondary: Total Mark
                         if ($aTM !== $bTM) return $bTM <=> $aTM;
+                        // Tertiary: Roll
                         return $aRoll <=> $bRoll;
                     }
 
-                    // fallback normal sorting
+                    // fallback for other merit types
                     return 0;
                 })->values();
 
-                // ASSIGN ranks sequentially in sorted order
+                // Log sorted order for debug
+                foreach ($sorted as $s) {
+                    $stdId = $s['student_id'];
+                    $tm = $this->getTotalMark($s);
+                    $gpa = $s['gpa_with_optional'] ?? $s['gpa'] ?? 0;
+                    $roll = $academicDetails->get($stdId)['class_roll'] ?? null;
+                    Log::info("Sorted Student {$stdId}: GPA={$gpa}, TM={$tm}, Roll={$roll}");
+                }
+
+                // Assign ranks sequentially within the group
                 $ranked = [];
                 foreach ($sorted as $index => $student) {
                     $stdId = $student['student_id'];
-                    $acad  = $academicDetails[$stdId] ?? [];
-                    $std   = $studentDetails[$stdId] ?? [];
+                    $tm = $this->getTotalMark($student);
+                    $gpa = (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
+                    $roll = $academicDetails->get($stdId)['class_roll'] ?? 0;
 
-                    $totalMark = $this->getTotalMark($student);
-                    $gpa       = (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
-                    $roll      = $acad['class_roll'] ?? 0;
+                    $currentRank = $index + 1; // sequential rank within group
+
+                    Log::info("Assigning rank {$currentRank} to Student {$stdId} in group '{$groupKey}' (GPA={$gpa}, TM={$tm}, Roll={$roll})");
 
                     $ranked[] = [
                         'student_id'           => $stdId,
                         'student_name'         => $student['student_name'],
                         'roll'                 => $roll,
-                        'total_mark'           => $totalMark,
+                        'total_mark'           => $tm,
                         'gpa'                  => round($gpa, 2),
                         'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
                         'letter_grade'         => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
                         'result_status'        => $student['result_status'],
-                        'merit_position'       => $index + 1, // <-- correct sequential rank
+                        'merit_position'       => $currentRank, // rank within the section/group
                         'merit_primary'        => $gpa,
-                        'merit_secondary'      => $totalMark,
-                        'shift'                => $acad['shift'] ?? null,
-                        'section'              => $acad['section'] ?? null,
-                        'group'                => $acad['group'] ?? null,
-                        'gender'               => $std['student_gender'] ?? null,
-                        'religion'             => $std['student_religion'] ?? null,
+                        'merit_secondary'      => $tm,
+                        'shift'                => $academicDetails->get($stdId)['shift'] ?? null,
+                        'section'              => $academicDetails->get($stdId)['section'] ?? null,
+                        'group'                => $academicDetails->get($stdId)['group'] ?? null,
+                        'gender'               => $studentDetails->get($stdId)['student_gender'] ?? null,
+                        'religion'             => $studentDetails->get($stdId)['student_religion'] ?? null,
                     ];
                 }
 
