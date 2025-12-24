@@ -88,7 +88,6 @@ class MeritProcessor
 
         $all = collect($finalMerit);
 
-        $allRaw = $allSorted;
         return [
             'total_students' => $results->count(),
             'merit_type'     => $meritType,
@@ -99,7 +98,7 @@ class MeritProcessor
 
                 // SECTION WISE
                 'section_wise' => $this->rankByField(
-                    $allRaw,
+                    $all,
                     'section',
                     $meritType,
                     $academicDetails,
@@ -108,7 +107,7 @@ class MeritProcessor
 
                 // SHIFT WISE
                 'shift_wise' => $this->rankByField(
-                    $allRaw,
+                    $all,
                     'shift',
                     $meritType,
                     $academicDetails,
@@ -117,7 +116,7 @@ class MeritProcessor
 
                 // GROUP WISE
                 'group_wise' => $this->rankByField(
-                    $allRaw,
+                    $all,
                     'group',
                     $meritType,
                     $academicDetails,
@@ -126,7 +125,7 @@ class MeritProcessor
 
                 // GENDER WISE
                 'gender_wise' => $this->rankByField(
-                    $allRaw,
+                    $all,
                     'gender',
                     $meritType,
                     $academicDetails,
@@ -135,7 +134,7 @@ class MeritProcessor
 
                 // RELIGION WISE
                 'religion_wise' => $this->rankByField(
-                    $allRaw,
+                    $all,
                     'religion',
                     $meritType,
                     $academicDetails,
