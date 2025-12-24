@@ -116,7 +116,7 @@ class ResultCalculator
                     // $failed = true;
                     if (!($combinedResult['is_uncountable'] ?? false)) {
                         $failed = true;
-                        $totalFailCount++;
+                        // $totalFailCount++;
                     }
                 }
 
