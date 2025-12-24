@@ -284,6 +284,32 @@ class MeritProcessor
     }
 
 
+    // private function rankByField(
+    //     Collection $results,
+    //     string $field,
+    //     string $meritType,
+    //     Collection $academicDetails,
+    //     Collection $studentDetails
+    // ): array {
+    //     return $results
+    //         ->groupBy(fn($s) => $s[$field] ?? 'unknown')
+    //         ->flatMap(function ($groupStudents) use ($meritType, $academicDetails, $studentDetails) {
+    //             $sorted = $this->sortStudents(
+    //                 collect($groupStudents),
+    //                 $meritType,
+    //                 $academicDetails
+    //             );
+
+    //             return $this->assignRanks(
+    //                 $sorted,
+    //                 $meritType,
+    //                 $academicDetails,
+    //                 $studentDetails
+    //             );
+    //         })
+    //         ->values()
+    //         ->toArray();
+    // }
     private function rankByField(
         Collection $results,
         string $field,
@@ -293,12 +319,35 @@ class MeritProcessor
     ): array {
         return $results
             ->groupBy(fn($s) => $s[$field] ?? 'unknown')
-            ->flatMap(function ($groupStudents) use ($meritType, $academicDetails, $studentDetails) {
-                $sorted = $this->sortStudents(
-                    collect($groupStudents),
-                    $meritType,
-                    $academicDetails
-                );
+            ->flatMap(function ($groupStudents) use ($meritType, $academicDetails, $studentDetails, $field) {
+
+                $sorted = collect($groupStudents)->sort(function ($a, $b) use ($meritType, $academicDetails) {
+
+                    $aId = $a['student_id'];
+                    $bId = $b['student_id'];
+
+                    $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
+                    $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
+
+                    $aTM = $this->getTotalMark($a);
+                    $bTM = $this->getTotalMark($b);
+
+                    $aRoll = $academicDetails->get($aId)['class_roll'] ?? PHP_INT_MAX;
+                    $bRoll = $academicDetails->get($bId)['class_roll'] ?? PHP_INT_MAX;
+
+                    // For Grade Point (Sequential)
+                    if (str_contains(strtolower($meritType), 'grade point') && str_contains(strtolower($meritType), 'sequential')) {
+                        // Primary: GPA
+                        if ($aGpa !== $bGpa) return $bGpa <=> $aGpa;
+                        // Secondary: total mark
+                        if ($aTM !== $bTM) return $bTM <=> $aTM;
+                        // Tertiary: roll
+                        return $aRoll <=> $bRoll;
+                    }
+
+                    // For other cases, fallback to normal sort
+                    return 0;
+                })->values();
 
                 return $this->assignRanks(
                     $sorted,
