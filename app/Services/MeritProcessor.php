@@ -3,13 +3,16 @@
 namespace App\Services;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\FacadesLog;
 use Illuminate\Support\Facades\Log;
 
 class MeritProcessor
 {
+
     public function process(array $payload): array
     {
         $results = $this->normalizeResults($payload['results'] ?? []);
+
         if ($results->isEmpty()) {
             return ['status' => 'error', 'message' => 'No results found'];
         }
@@ -83,24 +86,94 @@ class MeritProcessor
             Log::info('OK: Only one student with rank 1', $rank1Students->toArray());
         }
 
-        // Create different views from the same ranked data
         $all = collect($finalMerit);
-
-        Log::info('=== MERIT PROCESS END ===');
 
         return [
             'total_students' => $results->count(),
             'merit_type'     => $meritType,
             'grouped_by'     => $groupBy,
-            'data'           => [
-                'all_students'   => $finalMerit,
-                'section_wise'   => $all->groupBy('section')->map->values()->toArray(),
-                'shift_wise'     => $all->groupBy('shift')->map->values()->toArray(),
-                'group_wise'     => $all->groupBy('group')->map->values()->toArray(),
-                'gender_wise'    => $all->groupBy('gender')->map->values()->toArray(),
-                'religion_wise'  => $all->groupBy('religion')->map->values()->toArray(),
+            'data' => [
+                // CLASS WISE (already correct)
+                'all_students' => $finalMerit,
+
+                // SECTION WISE
+                'section_wise' => $this->rankByField(
+                    $all,
+                    'section',
+                    $meritType,
+                    $academicDetails,
+                    $studentDetails
+                ),
+
+                // SHIFT WISE
+                'shift_wise' => $this->rankByField(
+                    $all,
+                    'shift',
+                    $meritType,
+                    $academicDetails,
+                    $studentDetails
+                ),
+
+                // GROUP WISE
+                'group_wise' => $this->rankByField(
+                    $all,
+                    'group',
+                    $meritType,
+                    $academicDetails,
+                    $studentDetails
+                ),
+
+                // GENDER WISE
+                'gender_wise' => $this->rankByField(
+                    $all,
+                    'gender',
+                    $meritType,
+                    $academicDetails,
+                    $studentDetails
+                ),
+
+                // RELIGION WISE
+                'religion_wise' => $this->rankByField(
+                    $all,
+                    'religion',
+                    $meritType,
+                    $academicDetails,
+                    $studentDetails
+                ),
             ]
         ];
+    }
+
+    private function normalizeResults($raw): Collection
+    {
+        if (isset($raw['results']) && is_array($raw['results'])) {
+            return collect($raw['results']);
+        }
+        return collect(is_array($raw) ? $raw : []);
+    }
+
+    private function getGroupByFields(array $config): array
+    {
+        $fields = [];
+        if ($config['group_by_shift'] ?? false)    $fields[] = 'shift';
+        if ($config['group_by_section'] ?? false)  $fields[] = 'section';
+        if ($config['group_by_group'] ?? false)    $fields[] = 'group';
+        if ($config['group_by_gender'] ?? false)   $fields[] = 'gender';
+        if ($config['group_by_religion'] ?? false) $fields[] = 'religion';
+
+        return empty($fields) ? [] : $fields; // ← [] মানে পুরো ক্লাস একসাথে
+    }
+
+
+    private function getTotalMark($student): float
+    {
+        // $bonus = $student['optional_bonus'] ?? 0;
+        // return collect($student['subjects'] ?? [])
+        //     ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+
+        return collect($student['subjects'] ?? [])
+            ->filter(fn($s) => $s['is_uncountable'] === false)
+            ->sum(fn($s) => $s['final_mark'] ?? 0);
     }
 
     private function sortStudents(Collection $students, string $meritType, Collection $academicDetails): Collection
@@ -210,35 +283,31 @@ class MeritProcessor
         return $ranked;
     }
 
-    private function normalizeResults($raw): Collection
-    {
-        if (isset($raw['results']) && is_array($raw['results'])) {
-            return collect($raw['results']);
-        }
-        return collect(is_array($raw) ? $raw : []);
-    }
 
-    private function getGroupByFields(array $config): array
-    {
-        $fields = [];
-        if ($config['group_by_shift'] ?? false)    $fields[] = 'shift';
-        if ($config['group_by_section'] ?? false)  $fields[] = 'section';
-        if ($config['group_by_group'] ?? false)    $fields[] = 'group';
-        if ($config['group_by_gender'] ?? false)   $fields[] = 'gender';
-        if ($config['group_by_religion'] ?? false) $fields[] = 'religion';
+    private function rankByField(
+        Collection $results,
+        string $field,
+        string $meritType,
+        Collection $academicDetails,
+        Collection $studentDetails
+    ): array {
+        return $results
+            ->groupBy(fn($s) => $s[$field] ?? 'unknown')
+            ->flatMap(function ($groupStudents) use ($meritType, $academicDetails, $studentDetails) {
+                $sorted = $this->sortStudents(
+                    collect($groupStudents),
+                    $meritType,
+                    $academicDetails
+                );
 
-        return empty($fields) ? [] : $fields; // ← [] মানে পুরো ক্লাস একসাথে
-    }
-
-
-    private function getTotalMark($student): float
-    {
-        // $bonus = $student['optional_bonus'] ?? 0;
-        // return collect($student['subjects'] ?? [])
-        //     ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
-
-        return collect($student['subjects'] ?? [])
-            ->filter(fn($s) => $s['is_uncountable'] === false)
-            ->sum(fn($s) => $s['final_mark'] ?? 0);
+                return $this->assignRanks(
+                    $sorted,
+                    $meritType,
+                    $academicDetails,
+                    $studentDetails
+                );
+            })
+            ->values()
+            ->toArray();
     }
 }
