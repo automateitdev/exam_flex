@@ -288,9 +288,9 @@ class MarkEntryController extends Controller
 
         $results = app(MeritProcessor::class)->process($request->all());
 
-        // Log::channel('merit_log')->info('Merit Process Result', [
-        //     'results' => $results
-        // ]);
+        Log::channel('merit_log')->info('Merit Process Result', [
+            'results' => $results
+        ]);
         return response()->json([
             'status' => 'success',
             'message' => 'Merit Calculated Successfully',
