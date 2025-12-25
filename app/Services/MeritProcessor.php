@@ -13,6 +13,13 @@ class MeritProcessor
     {
         $results = $this->normalizeResults($payload['results'] ?? []);
 
+        // 🔹 Deduplicate by student_id
+        $results = $results->unique('student_id')->values();
+
+        Log::info("\nStudents after deduplication", [
+            'count' => $results->count()
+        ]);
+
         if ($results->isEmpty()) {
             return ['status' => 'error', 'message' => 'No results found'];
         }
@@ -293,6 +300,90 @@ class MeritProcessor
     //         ->toArray();
     // }
 
+    // private function rankByField(
+    //     Collection $results,
+    //     string $field,
+    //     string $meritType,
+    //     Collection $academicDetails,
+    //     Collection $studentDetails
+    // ): array {
+    //     Log::info("===== RANKING BY FIELD: {$field} =====", ['total_students' => $results->count(), 'results' => $results]);
+
+    //     return $results
+    //         ->groupBy(fn($s) => $academicDetails[$s['student_id']][$field] ?? 'unknown')
+    //         ->flatMap(function ($groupStudents, $groupKey) use (
+    //             $academicDetails,
+    //             $studentDetails,
+    //             $meritType
+    //         ) {
+
+    //             // Log::info("===== Group '{$groupKey}' ({$groupStudents->count()} students) =====");
+
+    //             /* 🔥 STEP 1: RE-SORT INSIDE GROUP */
+    //             $sorted = $groupStudents->sort(function ($a, $b) use ($academicDetails) {
+
+    //                 $aId = $a['student_id'];
+    //                 $bId = $b['student_id'];
+
+    //                 // GPA DESC
+    //                 $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
+    //                 $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
+    //                 if ($aGpa !== $bGpa) {
+    //                     return $bGpa <=> $aGpa;
+    //                 }
+
+    //                 // TOTAL MARK DESC
+    //                 $aTM = $a['total_mark'];
+    //                 $bTM = $b['total_mark'];
+    //                 if ($aTM !== $bTM) {
+    //                     return $bTM <=> $aTM;
+    //                 }
+
+    //                 // ROLL ASC
+    //                 $aRoll = $academicDetails[$aId]['class_roll'] ?? PHP_INT_MAX;
+    //                 $bRoll = $academicDetails[$bId]['class_roll'] ?? PHP_INT_MAX;
+    //                 return $aRoll <=> $bRoll;
+    //             })->values();
+
+    //             /* 🔥 STEP 2: ASSIGN FRESH RANKS */
+    //             $ranked = [];
+
+    //             foreach ($sorted as $index => $student) {
+
+    //                 $stdId = $student['student_id'];
+
+    //                 // Log::info(
+    //                 //     "Assigning rank " . ($index + 1) .
+    //                 //         " to {$stdId} (GPA=" .
+    //                 //         ($student['gpa'] ?? 0) .
+    //                 //         ", TM=" . $this->getTotalMark($student) . ")"
+    //                 // );
+
+    //                 $ranked[] = [
+    //                     'student_id'     => $stdId,
+    //                     'student_name'   => $student['student_name'],
+    //                     'roll'           => $academicDetails[$stdId]['class_roll'] ?? 0,
+    //                     'total_mark'     => $this->getTotalMark($student),
+    //                     'gpa'            => (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0),
+    //                     'letter_grade'   => $student['letter_grade_with_optional'] ?? $student['letter_grade'],
+    //                     'result_status'  => $student['result_status'],
+    //                     'merit_position' => $index + 1, // 🔥 RESET PER GROUP
+    //                     'section'        => $academicDetails[$stdId]['section'] ?? null,
+    //                     'shift'          => $academicDetails[$stdId]['shift'] ?? null,
+    //                     'group'          => $academicDetails[$stdId]['group'] ?? null,
+    //                     'gender'         => $studentDetails[$stdId]['student_gender'] ?? null,
+    //                     'religion'       => $studentDetails[$stdId]['student_religion'] ?? null,
+    //                 ];
+    //             }
+
+    //             return $ranked;
+    //         })
+    //         ->values()
+    //         ->toArray();
+    // }
+
+
+    // merit type taking into account
     private function rankByField(
         Collection $results,
         string $field,
@@ -300,69 +391,80 @@ class MeritProcessor
         Collection $academicDetails,
         Collection $studentDetails
     ): array {
-        Log::info("===== RANKING BY FIELD: {$field} =====", ['total_students' => $results->count(), 'results' => $results]);
+
+        $isSequential = str_contains(strtolower($meritType), 'sequential');
+        $useGpa = str_contains(strtolower($meritType), 'grade point') || str_contains(strtolower($meritType), 'gpa');
 
         return $results
             ->groupBy(fn($s) => $academicDetails[$s['student_id']][$field] ?? 'unknown')
-            ->flatMap(function ($groupStudents, $groupKey) use (
-                $academicDetails,
-                $studentDetails,
-                $meritType
-            ) {
+            ->flatMap(function (Collection $groupStudents) use ($isSequential, $useGpa, $academicDetails, $studentDetails) {
 
-                // Log::info("===== Group '{$groupKey}' ({$groupStudents->count()} students) =====");
-
-                /* 🔥 STEP 1: RE-SORT INSIDE GROUP */
-                $sorted = $groupStudents->sort(function ($a, $b) use ($academicDetails) {
-
+                // 🔹 Step 1: Sort group by merit rules (recompute metrics)
+                $sorted = $groupStudents->sort(function ($a, $b) use ($useGpa, $academicDetails) {
                     $aId = $a['student_id'];
                     $bId = $b['student_id'];
 
-                    // GPA DESC
                     $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
                     $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
-                    if ($aGpa !== $bGpa) {
-                        return $bGpa <=> $aGpa;
-                    }
 
-                    // TOTAL MARK DESC
-                    $aTM = $a['total_mark'];
-                    $bTM = $b['total_mark'];
-                    if ($aTM !== $bTM) {
-                        return $bTM <=> $aTM;
-                    }
+                    $aTotal = collect($a['subjects'] ?? [])
+                        ->filter(fn($s) => $s['is_uncountable'] === false)
+                        ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+                    $bTotal = collect($b['subjects'] ?? [])
+                        ->filter(fn($s) => $s['is_uncountable'] === false)
+                        ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
 
-                    // ROLL ASC
-                    $aRoll = $academicDetails[$aId]['class_roll'] ?? PHP_INT_MAX;
-                    $bRoll = $academicDetails[$bId]['class_roll'] ?? PHP_INT_MAX;
-                    return $aRoll <=> $bRoll;
+                    $primaryA = $useGpa ? $aGpa : $aTotal;
+                    $primaryB = $useGpa ? $bGpa : $bTotal;
+
+                    if ($primaryA !== $primaryB) return $primaryB <=> $primaryA;
+
+                    $rollA = $academicDetails[$aId]['class_roll'] ?? PHP_INT_MAX;
+                    $rollB = $academicDetails[$bId]['class_roll'] ?? PHP_INT_MAX;
+                    return $rollA <=> $rollB;
                 })->values();
 
-                /* 🔥 STEP 2: ASSIGN FRESH RANKS */
+                // 🔹 Step 2: Assign ranks
                 $ranked = [];
+                $lastPrimary = null;
+                $lastRank = 0;
 
                 foreach ($sorted as $index => $student) {
-
                     $stdId = $student['student_id'];
 
-                    // Log::info(
-                    //     "Assigning rank " . ($index + 1) .
-                    //         " to {$stdId} (GPA=" .
-                    //         ($student['gpa'] ?? 0) .
-                    //         ", TM=" . $this->getTotalMark($student) . ")"
-                    // );
+                    $totalMark = collect($student['subjects'] ?? [])
+                        ->filter(fn($s) => $s['is_uncountable'] === false)
+                        ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+                    $gpa = (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
+
+                    $primary = $useGpa ? $gpa : $totalMark;
+
+                    if ($isSequential) {
+                        $currentRank = $index + 1;
+                    } else {
+                        if ($index === 0) {
+                            $currentRank = 1;
+                        } elseif ($primary < $lastPrimary) {
+                            $currentRank = $index + 1;
+                        } else {
+                            $currentRank = $lastRank;
+                        }
+                    }
+
+                    $lastRank = $currentRank;
+                    $lastPrimary = $primary;
 
                     $ranked[] = [
                         'student_id'     => $stdId,
                         'student_name'   => $student['student_name'],
                         'roll'           => $academicDetails[$stdId]['class_roll'] ?? 0,
-                        'total_mark'     => $this->getTotalMark($student),
-                        'gpa'            => (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0),
-                        'letter_grade'   => $student['letter_grade_with_optional'] ?? $student['letter_grade'],
+                        'total_mark'     => $totalMark,
+                        'gpa'            => round($gpa, 2),
+                        'letter_grade'   => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
                         'result_status'  => $student['result_status'],
-                        'merit_position' => $index + 1, // 🔥 RESET PER GROUP
-                        'section'        => $academicDetails[$stdId]['section'] ?? null,
+                        'merit_position' => $currentRank,
                         'shift'          => $academicDetails[$stdId]['shift'] ?? null,
+                        'section'        => $academicDetails[$stdId]['section'] ?? null,
                         'group'          => $academicDetails[$stdId]['group'] ?? null,
                         'gender'         => $studentDetails[$stdId]['student_gender'] ?? null,
                         'religion'       => $studentDetails[$stdId]['student_religion'] ?? null,
