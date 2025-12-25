@@ -113,11 +113,12 @@ class ResultCalculator
                     $subjectCount++;
                 }
                 if ($combinedResult['combined_status'] === 'Fail') {
-                    // $failed = true;
-                    if (!($combinedResult['is_uncountable'] ?? false)) {
-                        $failed = true;
-                        // $totalFailCount++;
-                    }
+                    $failed = true;
+                    $totalFailCount++;
+                    // if (!($combinedResult['is_uncountable'] ?? false)) {
+                    //     $failed = true;
+                    //     // $totalFailCount++;
+                    // }
                 }
 
                 $totalMarkWithoutOptional += $combinedResult['final_mark'];
