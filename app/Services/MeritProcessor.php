@@ -382,65 +382,40 @@ class MeritProcessor
         return $results
             ->groupBy(fn($s) => $academicDetails[$s['student_id']][$field] ?? 'unknown')
             ->flatMap(function (Collection $groupStudents) use ($isSequential, $useGpa, $academicDetails, $studentDetails) {
+                // 🔹 Step 1: Sort students within the group
+                $sorted = $groupStudents->sort(function ($a, $b) use ($useGpa, $academicDetails) {
+                    $aId = $a['student_id'];
+                    $bId = $b['student_id'];
 
-            // 🔹 Step 1: Sort group by merit rules (recompute metrics)
-            // $sorted = $groupStudents->sort(function ($a, $b) use ($useGpa, $academicDetails) {
-            //     $aId = $a['student_id'];
-            //     $bId = $b['student_id'];
+                    $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
+                    $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
 
-            //     $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
-            //     $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
+                    $aTotal = collect($a['subjects'] ?? [])
+                        ->filter(fn($s) => $s['is_uncountable'] === false)
+                        ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+                    $bTotal = collect($b['subjects'] ?? [])
+                        ->filter(fn($s) => $s['is_uncountable'] === false)
+                        ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
 
-            //     $aTotal = collect($a['subjects'] ?? [])
-            //         ->filter(fn($s) => $s['is_uncountable'] === false)
-            //         ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
-            //     $bTotal = collect($b['subjects'] ?? [])
-            //         ->filter(fn($s) => $s['is_uncountable'] === false)
-            //         ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+                    if ($useGpa) {
+                        // Merit type: Grade Point
+                        if ($aGpa !== $bGpa) return $bGpa <=> $aGpa; // primary: GPA
+                        if ($aTotal !== $bTotal) return $bTotal <=> $aTotal; // tie-breaker: total marks
+                    } else {
+                        // Merit type: Total Mark
+                        if ($aTotal !== $bTotal) return $bTotal <=> $aTotal; // primary: total marks
+                        if ($aGpa !== $bGpa) return $bGpa <=> $aGpa; // tie-breaker: GPA
+                    }
 
-            //     $primaryA = $useGpa ? $aGpa : $aTotal;
-            //     $primaryB = $useGpa ? $bGpa : $bTotal;
-
-            //     if ($primaryA !== $primaryB) return $primaryB <=> $primaryA;
-
-            //     $rollA = $academicDetails[$aId]['class_roll'] ?? PHP_INT_MAX;
-            //     $rollB = $academicDetails[$bId]['class_roll'] ?? PHP_INT_MAX;
-            //     return $rollA <=> $rollB;
-            // })->values();
-
-            $sorted = $groupStudents->sort(function ($a, $b) use ($useGpa, $academicDetails) {
-                $aId = $a['student_id'];
-                $bId = $b['student_id'];
-
-                $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
-                $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
-
-                $aTotal = collect($a['subjects'] ?? [])
-                    ->filter(fn($s) => $s['is_uncountable'] === false)
-                    ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
-                $bTotal = collect($b['subjects'] ?? [])
-                    ->filter(fn($s) => $s['is_uncountable'] === false)
-                    ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
-
-                if ($useGpa) {
-                    // Merit type: Grade Point
-                    if ($aGpa !== $bGpa) return $bGpa <=> $aGpa; // primary: GPA
-                    if ($aTotal !== $bTotal) return $bTotal <=> $aTotal; // tie-breaker: total marks
-                } else {
-                    // Merit type: Total Mark
-                    if ($aTotal !== $bTotal) return $bTotal <=> $aTotal; // primary: total marks
-                    if ($aGpa !== $bGpa) return $bGpa <=> $aGpa; // tie-breaker: GPA
-                }
-
-                // Last tie-breaker: class roll
-                $rollA = $academicDetails[$aId]['class_roll'] ?? PHP_INT_MAX;
-                $rollB = $academicDetails[$bId]['class_roll'] ?? PHP_INT_MAX;
-                return $rollA <=> $rollB;
-            });
+                    // Last tie-breaker: class roll
+                    $rollA = $academicDetails[$aId]['class_roll'] ?? PHP_INT_MAX;
+                    $rollB = $academicDetails[$bId]['class_roll'] ?? PHP_INT_MAX;
+                    return $rollA <=> $rollB;
+                });
 
 
-            // 🔹 Step 2: Assign ranks
-            $ranked = [];
+                // 🔹 Step 2: Assign ranks
+                $ranked = [];
                 $lastPrimary = null;
                 $lastRank = 0;
 
