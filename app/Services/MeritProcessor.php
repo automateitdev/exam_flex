@@ -165,47 +165,148 @@ class MeritProcessor
 
     }
 
+    // private function sortStudents(Collection $students, string $meritType, Collection $academicDetails): Collection
+    // {
+    //     $meritTypeLower = strtolower($meritType);
+    //     $isGradePoint = str_contains($meritTypeLower, 'grade point') || str_contains($meritTypeLower, 'gpa');
+
+    //     $sorted = $students->sort(function ($a, $b) use ($isGradePoint, $academicDetails) {
+    //         $aId = $a['student_id'];
+    //         $bId = $b['student_id'];
+
+    //         // Pass first, Fail later
+    //         if ($a['result_status'] !== $b['result_status']) {
+    //             return ($a['result_status'] === 'Pass') ? -1 : 1;
+    //         }
+
+    //         // Compare GPA
+    //         $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
+    //         $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
+
+    //         if ($aGpa !== $bGpa) {
+    //             return $bGpa <=> $aGpa; // Higher GPA first
+    //         }
+
+    //         // GPA is same - check total marks for Grade Point mode
+    //         if ($isGradePoint) {
+    //             $aTM = $this->getTotalMark($a);
+    //             $bTM = $this->getTotalMark($b);
+
+    //             if ($aTM !== $bTM) {
+    //                 return $bTM <=> $aTM; // Higher total mark first
+    //             }
+    //         }
+
+    //         // Final tie-breaker: roll number (lower roll first)
+    //         $aRoll = $academicDetails->get($aId)['class_roll'] ?? PHP_INT_MAX;
+    //         $bRoll = $academicDetails->get($bId)['class_roll'] ?? PHP_INT_MAX;
+
+    //         return $aRoll <=> $bRoll;
+    //     });
+
+    //     return $sorted->values();
+    // }
+
     private function sortStudents(Collection $students, string $meritType, Collection $academicDetails): Collection
     {
         $meritTypeLower = strtolower($meritType);
-        $isGradePoint = str_contains($meritTypeLower, 'grade point') || str_contains($meritTypeLower, 'gpa');
+        // Determine if GPA is the primary driver
+        $isGpaPriority = str_contains($meritTypeLower, 'grade point') || str_contains($meritTypeLower, 'gpa');
 
-        $sorted = $students->sort(function ($a, $b) use ($isGradePoint, $academicDetails) {
-            $aId = $a['student_id'];
-            $bId = $b['student_id'];
-
-            // Pass first, Fail later
+        return $students->sort(function ($a, $b) use ($isGpaPriority, $academicDetails) {
+            // 1. Result Status (Pass always beats Fail)
             if ($a['result_status'] !== $b['result_status']) {
                 return ($a['result_status'] === 'Pass') ? -1 : 1;
             }
 
-            // Compare GPA
+            // Prepare Metrics
             $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
             $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
+            $aTM  = $this->getTotalMark($a);
+            $bTM  = $this->getTotalMark($b);
 
-            if ($aGpa !== $bGpa) {
-                return $bGpa <=> $aGpa; // Higher GPA first
+            if ($isGpaPriority) {
+                // MODE: GPA -> Total Mark -> Roll
+                if ($aGpa !== $bGpa) return $bGpa <=> $aGpa;
+                if ($aTM  !== $bTM)  return $bTM  <=> $aTM;
+            } else {
+                // MODE: Total Mark -> GPA -> Roll
+                if ($aTM  !== $bTM)  return $bTM  <=> $aTM;
+                if ($aGpa !== $bGpa) return $bGpa <=> $aGpa;
             }
 
-            // GPA is same - check total marks for Grade Point mode
-            if ($isGradePoint) {
-                $aTM = $this->getTotalMark($a);
-                $bTM = $this->getTotalMark($b);
-
-                if ($aTM !== $bTM) {
-                    return $bTM <=> $aTM; // Higher total mark first
-                }
-            }
-
-            // Final tie-breaker: roll number (lower roll first)
-            $aRoll = $academicDetails->get($aId)['class_roll'] ?? PHP_INT_MAX;
-            $bRoll = $academicDetails->get($bId)['class_roll'] ?? PHP_INT_MAX;
+            // 4. Final tie-breaker: Class Roll (Lower roll number wins)
+            $aRoll = $academicDetails[$a['student_id']]['class_roll'] ?? PHP_INT_MAX;
+            $bRoll = $academicDetails[$b['student_id']]['class_roll'] ?? PHP_INT_MAX;
 
             return $aRoll <=> $bRoll;
-        });
-
-        return $sorted->values();
+        })->values();
     }
+
+    // private function assignRanks(
+    //     Collection $sorted,
+    //     string $meritType,
+    //     Collection $academicDetails,
+    //     Collection $studentDetails
+    // ): array {
+    //     $isSequential = str_contains(strtolower($meritType), 'sequential');
+    //     $useGpa = str_contains(strtolower($meritType), 'grade point') || str_contains(strtolower($meritType), 'gpa');
+
+    //     $ranked = [];
+
+    //     foreach ($sorted as $index => $student) {
+    //         $stdId = $student['student_id'];
+    //         $acad  = $academicDetails[$stdId] ?? [];
+    //         $std   = $studentDetails[$stdId] ?? [];
+
+    //         $totalMark = $this->getTotalMark($student);
+    //         $gpa       = (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
+    //         $roll      = $acad['class_roll'] ?? 0;
+
+    //         $primary   = $useGpa ? $gpa : $totalMark;
+    //         $secondary = $useGpa ? $totalMark : $gpa;
+
+    //         if ($isSequential) {
+    //             // Sequential mode: every student gets unique rank based on their position
+    //             $currentRank = $index + 1;
+    //         } else {
+    //             // Non-sequential: students with same primary metric share rank
+    //             if ($index === 0) {
+    //                 $currentRank = 1;
+    //             } else {
+    //                 $prevStudent = $ranked[$index - 1];
+    //                 $prevPrimary = $prevStudent['merit_primary'];
+
+    //                 if ($primary < $prevPrimary) {
+    //                     $currentRank = $index + 1;
+    //                 } else {
+    //                     $currentRank = $prevStudent['merit_position'];
+    //                 }
+    //             }
+    //         }
+
+    //         $ranked[] = [
+    //             'student_id'           => $stdId,
+    //             'student_name'         => $student['student_name'],
+    //             'roll'                 => $roll,
+    //             'total_mark'           => $totalMark,
+    //             'gpa'                  => round($gpa, 2),
+    //             'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
+    //             'letter_grade'         => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
+    //             'result_status'        => $student['result_status'],
+    //             'merit_position'       => $currentRank,
+    //             'merit_primary'        => $primary,
+    //             'merit_secondary'      => $secondary,
+    //             'shift'                => $acad['shift'] ?? null,
+    //             'section'              => $acad['section'] ?? null,
+    //             'group'                => $acad['group'] ?? null,
+    //             'gender'               => $std['student_gender'] ?? null,
+    //             'religion'             => $std['student_religion'] ?? null,
+    //         ];
+    //     }
+
+    //     return $ranked;
+    // }
 
     private function assignRanks(
         Collection $sorted,
@@ -217,6 +318,8 @@ class MeritProcessor
         $useGpa = str_contains(strtolower($meritType), 'grade point') || str_contains(strtolower($meritType), 'gpa');
 
         $ranked = [];
+        $lastRank = 0;
+        $prevMetrics = null;
 
         foreach ($sorted as $index => $student) {
             $stdId = $student['student_id'];
@@ -225,42 +328,32 @@ class MeritProcessor
 
             $totalMark = $this->getTotalMark($student);
             $gpa       = (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
-            $roll      = $acad['class_roll'] ?? 0;
-
-            $primary   = $useGpa ? $gpa : $totalMark;
-            $secondary = $useGpa ? $totalMark : $gpa;
 
             if ($isSequential) {
-                // Sequential mode: every student gets unique rank based on their position
                 $currentRank = $index + 1;
             } else {
-                // Non-sequential: students with same primary metric share rank
                 if ($index === 0) {
                     $currentRank = 1;
                 } else {
-                    $prevStudent = $ranked[$index - 1];
-                    $prevPrimary = $prevStudent['merit_primary'];
-
-                    if ($primary < $prevPrimary) {
-                        $currentRank = $index + 1;
-                    } else {
-                        $currentRank = $prevStudent['merit_position'];
-                    }
+                    // If the primary and secondary metrics are identical, they share the rank
+                    $isSameAsPrev = ($gpa == $prevMetrics['gpa'] && $totalMark == $prevMetrics['total_mark']);
+                    $currentRank = $isSameAsPrev ? $lastRank : ($index + 1);
                 }
             }
+
+            $lastRank = $currentRank;
+            $prevMetrics = ['gpa' => $gpa, 'total_mark' => $totalMark];
 
             $ranked[] = [
                 'student_id'           => $stdId,
                 'student_name'         => $student['student_name'],
-                'roll'                 => $roll,
+                'roll'                 => $acad['class_roll'] ?? 0,
                 'total_mark'           => $totalMark,
                 'gpa'                  => round($gpa, 2),
                 'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
                 'letter_grade'         => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
                 'result_status'        => $student['result_status'],
                 'merit_position'       => $currentRank,
-                'merit_primary'        => $primary,
-                'merit_secondary'      => $secondary,
                 'shift'                => $acad['shift'] ?? null,
                 'section'              => $acad['section'] ?? null,
                 'group'                => $acad['group'] ?? null,
@@ -271,117 +364,6 @@ class MeritProcessor
 
         return $ranked;
     }
-
-
-    // private function rankByField(
-    //     Collection $results,
-    //     string $field,
-    //     string $meritType,
-    //     Collection $academicDetails,
-    //     Collection $studentDetails
-    // ): array {
-    //     return $results
-    //         ->groupBy(fn($s) => $s[$field] ?? 'unknown')
-    //         ->flatMap(function ($groupStudents) use ($meritType, $academicDetails, $studentDetails) {
-    //             $sorted = $this->sortStudents(
-    //                 collect($groupStudents),
-    //                 $meritType,
-    //                 $academicDetails
-    //             );
-
-    //             return $this->assignRanks(
-    //                 $sorted,
-    //                 $meritType,
-    //                 $academicDetails,
-    //                 $studentDetails
-    //             );
-    //         })
-    //         ->values()
-    //         ->toArray();
-    // }
-
-    // private function rankByField(
-    //     Collection $results,
-    //     string $field,
-    //     string $meritType,
-    //     Collection $academicDetails,
-    //     Collection $studentDetails
-    // ): array {
-    //     Log::info("===== RANKING BY FIELD: {$field} =====", ['total_students' => $results->count(), 'results' => $results]);
-
-    //     return $results
-    //         ->groupBy(fn($s) => $academicDetails[$s['student_id']][$field] ?? 'unknown')
-    //         ->flatMap(function ($groupStudents, $groupKey) use (
-    //             $academicDetails,
-    //             $studentDetails,
-    //             $meritType
-    //         ) {
-
-    //             // Log::info("===== Group '{$groupKey}' ({$groupStudents->count()} students) =====");
-
-    //             /* 🔥 STEP 1: RE-SORT INSIDE GROUP */
-    //             $sorted = $groupStudents->sort(function ($a, $b) use ($academicDetails) {
-
-    //                 $aId = $a['student_id'];
-    //                 $bId = $b['student_id'];
-
-    //                 // GPA DESC
-    //                 $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
-    //                 $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
-    //                 if ($aGpa !== $bGpa) {
-    //                     return $bGpa <=> $aGpa;
-    //                 }
-
-    //                 // TOTAL MARK DESC
-    //                 $aTM = $a['total_mark'];
-    //                 $bTM = $b['total_mark'];
-    //                 if ($aTM !== $bTM) {
-    //                     return $bTM <=> $aTM;
-    //                 }
-
-    //                 // ROLL ASC
-    //                 $aRoll = $academicDetails[$aId]['class_roll'] ?? PHP_INT_MAX;
-    //                 $bRoll = $academicDetails[$bId]['class_roll'] ?? PHP_INT_MAX;
-    //                 return $aRoll <=> $bRoll;
-    //             })->values();
-
-    //             /* 🔥 STEP 2: ASSIGN FRESH RANKS */
-    //             $ranked = [];
-
-    //             foreach ($sorted as $index => $student) {
-
-    //                 $stdId = $student['student_id'];
-
-    //                 // Log::info(
-    //                 //     "Assigning rank " . ($index + 1) .
-    //                 //         " to {$stdId} (GPA=" .
-    //                 //         ($student['gpa'] ?? 0) .
-    //                 //         ", TM=" . $this->getTotalMark($student) . ")"
-    //                 // );
-
-    //                 $ranked[] = [
-    //                     'student_id'     => $stdId,
-    //                     'student_name'   => $student['student_name'],
-    //                     'roll'           => $academicDetails[$stdId]['class_roll'] ?? 0,
-    //                     'total_mark'     => $this->getTotalMark($student),
-    //                     'gpa'            => (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0),
-    //                     'letter_grade'   => $student['letter_grade_with_optional'] ?? $student['letter_grade'],
-    //                     'result_status'  => $student['result_status'],
-    //                     'merit_position' => $index + 1, // 🔥 RESET PER GROUP
-    //                     'section'        => $academicDetails[$stdId]['section'] ?? null,
-    //                     'shift'          => $academicDetails[$stdId]['shift'] ?? null,
-    //                     'group'          => $academicDetails[$stdId]['group'] ?? null,
-    //                     'gender'         => $studentDetails[$stdId]['student_gender'] ?? null,
-    //                     'religion'       => $studentDetails[$stdId]['student_religion'] ?? null,
-    //                 ];
-    //             }
-
-    //             return $ranked;
-    //         })
-    //         ->values()
-    //         ->toArray();
-    // }
-
 
     // merit type taking into account
     private function rankByField(
@@ -395,37 +377,70 @@ class MeritProcessor
         $isSequential = str_contains(strtolower($meritType), 'sequential');
         $useGpa = str_contains(strtolower($meritType), 'grade point') || str_contains(strtolower($meritType), 'gpa');
 
+        Log::info("===== RANKING BY FIELD: {$field} =====", ['total_students' => $results->count(), 'gpa_based' => $useGpa, 'sequential' => $isSequential]);
+
         return $results
             ->groupBy(fn($s) => $academicDetails[$s['student_id']][$field] ?? 'unknown')
             ->flatMap(function (Collection $groupStudents) use ($isSequential, $useGpa, $academicDetails, $studentDetails) {
 
-                // 🔹 Step 1: Sort group by merit rules (recompute metrics)
-                $sorted = $groupStudents->sort(function ($a, $b) use ($useGpa, $academicDetails) {
-                    $aId = $a['student_id'];
-                    $bId = $b['student_id'];
+            // 🔹 Step 1: Sort group by merit rules (recompute metrics)
+            // $sorted = $groupStudents->sort(function ($a, $b) use ($useGpa, $academicDetails) {
+            //     $aId = $a['student_id'];
+            //     $bId = $b['student_id'];
 
-                    $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
-                    $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
+            //     $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
+            //     $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
 
-                    $aTotal = collect($a['subjects'] ?? [])
-                        ->filter(fn($s) => $s['is_uncountable'] === false)
-                        ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
-                    $bTotal = collect($b['subjects'] ?? [])
-                        ->filter(fn($s) => $s['is_uncountable'] === false)
-                        ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+            //     $aTotal = collect($a['subjects'] ?? [])
+            //         ->filter(fn($s) => $s['is_uncountable'] === false)
+            //         ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+            //     $bTotal = collect($b['subjects'] ?? [])
+            //         ->filter(fn($s) => $s['is_uncountable'] === false)
+            //         ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
 
-                    $primaryA = $useGpa ? $aGpa : $aTotal;
-                    $primaryB = $useGpa ? $bGpa : $bTotal;
+            //     $primaryA = $useGpa ? $aGpa : $aTotal;
+            //     $primaryB = $useGpa ? $bGpa : $bTotal;
 
-                    if ($primaryA !== $primaryB) return $primaryB <=> $primaryA;
+            //     if ($primaryA !== $primaryB) return $primaryB <=> $primaryA;
 
-                    $rollA = $academicDetails[$aId]['class_roll'] ?? PHP_INT_MAX;
-                    $rollB = $academicDetails[$bId]['class_roll'] ?? PHP_INT_MAX;
-                    return $rollA <=> $rollB;
-                })->values();
+            //     $rollA = $academicDetails[$aId]['class_roll'] ?? PHP_INT_MAX;
+            //     $rollB = $academicDetails[$bId]['class_roll'] ?? PHP_INT_MAX;
+            //     return $rollA <=> $rollB;
+            // })->values();
 
-                // 🔹 Step 2: Assign ranks
-                $ranked = [];
+            $sorted = $groupStudents->sort(function ($a, $b) use ($useGpa, $academicDetails) {
+                $aId = $a['student_id'];
+                $bId = $b['student_id'];
+
+                $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
+                $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
+
+                $aTotal = collect($a['subjects'] ?? [])
+                    ->filter(fn($s) => $s['is_uncountable'] === false)
+                    ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+                $bTotal = collect($b['subjects'] ?? [])
+                    ->filter(fn($s) => $s['is_uncountable'] === false)
+                    ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+
+                if ($useGpa) {
+                    // Merit type: Grade Point
+                    if ($aGpa !== $bGpa) return $bGpa <=> $aGpa; // primary: GPA
+                    if ($aTotal !== $bTotal) return $bTotal <=> $aTotal; // tie-breaker: total marks
+                } else {
+                    // Merit type: Total Mark
+                    if ($aTotal !== $bTotal) return $bTotal <=> $aTotal; // primary: total marks
+                    if ($aGpa !== $bGpa) return $bGpa <=> $aGpa; // tie-breaker: GPA
+                }
+
+                // Last tie-breaker: class roll
+                $rollA = $academicDetails[$aId]['class_roll'] ?? PHP_INT_MAX;
+                $rollB = $academicDetails[$bId]['class_roll'] ?? PHP_INT_MAX;
+                return $rollA <=> $rollB;
+            });
+
+
+            // 🔹 Step 2: Assign ranks
+            $ranked = [];
                 $lastPrimary = null;
                 $lastRank = 0;
 

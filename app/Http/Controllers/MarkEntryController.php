@@ -29,9 +29,9 @@ class MarkEntryController extends Controller
 
     public function storeConfig(Request $request)
     {
-        Log::channel('mark_entry_log')->info('Mark Entry Config Request', [
-            'request' => $request->all()
-        ]);
+        // Log::channel('mark_entry_log')->info('Mark Entry Config Request', [
+        //     'request' => $request->all()
+        // ]);
 
         $data = $request->all();
 
@@ -286,7 +286,12 @@ class MarkEntryController extends Controller
             ], 422);
         }
 
-        $results = app(MeritProcessor::class)->process($request->all());
+        try {
+            $results = app(MeritProcessor::class)->process($request->all());
+        } catch (\Throwable $e) {
+            Log::error('MeritProcessor Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['error' => 'Merit processing failed'], 500);
+        }
 
         Log::channel('merit_log')->info('Merit Process Result', [
             'results' => $results
