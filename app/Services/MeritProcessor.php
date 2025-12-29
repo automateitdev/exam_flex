@@ -322,6 +322,7 @@ class MeritProcessor
         $prevMetrics = null;
 
         foreach ($sorted as $index => $student) {
+            Log::info('studentDetails', ['student' => $student]);
             $stdId = $student['student_id'];
             $acad  = $academicDetails[$stdId] ?? [];
             $std   = $studentDetails[$stdId] ?? [];
