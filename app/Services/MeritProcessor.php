@@ -257,7 +257,7 @@ class MeritProcessor
         $prevMetrics = null;
 
         foreach ($sorted as $index => $student) {
-            Log::info('studentDetails', ['student' => $student]);
+
             $stdId = $student['student_id'];
             $acad  = $academicDetails[$stdId] ?? [];
             $std   = $studentDetails[$stdId] ?? [];
@@ -356,13 +356,14 @@ class MeritProcessor
                 $lastRank = 0;
 
                 foreach ($sorted as $index => $student) {
+                    Log::info('studentDetails-2', ['student' => $student]);
                     $stdId = $student['student_id'];
 
-                    // $totalMark = collect($student['subjects'] ?? [])
-                    //     ->filter(fn($s) => $s['is_uncountable'] === false)
-                    //     ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+                    $totalMark = collect($student['subjects'] ?? [])
+                        ->filter(fn($s) => $s['is_uncountable'] === false)
+                        ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
 
-                    $totalMark = $student['total_mark_with_optional'];
+                    // $totalMark = $student['total_mark_with_optional'];
 
                     $gpa = (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
 
