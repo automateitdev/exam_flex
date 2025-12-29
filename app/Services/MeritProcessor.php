@@ -222,8 +222,8 @@ class MeritProcessor
             // Prepare Metrics
             $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
             $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
-            $aTM  = $this->getTotalMark($a);
-            $bTM  = $this->getTotalMark($b);
+            $aTM  = $a['total_mark_with_optional'];
+            $bTM  = $b['total_mark_with_optional'];
 
             if ($isGpaPriority) {
                 // MODE: GPA -> Total Mark -> Roll
@@ -242,71 +242,6 @@ class MeritProcessor
             return $aRoll <=> $bRoll;
         })->values();
     }
-
-    // private function assignRanks(
-    //     Collection $sorted,
-    //     string $meritType,
-    //     Collection $academicDetails,
-    //     Collection $studentDetails
-    // ): array {
-    //     $isSequential = str_contains(strtolower($meritType), 'sequential');
-    //     $useGpa = str_contains(strtolower($meritType), 'grade point') || str_contains(strtolower($meritType), 'gpa');
-
-    //     $ranked = [];
-
-    //     foreach ($sorted as $index => $student) {
-    //         $stdId = $student['student_id'];
-    //         $acad  = $academicDetails[$stdId] ?? [];
-    //         $std   = $studentDetails[$stdId] ?? [];
-
-    //         $totalMark = $this->getTotalMark($student);
-    //         $gpa       = (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
-    //         $roll      = $acad['class_roll'] ?? 0;
-
-    //         $primary   = $useGpa ? $gpa : $totalMark;
-    //         $secondary = $useGpa ? $totalMark : $gpa;
-
-    //         if ($isSequential) {
-    //             // Sequential mode: every student gets unique rank based on their position
-    //             $currentRank = $index + 1;
-    //         } else {
-    //             // Non-sequential: students with same primary metric share rank
-    //             if ($index === 0) {
-    //                 $currentRank = 1;
-    //             } else {
-    //                 $prevStudent = $ranked[$index - 1];
-    //                 $prevPrimary = $prevStudent['merit_primary'];
-
-    //                 if ($primary < $prevPrimary) {
-    //                     $currentRank = $index + 1;
-    //                 } else {
-    //                     $currentRank = $prevStudent['merit_position'];
-    //                 }
-    //             }
-    //         }
-
-    //         $ranked[] = [
-    //             'student_id'           => $stdId,
-    //             'student_name'         => $student['student_name'],
-    //             'roll'                 => $roll,
-    //             'total_mark'           => $totalMark,
-    //             'gpa'                  => round($gpa, 2),
-    //             'gpa_without_optional' => round($student['gpa_without_optional'] ?? 0, 2),
-    //             'letter_grade'         => $student['letter_grade_with_optional'] ?? $student['letter_grade'] ?? 'F',
-    //             'result_status'        => $student['result_status'],
-    //             'merit_position'       => $currentRank,
-    //             'merit_primary'        => $primary,
-    //             'merit_secondary'      => $secondary,
-    //             'shift'                => $acad['shift'] ?? null,
-    //             'section'              => $acad['section'] ?? null,
-    //             'group'                => $acad['group'] ?? null,
-    //             'gender'               => $std['student_gender'] ?? null,
-    //             'religion'             => $std['student_religion'] ?? null,
-    //         ];
-    //     }
-
-    //     return $ranked;
-    // }
 
     private function assignRanks(
         Collection $sorted,
@@ -327,7 +262,7 @@ class MeritProcessor
             $acad  = $academicDetails[$stdId] ?? [];
             $std   = $studentDetails[$stdId] ?? [];
 
-            $totalMark = $this->getTotalMark($student);
+            $totalMark = $student['total_mark_with_optional'];
             $gpa       = (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
 
             if ($isSequential) {
@@ -423,9 +358,12 @@ class MeritProcessor
                 foreach ($sorted as $index => $student) {
                     $stdId = $student['student_id'];
 
-                    $totalMark = collect($student['subjects'] ?? [])
-                        ->filter(fn($s) => $s['is_uncountable'] === false)
-                        ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+                    // $totalMark = collect($student['subjects'] ?? [])
+                    //     ->filter(fn($s) => $s['is_uncountable'] === false)
+                    //     ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+
+                    $totalMark = $student['total_mark_with_optional'];
+
                     $gpa = (float) ($student['gpa_with_optional'] ?? $student['gpa'] ?? 0);
 
                     $primary = $useGpa ? $gpa : $totalMark;
