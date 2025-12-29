@@ -154,11 +154,11 @@ class MeritProcessor
 
     private function getTotalMark($student): float
     {
-        // $bonus = $student['optional_bonus'] ?? 0;
+        $bonus = $student['optional_bonus'] ?? 0;
         // return collect($student['subjects'] ?? [])
         //     ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
 
-        return collect($student['subjects'] ?? [])
+        return $bonus + collect($student['subjects'] ?? [])
             ->filter(fn($s) => $s['is_uncountable'] === false)
             ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
         // ->sum(fn($s) => $s['final_mark'] ?? 0);
