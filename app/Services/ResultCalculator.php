@@ -324,6 +324,12 @@ class ResultCalculator
         // 🔒 FINAL AUTHORITY: grade decides pass/fail
         $combinedStatus = ($combinedGrade === 'F') ? 'Fail' : 'Pass';
 
+        Log::info('Combined Subject Debug', [
+            'subject' => $combinedName,
+            'total_obtained' => $totalObtained,
+            'total_max_mark' => $totalMaxMark,
+            'percentage' => $percentage,
+        ]);
 
         return [
             'combined_id'           => $combinedId,
