@@ -293,9 +293,9 @@ class MarkEntryController extends Controller
             return response()->json(['error' => 'Merit processing failed'], 500);
         }
 
-        Log::channel('merit_log')->info('Merit Process Result', [
-            'results' => $results
-        ]);
+        // Log::channel('merit_log')->info('Merit Process Result', [
+        //     'results' => $results
+        // ]);
         return response()->json([
             'status' => 'success',
             'message' => 'Merit Calculated Successfully',
