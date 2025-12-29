@@ -324,6 +324,7 @@ class ResultCalculator
         // 🔒 FINAL AUTHORITY: grade decides pass/fail
         $combinedStatus = ($combinedGrade === 'F') ? 'Fail' : 'Pass';
 
+
         Log::info('Combined Subject Debug', [
             'subject' => $combinedName,
             'total_obtained' => $totalObtained,
@@ -359,8 +360,28 @@ class ResultCalculator
         }
     }
 
+    // private function getGradePoint($percentage, $gradeRules)
+    // {
+    //     foreach ($gradeRules as $rule) {
+    //         if ($percentage >= $rule['from_mark'] && $percentage <= $rule['to_mark']) {
+    //             return $rule['grade_point'];
+    //         }
+    //     }
+    //     return 0.0;
+    // }
+
+    // private function getGrade($percentage, $gradeRules)
+    // {
+    //     foreach ($gradeRules as $rule) {
+    //         if ($percentage >= $rule['from_mark'] && $percentage <= $rule['to_mark']) {
+    //             return $rule['grade'];
+    //         }
+    //     }
+    //     return 'F';
+    // }
     private function getGradePoint($percentage, $gradeRules)
     {
+        $gradeRules = collect($gradeRules)->sortByDesc('from_mark');
         foreach ($gradeRules as $rule) {
             if ($percentage >= $rule['from_mark'] && $percentage <= $rule['to_mark']) {
                 return $rule['grade_point'];
@@ -371,6 +392,7 @@ class ResultCalculator
 
     private function getGrade($percentage, $gradeRules)
     {
+        $gradeRules = collect($gradeRules)->sortByDesc('from_mark');
         foreach ($gradeRules as $rule) {
             if ($percentage >= $rule['from_mark'] && $percentage <= $rule['to_mark']) {
                 return $rule['grade'];
@@ -378,6 +400,7 @@ class ResultCalculator
         }
         return 'F';
     }
+
 
     private function markToGradePoint($mark, $gradeRules)
     {
