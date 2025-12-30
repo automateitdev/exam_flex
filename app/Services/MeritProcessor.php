@@ -215,7 +215,10 @@ class MeritProcessor
         $prevMetrics = null;
 
         foreach ($sorted as $index => $student) {
-
+            if($student['student_id'] == 79755)
+            {
+                Log::info("student Howa", ['student' => $student]);
+            }
             $stdId = $student['student_id'];
             $acad  = $academicDetails[$stdId] ?? [];
             $std   = $studentDetails[$stdId] ?? [];
@@ -273,7 +276,7 @@ class MeritProcessor
 
         Log::info("===== RANKING BY FIELD: {$field} =====", ['total_students' => $results->count(), 'gpa_based' => $useGpa, 'sequential' => $isSequential]);
 
-        Log::info("results", ['results' => $results->toArray()]);
+        // Log::info("results", ['results' => $results->toArray()]);
 
         return $results
             ->groupBy(fn($s) => $academicDetails[$s['student_id']][$field] ?? 'unknown')
@@ -316,7 +319,7 @@ class MeritProcessor
                 $lastRank = 0;
 
                 foreach ($sorted as $index => $student) {
-                    Log::info('studentDetails-2', ['student' => $student]);
+                    // Log::info('studentDetails-2', ['student' => $student]);
                     $stdId = $student['student_id'];
 
                     // $totalMark = collect($student['subjects'] ?? [])
