@@ -101,7 +101,18 @@ class ExamMarkCalculator
 
         /* =====================================================
          | 5. FINAL PASS DECISION (CORE LOGIC)  ✅ FIXED
-         ===================================================== */
+         ===================================================== */$pass = true;
+
+         $pass = true;
+        // STEP A: Check Individual Pass Marks first (Highest Priority)
+        if ($hasPassMark && !$individualPass) {
+            $pass = false;
+        }
+        // STEP B: Only check Overall Pass if they haven't already failed individually
+        elseif ($hasOverall && !$overallPass) {
+            $pass = false;
+        }
+
         if ($hasPassMark && $hasOverall) {
             // both present → must pass both
             $pass = $individualPass && $overallPass;

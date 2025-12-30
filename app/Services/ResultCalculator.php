@@ -216,51 +216,6 @@ class ResultCalculator
         ];
     }
 
-    // private function processSingle($subj, $gradeRules, $mark_configs)
-    // {
-    //     $subjectId = $subj['subject_id'];
-    //     $config = $mark_configs[$subjectId] ?? [];
-    //     $partMarks = $subj['part_marks'] ?? [];
-
-    //     // Total marks for display
-    //     $totalMarks = collect($partMarks)->sum();
-
-    //     $convertedMark = 0;
-    //     $method = '';
-
-    //     foreach ($partMarks as $code => $obtained) {
-    //         $method = $config['method_of_evaluation'][$code] ?? 'At Actual';
-    //         $conversion = $config['conversion'][$code] ?? 100;
-    //         $converted = $obtained * ($conversion / 100);
-
-    //         $convertedMark += round2(roundMark($converted, $method));
-    //     }
-
-    //     $grace = $subj['grace_mark'] ?? 0;
-    //     $finalMark = round2(roundMark($convertedMark + $grace, $method)); // ✅ final_mark = converted_mark + grace
-
-    //     $totalMaxConverted = collect($config['total_marks'] ?? [])->sum();
-    //     $percentage = $totalMaxConverted > 0 ? ($finalMark / $totalMaxConverted) * 100 : 0;
-
-    //     return [
-    //         'subject_id'     => $subjectId,
-    //         'subject_name'   => $subj['subject_name'],
-    //         'part_marks'     => $partMarks,
-    //         'total_marks'    => $totalMarks,
-    //         'converted_mark' => $convertedMark,
-    //         'final_mark'     => $finalMark, // ✅ final_mark includes grace
-    //         'grace_mark'     => $grace,
-    //         'percentage'     => $percentage,
-
-    //         'grade_point'    => format2($subj['grade_point']),
-    //         'grade'          => $subj['grade'],
-
-    //         'is_uncountable' => ($subj['subject_type'] ?? '') === 'Uncountable',
-    //         'is_combined'    => false,
-    //         'attendance_status' => $subj['attendance_status'] ?? null,
-    //     ];
-    // }
-
     private function processSingle($subj, $gradeRules, $mark_configs)
     {
         $subjectId = $subj['subject_id'];
@@ -285,15 +240,27 @@ class ResultCalculator
 
         $totalMaxConverted = collect($config['total_marks'] ?? [])->sum();
 
-        // 1. Calculate raw percentage
-        $rawPercentage = $totalMaxConverted > 0 ? ($finalMark / $totalMaxConverted) * 100 : 0;
+        // // 1. Calculate raw percentage
+        // $rawPercentage = $totalMaxConverted > 0 ? ($finalMark / $totalMaxConverted) * 100 : 0;
 
-        // 2. Round the percentage for rule lookup (Fixes the 32.5% or 49.5% gap issue)
+        // // 2. Round the percentage for rule lookup (Fixes the 32.5% or 49.5% gap issue)
+        // $lookupPercentage = round($rawPercentage);
+
+        // // 3. Get Grade and GP based on the rounded percentage
+        // $gradePoint = $this->getGradePoint($lookupPercentage, $gradeRules);
+        // $grade      = $this->getGrade($lookupPercentage, $gradeRules);
+
+        $rawPercentage = $totalMaxConverted > 0 ? ($finalMark / $totalMaxConverted) * 100 : 0;
         $lookupPercentage = round($rawPercentage);
 
-        // 3. Get Grade and GP based on the rounded percentage
-        $gradePoint = $this->getGradePoint($lookupPercentage, $gradeRules);
-        $grade      = $this->getGrade($lookupPercentage, $gradeRules);
+        // ✅ FIX: Check if ExamMarkCalculator already marked this as Fail
+        if (($subj['grade'] ?? '') === 'F' || ($subj['result_status'] ?? '') === 'Fail') {
+            $gradePoint = $subj['grade_point'];
+            $grade      = $subj['grade'];
+        } else {
+            $gradePoint = $this->getGradePoint($lookupPercentage, $gradeRules);
+            $grade      = $this->getGrade($lookupPercentage, $gradeRules);
+        }
 
         return [
             'subject_id'     => $subjectId,
