@@ -152,59 +152,17 @@ class MeritProcessor
     }
 
 
-    private function getTotalMark($student): float
-    {
-        $bonus = $student['optional_bonus'] ?? 0;
-        // return collect($student['subjects'] ?? [])
-        //     ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
-
-        return $bonus + collect($student['subjects'] ?? [])
-            ->filter(fn($s) => $s['is_uncountable'] === false)
-            ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
-        // ->sum(fn($s) => $s['final_mark'] ?? 0);
-
-    }
-
-    // private function sortStudents(Collection $students, string $meritType, Collection $academicDetails): Collection
+    // private function getTotalMark($student): float
     // {
-    //     $meritTypeLower = strtolower($meritType);
-    //     $isGradePoint = str_contains($meritTypeLower, 'grade point') || str_contains($meritTypeLower, 'gpa');
+    //     $bonus = $student['optional_bonus'] ?? 0;
+    //     // return collect($student['subjects'] ?? [])
+    //     //     ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
 
-    //     $sorted = $students->sort(function ($a, $b) use ($isGradePoint, $academicDetails) {
-    //         $aId = $a['student_id'];
-    //         $bId = $b['student_id'];
+    //     return $bonus + collect($student['subjects'] ?? [])
+    //         ->filter(fn($s) => $s['is_uncountable'] === false)
+    //         ->sum(fn($s) => $s['combined_final_mark'] ?? $s['final_mark'] ?? 0);
+    //     // ->sum(fn($s) => $s['final_mark'] ?? 0);
 
-    //         // Pass first, Fail later
-    //         if ($a['result_status'] !== $b['result_status']) {
-    //             return ($a['result_status'] === 'Pass') ? -1 : 1;
-    //         }
-
-    //         // Compare GPA
-    //         $aGpa = (float) ($a['gpa_with_optional'] ?? $a['gpa'] ?? 0);
-    //         $bGpa = (float) ($b['gpa_with_optional'] ?? $b['gpa'] ?? 0);
-
-    //         if ($aGpa !== $bGpa) {
-    //             return $bGpa <=> $aGpa; // Higher GPA first
-    //         }
-
-    //         // GPA is same - check total marks for Grade Point mode
-    //         if ($isGradePoint) {
-    //             $aTM = $this->getTotalMark($a);
-    //             $bTM = $this->getTotalMark($b);
-
-    //             if ($aTM !== $bTM) {
-    //                 return $bTM <=> $aTM; // Higher total mark first
-    //             }
-    //         }
-
-    //         // Final tie-breaker: roll number (lower roll first)
-    //         $aRoll = $academicDetails->get($aId)['class_roll'] ?? PHP_INT_MAX;
-    //         $bRoll = $academicDetails->get($bId)['class_roll'] ?? PHP_INT_MAX;
-
-    //         return $aRoll <=> $bRoll;
-    //     });
-
-    //     return $sorted->values();
     // }
 
     private function sortStudents(Collection $students, string $meritType, Collection $academicDetails): Collection
