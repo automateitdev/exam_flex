@@ -20,9 +20,6 @@ class MeritProcessor
             'count' => $results->count()
         ]);
 
-        //log the student_id = 79755
-        Log::info('student_id = 79755', ['result_79755' => $results->where('student_id', "79755")->first()]);
-
         if ($results->isEmpty()) {
             return ['status' => 'error', 'message' => 'No results found'];
         }
@@ -218,10 +215,7 @@ class MeritProcessor
         $prevMetrics = null;
 
         foreach ($sorted as $index => $student) {
-            if($student['student_id'] == 79755)
-            {
-                Log::info("student Howa", ['student' => $student]);
-            }
+           
             $stdId = $student['student_id'];
             $acad  = $academicDetails[$stdId] ?? [];
             $std   = $studentDetails[$stdId] ?? [];
