@@ -273,7 +273,7 @@ class MeritProcessor
 
         Log::info("===== RANKING BY FIELD: {$field} =====", ['total_students' => $results->count(), 'gpa_based' => $useGpa, 'sequential' => $isSequential]);
 
-        // Log::info("results", ['results' => $results->toArray()]);
+        Log::info("results", ['results' => $results->toArray()]);
 
         return $results
             ->groupBy(fn($s) => $academicDetails[$s['student_id']][$field] ?? 'unknown')
