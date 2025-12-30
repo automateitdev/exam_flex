@@ -144,7 +144,7 @@ class ResultCalculator
 
                 if ($single['is_optional'] ?? false) {
                     if ($single['grade'] !== 'F') {
-                        $fourthSubjectPassed = true;  // এটাই আপনার চাওয়া!
+                        $fourthSubjectPassed = true;
                     }
                 }
             }
@@ -176,8 +176,8 @@ class ResultCalculator
 
             if ($optGP >= 2.00) {
                 $bonusGPFromOptional = max(0, $optGP - 2.00);
-                $bonusMarkFromOptional = round2(roundMark(max(0, $optionalFullMark - $percentage_of_optional), $method));
             }
+            $bonusMarkFromOptional = round2(roundMark(max(0, $optionalFullMark - $percentage_of_optional), $method));
         }
 
         $maxGradePoint = collect($gradeRules)->max('grade_point');
@@ -280,92 +280,6 @@ class ResultCalculator
             'attendance_status' => $subj['attendance_status'] ?? null,
         ];
     }
-    // private function processCombinedGroup($group, $gradeRules, $mark_configs)
-    // {
-    //     $combinedId   = $group->first()['combined_id'];
-    //     $combinedName = $group->first()['combined_subject_name'];
-
-    //     $totalObtained = 0;    // sum of parts' final_mark (converted + grace)
-    //     $totalMaxMark  = 0;    // sum of parts' converted max (total_mark * conversion%)
-
-    //     $parts = $group->map(function ($mark) use ($mark_configs, &$totalObtained, &$totalMaxMark) {
-    //         $method = '';
-    //         $subjectId = $mark['subject_id'];
-    //         $config    = $mark_configs[$subjectId] ?? [];
-    //         $partMarks = $mark['part_marks'] ?? [];
-
-    //         // per-paper converted obtained and converted max
-    //         $convertedMark = 0.0;
-    //         $thisPaperConvertedMax = 0.0;
-
-    //         foreach ($partMarks as $code => $obtained) {
-    //             $method = $config['method_of_evaluation'][$code] ?? 'At Actual';
-    //             $conversion = (float) ($config['conversion'][$code] ?? 100) / 100.0;
-    //             $totalPart  = (float) ($config['total_marks'][$code] ?? 0);
-
-    //             $converted = $obtained * $conversion;
-    //             $maxConverted = $totalPart * $conversion;
-    //             // student's converted obtained for this code
-    //             $convertedMark += round2(roundMark($converted, $method));
-
-    //             // this paper's converted max for this code
-    //             $thisPaperConvertedMax += round2(roundMark($maxConverted, $method));
-    //         }
-
-    //         $grace = (float) ($mark['grace_mark'] ?? 0);
-    //         $finalMark = round2(roundMark($convertedMark + $grace, $method)); // final = converted + grace
-
-    //         // accumulate combined totals
-    //         $totalObtained += $finalMark;
-    //         $totalMaxMark  += $thisPaperConvertedMax;
-
-    //         return [
-    //             'subject_id'     => $subjectId,
-    //             'subject_name'   => $mark['subject_name'],
-    //             'part_marks'     => $partMarks,
-    //             'total_marks'    => collect($partMarks)->sum(),        // raw obtained sum (keep for display)
-    //             'converted_mark' => $convertedMark,         // ONLY its own converted marks
-    //             'final_mark'     => $finalMark,             // converted + grace
-    //             'grace_mark'     => $grace,
-    //             'grade'          => $mark['grade'] ?? null,
-    //             'grade_point'    => format2($mark['grade_point'] ?? 0),
-    //             'attendance_status' => $mark['attendance_status'] ?? null,
-    //         ];
-    //     })->values()->toArray();
-
-    //     // percentage based on converted max
-    //     $percentage = $totalMaxMark > 0 ? ($totalObtained / $totalMaxMark) * 100 : 0;
-
-    //     // determine grade from percentage
-    //     $combinedGradePoint = $this->getGradePoint($percentage, $gradeRules);
-    //     $combinedGrade      = $this->getGrade($percentage, $gradeRules);
-
-    //     // 🔒 FINAL AUTHORITY: grade decides pass/fail
-    //     $combinedStatus = ($combinedGrade === 'F') ? 'Fail' : 'Pass';
-
-
-    //     Log::info('Combined Subject Debug', [
-    //         'subject' => $combinedName,
-    //         'total_obtained' => $totalObtained,
-    //         'total_max_mark' => $totalMaxMark,
-    //         'percentage' => $percentage,
-    //     ]);
-
-    //     return [
-    //         'combined_id'           => $combinedId,
-    //         'is_combined'           => true,
-    //         'combined_name'         => $combinedName,
-    //         'total_marks'           => $totalObtained,    // converted sum (with grace)
-    //         'final_mark'            => $totalObtained,
-    //         'total_max_mark'        => $totalMaxMark,     // converted-max sum
-    //         'percentage'            => $percentage,
-    //         'combined_grade_point'  => format2($combinedGradePoint),
-    //         'combined_grade'        => $combinedGrade,
-    //         'combined_status'       => $combinedStatus,
-    //         'parts'                 => $parts,
-    //         'is_uncountable'        => false,
-    //     ];
-    // }
 
     private function processCombinedGroup($group, $gradeRules, $mark_configs)
     {
