@@ -21,8 +21,8 @@ class MeritProcessor
         ]);
 
         //log the student_id = 79755
-        Log::info('student_id = 79755', ['result_79755' => $results->where('student_id', 79755)->first()]);
-        
+        Log::info('student_id = 79755', ['result_79755' => $results->where('student_id', "79755")->first()]);
+
         if ($results->isEmpty()) {
             return ['status' => 'error', 'message' => 'No results found'];
         }
