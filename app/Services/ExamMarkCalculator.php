@@ -105,55 +105,69 @@ class ExamMarkCalculator
         if ($hasPassMark && $hasOverall) {
             // both present → must pass both
             $pass = $individualPass && $overallPass;
-
         } elseif (!$hasPassMark && $hasOverall) {
             // only overall
             $pass = $overallPass;
-
         } elseif ($hasPassMark && !$hasOverall) {
             // only pass mark
             $pass = $individualPass;
-
         } else {
             $pass = true;
         }
 
         /* =====================================================
-         | 6. REMARK BUILDING  🔄 UPDATED
-         ===================================================== */
+          | ✅ NEW: GRACE MARK LOGIC (Add this block here)
+          | Only applies if student is failing and grace can make them pass
+          ===================================================== */
+        $appliedGrace = 0;
+        $finalMark = $obtainedMark;
+        $passBeforeGrace = $pass;
+
+        if (!$passBeforeGrace && $graceMark > 0 && $hasOverall) {
+            $needed = $overallRequired - $overallCalc;
+
+            if ($needed <= $graceMark) {
+                $appliedGrace = $needed;
+                $finalMark = $obtainedMark + $appliedGrace;
+                $pass = true; // Change status to Pass
+            }
+        }
+        /* =====================================================
+          | 6. REMARK BUILDING
+          ===================================================== */
         $remark = '';
-
-        if (!$pass) {
+        if ($appliedGrace > 0) {
+            $remark = "Pass by Grace (+{$appliedGrace} marks)";
+        } elseif (!$pass) {
             $reasons = [];
-
             if ($hasPassMark && !$individualPass) {
                 $reasons[] = 'Failed Individual: ' . implode(', ', $failedParts);
             }
-
             if ($hasOverall && !$overallPass) {
                 $reasons[] = "Overall: $overallCalc < $overallRequired";
             }
-
             $remark = implode(' | ', $reasons);
         }
 
         /* =====================================================
-         | 7. PERCENTAGE (UNCHANGED)
-         ===================================================== */
+          | 7. PERCENTAGE (Use $finalMark instead of $obtainedMark)
+          ===================================================== */
         $percentage = ($totalMaxMark > 0)
-            ? ($obtainedMark / $totalMaxMark) * 100
+            ? ($finalMark / $totalMaxMark) * 100
             : 0;
 
         /* =====================================================
          | 8. GRADE RESOLUTION (CONFIG DRIVEN)  ✅ FIXED
          ===================================================== */
         if ($pass) {
-            $gradeInfo = $gradePoints->first(fn ($g) =>
+            $gradeInfo = $gradePoints->first(
+                fn($g) =>
                 $percentage >= $g['from_mark'] &&
-                $percentage <= $g['to_mark']
+                    $percentage <= $g['to_mark']
             );
         } else {
-            $gradeInfo = $gradePoints->first(fn ($g) =>
+            $gradeInfo = $gradePoints->first(
+                fn($g) =>
                 $g['result'] === 'Fail'
             );
         }
