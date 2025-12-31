@@ -178,8 +178,8 @@ class ExamMarkCalculator
         return [
             'student_id'        => $studentId,
             'obtained_mark'     => (float) $obtainedMark,
-            'final_mark'        => (float) $obtainedMark,
-            'grace_mark'        => 0,
+            'final_mark'        => (float) $finalMark, // Updated
+            'grace_mark'        => (float) $appliedGrace, // Updated
             'result_status'     => $pass ? 'Pass' : 'Fail',
             'remark'            => $remark,
             'percentage'        => round($percentage, 2),
