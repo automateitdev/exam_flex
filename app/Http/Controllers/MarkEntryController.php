@@ -29,9 +29,9 @@ class MarkEntryController extends Controller
 
     public function storeConfig(Request $request)
     {
-        // Log::channel('mark_entry_log')->info('Mark Entry Config Request', [
-        //     'request' => $request->all()
-        // ]);
+        Log::channel('mark_entry_log')->info('Mark Entry Config Request', [
+            'request' => $request->all()
+        ]);
 
         $data = $request->all();
 
